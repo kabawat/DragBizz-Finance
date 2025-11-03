@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  dragbizz-subscription-dev:
+    build: .
+    container_name: dragbizz_subscription_dev
+    ports:
+      - "4010:4010"
+    env_file:
+      - env.development
+    environment:
+      - NODE_ENV=development
+      - PORT=4010
+      - MONGODB_URI=mongodb://subs_dev:dev_password_123@mongo-dev:27017/dragbizz_subscription_dev?authSource=admin
+      - REDIS_HOST=redis-dev
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=0
+      - AUTH_SERVER_URL=http://localhost:4000
+    command: sh -c "yarn install && yarn dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - mongo-dev
+      - redis-dev
+    stdin_open: true
+    tty: true
+
+  mongo-dev:
+    image: mongo:7.0
+    container_name: dragbizz_subscription_mongo_dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: subs_dev
+      MONGO_INITDB_ROOT_PASSWORD: dev_password_123
+    volumes:
+      - mongo_dev_data:/data/db
+
+  redis-dev:
+    image: redis:7.2-alpine
+    container_name: dragbizz_subscription_redis_dev
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis_dev_data:/data
+
+volumes:
+  mongo_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+

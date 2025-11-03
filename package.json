@@ -1,0 +1,56 @@
+{
+  "name": "dragbizz-subscription",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon --watch . --legacy-watch --delay 1000ms index.js",
+    "start": "node index.js",
+    "dev:start": "docker compose -f docker-compose.dev.yml up -d --build",
+    "dev:stop": "docker compose -f docker-compose.dev.yml down",
+    "dev:logs": "docker compose -f docker-compose.dev.yml logs -f",
+    "dev:log": "docker compose -f docker-compose.dev.yml logs -f dragbizz-subscription-dev",
+    "dev:restart": "docker compose -f docker-compose.dev.yml restart",
+    "dev:clean": "docker compose -f docker-compose.dev.yml down -v --remove-orphans",
+
+    "staging:start": "docker compose -f docker-compose.staging.yml up -d --build",
+    "staging:stop": "docker compose -f docker-compose.staging.yml down",
+    "staging:logs": "docker compose -f docker-compose.staging.yml logs -f",
+    "staging:log": "docker compose -f docker-compose.staging.yml logs -f dragbizz-subscription-staging",
+    "staging:restart": "docker compose -f docker-compose.staging.yml restart",
+    "staging:deploy": "docker compose -f docker-compose.staging.yml pull && docker compose -f docker-compose.staging.yml up -d --build --force-recreate",
+    "staging:clean": "docker compose -f docker-compose.staging.yml down -v --remove-orphans",
+
+    "prod:start": "docker compose -f docker-compose.prod.yml up -d --build",
+    "prod:stop": "docker compose -f docker-compose.prod.yml down",
+    "prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "prod:log": "docker compose -f docker-compose.prod.yml logs -f dragbizz-subscription-prod",
+    "prod:restart": "docker compose -f docker-compose.prod.yml restart",
+    "prod:deploy": "docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d --build --force-recreate",
+    "prod:clean": "docker compose -f docker-compose.prod.yml down -v --remove-orphans"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jose": "^6.1.0",
+    "module-alias": "^2.2.3",
+    "mongoose": "^8.16.5",
+    "morgan": "^1.10.1",
+    "redis": "^5.6.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "_moduleAliases": {
+    "@src": "./src",
+    "@config": "./src/config",
+    "@middlewares": "./src/middlewares",
+    "@routes": "./src/routes",
+    "@utils": "./src/utils"
+  }
+}
+
