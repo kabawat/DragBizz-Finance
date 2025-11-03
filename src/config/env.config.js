@@ -7,7 +7,7 @@ const SECRET = {
   server: {
     url: process.env.SELF_SERVER_URL,
     auth: process.env.AUTH_SERVER_URL,
-    port: process.env.PORT || 4010,
+    port: process.env.PORT || 4002,
   },
   mongo: {
     uri: ENVIRONMENT === 'production' ? process.env.MONGODB_URI : process.env.MONGODB_URI_DEV,
