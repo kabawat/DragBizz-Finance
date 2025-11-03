@@ -5,18 +5,12 @@ services:
     build: .
     container_name: dragbizz_subscription_staging
     ports:
-      - "4012:4012"
+      - "${PORT:-4002}:${PORT:-4002}"
     env_file:
       - env.staging
     environment:
       - NODE_ENV=staging
-      - PORT=4012
-      - MONGODB_URI=mongodb://subs_staging:staging_password_123@mongo-staging:27017/dragbizz_subscription_staging?authSource=admin
-      - REDIS_HOST=redis-staging
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - REDIS_DB=0
-      - AUTH_SERVER_URL=${AUTH_SERVER_URL}
+      - PORT=${PORT:-4012}
     command: sh -c "yarn install && yarn start"
     volumes:
       - .:/app
