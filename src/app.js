@@ -15,14 +15,29 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || (isProduction ? "https://
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(morgan(isProduction ? "combined" : "dev"));
-app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    const ok = allowedOrigins.includes(origin);
-    return cb(ok ? null : new Error("Not allowed by CORS"), ok);
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+      origin: (origin, callback) => {
+          // allow requests with no origin (like curl/postman)
+          if (!origin) return callback(null, true);
+
+          // Always allow server url itself
+          const selfUrl = SECRET?.server?.url;
+          const isSelf = selfUrl && origin === selfUrl;
+
+          // In development, allow any localhost origin (any port)
+          const isLocalhostWildcard = !isProduction && (/^http:\/\/localhost(:\d+)?\/?$/.test(origin) || origin.startsWith('http://localhost'));
+          const isAllowed = isSelf || isLocalhostWildcard || allowedOrigins.includes(origin);
+          return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
+      },
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "ngrok-skip-browser-warning"],
+      exposedHeaders: ["Content-Length", "Content-Type"],
+      optionsSuccessStatus: 200,
+      preflightContinue: false,
+      maxAge: 86400, // 24 hours
+  })
+);
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 

@@ -27,15 +27,14 @@ const extractBearerToken = (authHeader) => {
     return parts.length === 2 && parts[0] === "Bearer" ? parts[1] : null;
 };
 
-// ✅ Verify public token (Auth micro-service, RS256) with Redis caching
+// Verify access token
 async function verifyAccessToken(token) {
     try {
-        // Step 1: Check Redis cache first (ultra fast - ~1ms)
+        // Check Redis cache first
         const cacheKey = getTokenCacheKey(token);
         const cachedResult = await getCache(cacheKey);
         
         if (cachedResult) {
-            // Cache hit - return immediately
             return {
                 valid: cachedResult.valid,
                 expired: cachedResult.expired,
@@ -44,7 +43,7 @@ async function verifyAccessToken(token) {
             };
         }
 
-        // Step 2: Cache miss - verify via JWKS (jose auto-caches JWKS keys)
+        // Cache miss - verify via JWKS
         const { payload } = await jwtVerify(token, JWKS, {
             issuer: SECRET?.jwt?.issuer,
             algorithms: [SECRET?.jwt?.algorithm],
@@ -54,7 +53,7 @@ async function verifyAccessToken(token) {
             clockTolerance: 60,
         });
 
-        // Step 3: Cache successful verification
+        // Cache successful verification
         const result = {
             valid: true,
             expired: false,
@@ -62,7 +61,7 @@ async function verifyAccessToken(token) {
             cached: false
         };
 
-        // Cache for 5 minutes (less than token expiry)
+        // Cache for 5 minutes
         await setCache(cacheKey, result, VERIFY_CACHE_TTL);
 
         return result;
@@ -72,7 +71,7 @@ async function verifyAccessToken(token) {
             return { valid: false, expired: true, decoded: null, cached: false };
         }
         
-        // Don't cache invalid tokens
+        // Cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }
 }
