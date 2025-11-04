@@ -1,37 +1,52 @@
-const SECRET = require("@config/env.config");
-const { jwtVerify, createRemoteJWKSet } = require("jose");
+const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
+const STATUS_CODES = require("@src/constants/statusCode");
+const { handleControllerError } = require("@src/utils/responseHandler/error");
 
-const jwksUrl = new URL(`${SECRET?.server?.auth}/.well-known/jwks.json`);
-if (SECRET?.ENVIRONMENT === 'production' && jwksUrl.protocol !== 'https:') {
-  throw new Error("JWKS URL must use HTTPS in production");
-}
-const JWKS = createRemoteJWKSet(jwksUrl);
-
-const extractBearerToken = (authHeader) => {
-  if (!authHeader || typeof authHeader !== "string") return null;
-  const parts = authHeader.split(" ");
-  return parts.length === 2 && parts[0] === "Bearer" ? parts[1] : null;
-};
-
-const verifyAccessToken = async (token) => {
-  const { payload } = await jwtVerify(token, JWKS, {
-    issuer: SECRET?.jwt?.issuer,
-    algorithms: [SECRET?.jwt?.algorithm],
-    audience: SECRET?.jwt?.audience,
-  });
-  return payload;
-};
+const SECRET = require("@src/config/env.config");
+const isProduction = SECRET.ENVIRONMENT === "production";
 
 const accessMiddleware = async (req, res, next) => {
-  try {
-    const token = extractBearerToken(req.headers["authorization"]);
-    if (!token) return res.status(401).json({ status: false, message: "Unauthorized" });
-    req.user = await verifyAccessToken(token);
-    next();
-  } catch (err) {
-    const msg = err?.code === 'ERR_JWT_EXPIRED' ? 'Token expired' : 'Unauthorized';
-    return res.status(401).json({ status: false, message: msg });
-  }
+    try {
+        if (!isProduction) {
+            console.log(`[accessMiddleware] ${req.method} ${req.path}`);
+        }
+        const authHeader = req.headers["authorization"];
+        const token = extractBearerToken(authHeader);
+
+        if (!token) {
+            if (!isProduction) {
+                console.log('[accessMiddleware] No token found');
+            }
+            return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                status: false,
+                message: "Access token missing or invalid.",
+            });
+        }
+
+        if (!isProduction) {
+            console.log('[accessMiddleware] Verifying token...');
+        }
+        const { valid, expired, decoded } = await verifyAccessToken(token);
+        
+        if (!valid) {
+            if (!isProduction) {
+                console.log('[accessMiddleware] Token invalid:', expired ? 'expired' : 'invalid');
+            }
+            return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                status: false,
+                message: expired ? "Access token expired." : "Invalid access token.",
+            });
+        }
+
+        if (!isProduction) {
+            console.log('[accessMiddleware] Token valid, user:', decoded.sub);
+        }
+        req.user = decoded;
+        next();
+    } catch (err) {
+        console.error('[accessMiddleware] Error:', err.message);
+        return handleControllerError(res, err, "accessMiddleware");
+    }
 };
 
 module.exports = accessMiddleware;
