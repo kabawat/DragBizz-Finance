@@ -7,7 +7,7 @@ services:
     ports:
       - "${PORT:-4002}:${PORT:-4002}"
     env_file:
-      - env.development
+      - .env
     environment:
       - NODE_ENV=development
       - PORT=${PORT:-4002}
