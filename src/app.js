@@ -18,7 +18,6 @@ app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(
   cors({
       origin: (origin, callback) => {
-          // allow requests with no origin (like curl/postman)
           if (!origin) return callback(null, true);
 
           // Always allow server url itself
@@ -28,11 +27,13 @@ app.use(
           // In development, allow any localhost origin (any port)
           const isLocalhostWildcard = !isProduction && (/^http:\/\/localhost(:\d+)?\/?$/.test(origin) || origin.startsWith('http://localhost'));
           const isAllowed = isSelf || isLocalhostWildcard || allowedOrigins.includes(origin);
+          
           return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
       },
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "ngrok-skip-browser-warning"],
       exposedHeaders: ["Content-Length", "Content-Type"],
+      credentials: true, // Allow credentials (cookies, authorization headers)
       optionsSuccessStatus: 200,
       preflightContinue: false,
       maxAge: 86400, // 24 hours

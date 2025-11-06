@@ -153,8 +153,6 @@ class PackageService {
             const limitNum = Math.min(Math.max(1, parseInt(limit) || 10), 100); // Max 100 per page
             const skip = (pageNum - 1) * limitNum;
 
-            // Build query - default: only exclude soft-deleted packages
-            // No other filters applied by default
             const query = {
                 $or: [
                     { deletedAt: null },

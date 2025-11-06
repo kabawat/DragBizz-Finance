@@ -15,7 +15,7 @@ function validatePackage(data) {
         errors.pricing = 'Pricing information is required';
     } else {
         // Validate pricing object
-        if (typeof data.pricing.amount !== 'number' || data.pricing.amount < 0) {
+        if (data.pricing.amount < 0) {
             errors['pricing.amount'] = 'Pricing amount is required and must be a positive number';
         }
 
@@ -27,14 +27,12 @@ function validatePackage(data) {
             errors['pricing.currency'] = `Currency must be one of: ${CURRENCIES.join(', ')}`;
         }
 
-        if (data.pricing.setupFee !== undefined && (typeof data.pricing.setupFee !== 'number' || data.pricing.setupFee < 0)) {
+        if (data.pricing.setupFee && (data.pricing.setupFee < 0)) {
             errors['pricing.setupFee'] = 'Setup fee must be a positive number';
         }
 
-        if (data.pricing.discount !== undefined) {
-            if (typeof data.pricing.discount !== 'number' || data.pricing.discount < 0 || data.pricing.discount > 100) {
-                errors['pricing.discount'] = 'Discount must be a number between 0 and 100';
-            }
+        if (data.pricing.discount < 0 || data.pricing.discount > 100) {
+            errors['pricing.discount'] = 'Discount must be a number between 0 and 100';
         }
     }
 
@@ -53,22 +51,6 @@ function validatePackage(data) {
 
     if (data.status && !PACKAGE_STATUS.includes(data.status)) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
-    }
-
-    if (data.maxStores !== undefined && (typeof data.maxStores !== 'number' || data.maxStores < 0)) {
-        errors.maxStores = 'Max stores must be a positive number';
-    }
-
-    if (data.maxUsers !== undefined && (typeof data.maxUsers !== 'number' || data.maxUsers < 0)) {
-        errors.maxUsers = 'Max users must be a positive number';
-    }
-
-    if (data.maxProducts !== undefined && data.maxProducts !== null && (typeof data.maxProducts !== 'number' || data.maxProducts < 0)) {
-        errors.maxProducts = 'Max products must be a positive number or null';
-    }
-
-    if (data.maxStorage !== undefined && data.maxStorage !== null && (typeof data.maxStorage !== 'number' || data.maxStorage < 0)) {
-        errors.maxStorage = 'Max storage must be a positive number or null';
     }
 
     // Validate features array if provided
@@ -149,22 +131,6 @@ function validatePackageUpdate(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-    if (data.maxStores !== undefined && (typeof data.maxStores !== 'number' || data.maxStores < 0)) {
-        errors.maxStores = 'Max stores must be a positive number';
-    }
-
-    if (data.maxUsers !== undefined && (typeof data.maxUsers !== 'number' || data.maxUsers < 0)) {
-        errors.maxUsers = 'Max users must be a positive number';
-    }
-
-    if (data.maxProducts !== undefined && data.maxProducts !== null && (typeof data.maxProducts !== 'number' || data.maxProducts < 0)) {
-        errors.maxProducts = 'Max products must be a positive number or null';
-    }
-
-    if (data.maxStorage !== undefined && data.maxStorage !== null && (typeof data.maxStorage !== 'number' || data.maxStorage < 0)) {
-        errors.maxStorage = 'Max storage must be a positive number or null';
-    }
-
     // Validate features array if provided
     if (data.features && Array.isArray(data.features)) {
         data.features.forEach((feature, index) => {
@@ -175,13 +141,6 @@ function validatePackageUpdate(data) {
                 errors[`features[${index}].limit`] = 'Feature limit must be a positive number or null';
             }
         });
-    }
-
-    // Validate trial period if provided
-    if (data.trialPeriod) {
-        if (data.trialPeriod.enabled && (!data.trialPeriod.days || typeof data.trialPeriod.days !== 'number' || data.trialPeriod.days < 0)) {
-            errors['trialPeriod.days'] = 'Trial days must be a positive number when trial is enabled';
-        }
     }
 
     return {
