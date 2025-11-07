@@ -10,7 +10,7 @@ const paymentRouter = require('./routes/payment.routes');
 
 const router = express.Router();
 // admin only routes
-router.use('/packages', accessMiddleware, adminMiddleware, packageRouter);
+router.use('/packages', accessMiddleware, packageRouter);
 
 // user only routes
 router.use('/subscriptions', accessMiddleware, subsRouter);

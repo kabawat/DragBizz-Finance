@@ -4,9 +4,9 @@ const updatePackageController = require('@src/controllers/package/update');
 const deletePackageController = require('@src/controllers/package/delete');
 const getPackageController = require('@src/controllers/package/get');
 
-packageRouter.get('/', getPackageController); 
-packageRouter.post('/', createPackageController);
-packageRouter.put('/:id', updatePackageController);
-packageRouter.delete('/:id', deletePackageController);
+packageRouter.get('/', getPackageController);
+packageRouter.post('/', adminMiddleware, createPackageController);
+packageRouter.put('/:id', adminMiddleware, updatePackageController);
+packageRouter.delete('/:id', adminMiddleware, deletePackageController);
 
 module.exports = packageRouter;
