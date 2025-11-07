@@ -1,0 +1,42 @@
+const PaymentService = require('@src/services/payment/payment.service');
+const { validateCreateOrder } = require('@src/utils/validations/payment.validation');
+const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
+const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
+const Response = require('@src/utils/responseHandler/standardized');
+
+async function createOrderController(req, res) {
+    try {
+        const userId = req.user?.sub;
+        if (!userId) {
+            return Response.validationError(res, 'User ID not found in token');
+        }
+
+        const sanitizedData = sanitizeCreateOrderData(req.body);
+        const validation = validateCreateOrder(sanitizedData);
+        if (!validation.isValid) {
+            return Response.validationError(res, 'Validation failed', validation.errors);
+        }
+
+        const orderData = await PaymentService.createOrder({
+            userId,
+            ...sanitizedData,
+            idempotencyKey: req.idempotencyKey,
+            ipAddress: req.clientIp,
+            userAgent: req.userAgent
+        });
+
+        const responseData = serializeOrderResponse(orderData);
+        return Response.created(res, 'Payment order created successfully', responseData);
+    } catch (error) {
+        if (error.message === 'Package not found or not available') {
+            return Response.notFound(res, error.message);
+        }
+        if (error.message.includes('billing cycle')) {
+            return Response.validationError(res, error.message);
+        }
+        return Response.handleError(res, error, 'createOrderController');
+    }
+}
+
+module.exports = createOrderController;
+

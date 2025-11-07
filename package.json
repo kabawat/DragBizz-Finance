@@ -46,6 +46,8 @@
     "module-alias": "^2.2.3",
     "mongoose": "^8.16.5",
     "morgan": "^1.10.1",
+    "nanoid": "^5.1.5",
+    "razorpay": "^2.9.2",
     "redis": "^5.6.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
@@ -55,9 +57,13 @@
   },
   "_moduleAliases": {
     "@middlewares": "./src/middlewares",
+    "@controller": "./src/controllers",
+    "@services": "./src/services",
+    "@models": "./src/models",
     "@routes": "./src/routes",
     "@config": "./src/config",
     "@utils": "./src/utils",
+    "@lib": "./src/lib",
     "@src": "./src"
   }
 }

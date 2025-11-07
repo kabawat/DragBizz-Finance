@@ -33,7 +33,7 @@ async function verifyAccessToken(token) {
         // Check Redis cache first
         const cacheKey = getTokenCacheKey(token);
         const cachedResult = await getCache(cacheKey);
-        
+        console.log("cachedResult", cachedResult);
         if (cachedResult) {
             return {
                 valid: cachedResult.valid,
@@ -52,7 +52,7 @@ async function verifyAccessToken(token) {
                 : [SECRET?.jwt?.audience],
             clockTolerance: 60,
         });
-
+        console.log("payload", payload);
         // Cache successful verification
         const result = {
             valid: true,
@@ -66,11 +66,12 @@ async function verifyAccessToken(token) {
 
         return result;
     } catch (err) {
+        console.log("err", err);
         // Handle expired tokens
         if (err.code === "ERR_JWT_EXPIRED") {
             return { valid: false, expired: true, decoded: null, cached: false };
         }
-        
+            
         // Cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }

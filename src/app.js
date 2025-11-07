@@ -18,25 +18,36 @@ app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(
   cors({
       origin: (origin, callback) => {
-          if (!origin) return callback(null, true);
+          // Allow requests with no origin (like mobile apps, curl, Postman)
+          if (!origin) {
+              return callback(null, true);
+          }
 
           // Always allow server url itself
           const selfUrl = SECRET?.server?.url;
           const isSelf = selfUrl && origin === selfUrl;
 
           // In development, allow any localhost origin (any port)
-          const isLocalhostWildcard = !isProduction && (/^http:\/\/localhost(:\d+)?\/?$/.test(origin) || origin.startsWith('http://localhost'));
-          const isAllowed = isSelf || isLocalhostWildcard || allowedOrigins.includes(origin);
+          const isLocalhostWildcard = !isProduction && (
+              /^http:\/\/localhost(:\d+)?\/?$/.test(origin) || 
+              origin.startsWith('http://localhost') ||
+              origin.startsWith('http://127.0.0.1')
+          );
+
+          // In development, allow all origins (for testing)
+          const allowAllInDev = !isProduction;
+
+          const isAllowed = isSelf || isLocalhostWildcard || allowAllInDev || allowedOrigins.includes(origin);
           
           return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
       },
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "ngrok-skip-browser-warning"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "ngrok-skip-browser-warning", "Idempotency-Key"],
       exposedHeaders: ["Content-Length", "Content-Type"],
-      credentials: true, // Allow credentials (cookies, authorization headers)
+      credentials: true,
       optionsSuccessStatus: 200,
       preflightContinue: false,
-      maxAge: 86400, // 24 hours
+      maxAge: 86400,
   })
 );
 

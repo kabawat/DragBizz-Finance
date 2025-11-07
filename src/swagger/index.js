@@ -39,6 +39,10 @@ const options = {
                 description: 'Subscription management APIs'
             },
             {
+                name: 'Payments',
+                description: 'Payment processing and management APIs'
+            },
+            {
                 name: 'Checkout',
                 description: 'Checkout and payment session APIs'
             },

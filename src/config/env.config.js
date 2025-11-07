@@ -23,6 +23,12 @@ const SECRET = {
     algorithm: process.env.ALGORITHM || "RS256",
     audience: process.env.AUDIENCE || "SUBSCRIPTION",
   },
+  razorpay: {
+    keyId: process.env.RAZORPAY_KEY_ID,
+    keySecret: process.env.RAZORPAY_KEY_SECRET,
+    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+    mode: process.env.RAZORPAY_MODE || 'test' // test or live
+  },
   provider: {
     // placeholders for integration
     stripeSecret: process.env.STRIPE_SECRET,
