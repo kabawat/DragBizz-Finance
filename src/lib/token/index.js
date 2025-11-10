@@ -4,7 +4,7 @@ const crypto = require("crypto");
 const { getCache, setCache } = require("@src/services/cache.service");
 
 // 🔑 Remote JWKS config (Auth micro-service)
-const jwksUrl = new URL(`${SECRET?.server?.auth}/auth/.well-known/jwks.json`);
+const jwksUrl = new URL(`${SECRET?.server?.url}/auth/.well-known/jwks.json`);
 if (SECRET?.ENVIRONMENT === 'production' && jwksUrl.protocol !== 'https:') {
     throw new Error("JWKS URL must use HTTPS in production");
 }

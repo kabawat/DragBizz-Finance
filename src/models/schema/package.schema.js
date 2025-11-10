@@ -1,78 +1,24 @@
-const { PACKAGE_STATUS, CURRENCIES } = require('@src/constants/enum/package.enum');
+const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
 const mongoose = require('mongoose');
 
-// Package-specific feature configuration (limit, enabled for this package)
-const PackageFeatureSchema = new mongoose.Schema({
-    feature: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Feature',
-        required: true,
-        index: true
-    },
-    enabled: {
-        type: Boolean,
-        default: true
-    },
-    limit: {
-        type: Number,
-        default: null // null means unlimited
-    },
-    unit: {
-        type: String,
-        trim: true // e.g., "stores", "users", "products", "GB"
-    }
-}, { _id: false });
-
-const DurationPricingSchema = new mongoose.Schema({
+const PricingSchema = new mongoose.Schema({
     months: {
         type: Number,
         required: true,
-        enum: [1, 3, 6, 12, 18, 24, 36, 48],
-        index: true
+        default: 1
     },
     price: {
         type: Number,
         required: true,
-        min: 0
+        default: 0
     },
     discount: {
         type: Number,
-        default: 0,
-        min: 0,
-        max: 100
+        default: 0
     },
     discountedPrice: {
         type: Number,
-        min: 0
-    }
-}, { _id: false });
-
-const PricingSchema = new mongoose.Schema({
-    currency: {
-        type: String,
-        default: 'INR',
-        enum: CURRENCIES
-    },
-    setupFee: {
-        type: Number,
-        default: 0,
-        min: 0
-    },
-    gstPercentage: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100
-    },
-    durationPricing: {
-        type: [DurationPricingSchema],
-        required: true,
-        validate: {
-            validator: function(v) {
-                return v && v.length > 0;
-            },
-            message: 'At least one duration pricing is required'
-        }
+        default: 0
     }
 }, { _id: false });
 
@@ -105,13 +51,21 @@ const packageSchema = new mongoose.Schema({
 
     // Pricing Information
     pricing: {
-        type: PricingSchema,
-        required: true
+        type: [PricingSchema],
+        required: true,
+        validate: {
+            validator: function(v) {
+                return Array.isArray(v) && v.length > 0;
+            },
+            message: 'At least one pricing option is required'
+        }
     },
 
-    // Features - Reference to Feature model with package-specific config
     features: {
-        type: [PackageFeatureSchema],
+        type: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Feature'
+        }],
         default: []
     },
 
@@ -121,6 +75,11 @@ const packageSchema = new mongoose.Schema({
         enum: ['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'],
         default: 'BASIC',
         index: true
+    },
+    label: {
+        type: String,
+        trim: true,
+        maxlength: 50
     },
     displayOrder: {
         type: Number,
@@ -196,17 +155,7 @@ const packageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         select: false
     },
-
-    // Soft Delete
-    deletedAt: {
-        type: Date,
-        default: null
-    },
-
-    __v: {
-        type: Number,
-        select: false
-    }
+    
 }, {
     timestamps: true,
     strict: 'throw'
@@ -229,7 +178,7 @@ packageSchema.index({ status: 1, isVisible: 1, displayOrder: 1 }, { name: "packa
 packageSchema.index({ planType: 1, status: 1 }, { name: "package_type_status_idx" });
 packageSchema.index({ isPopular: 1, status: 1 }, { name: "package_popular_status_idx" });
 packageSchema.index({ createdAt: -1 }, { name: "package_created_desc_idx" });
-packageSchema.index({ 'features.feature': 1 }, { name: "package_features_idx" });
+packageSchema.index({ features: 1 }, { name: "package_features_idx" });
 
 packageSchema.pre('save', function (next) {
     if (this.isModified('name')) {
@@ -238,13 +187,13 @@ packageSchema.pre('save', function (next) {
             .replace(/(^-|-$)/g, '');
     }
 
-    if (this.pricing && this.pricing.durationPricing && this.isModified('pricing')) {
-        this.pricing.durationPricing.forEach(duration => {
-            if (duration.discount > 0) {
-                duration.discountedPrice = duration.price - (duration.price * duration.discount / 100);
-        } else {
-                duration.discountedPrice = duration.price;
-        }
+    if (Array.isArray(this.pricing) && this.isModified('pricing')) {
+        this.pricing.forEach(pricingOption => {
+            if (pricingOption.discount > 0) {
+                pricingOption.discountedPrice = pricingOption.price - (pricingOption.price * pricingOption.discount / 100);
+            } else {
+                pricingOption.discountedPrice = pricingOption.price;
+            }
         });
     }
 

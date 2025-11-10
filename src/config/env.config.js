@@ -5,9 +5,10 @@ const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 const SECRET = {
   ENVIRONMENT,
   server: {
-    url: process.env.SELF_SERVER_URL,
-    auth: process.env.AUTH_SERVER_URL,
+    url: process.env.SERVER_URL,
+    auth: process.env.SERVER_URL,
     port: process.env.PORT || 4002,
+    allowedOrigins: process.env.ALLOWED_ORIGINS || (ENVIRONMENT === "production" ? "https://dragbizz.com" : "http://localhost:3000,https://test.dragbizz.com"),
   },
   mongo: {
     uri: ENVIRONMENT === 'production' ? process.env.MONGODB_URI : process.env.MONGODB_URI_DEV,
@@ -36,6 +37,31 @@ const SECRET = {
     cashfreeSecret: process.env.CF_SECRET_KEY,
   }
 };
+
+// Validate critical environment variables
+if (!SECRET.mongo.uri) {
+    console.error("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
+    process.exit(1);
+}
+
+if (!SECRET.redis.host) {
+    console.error("❌ REDIS_HOST must be set. Refusing to start.");
+    process.exit(1);
+}
+
+// Validate Razorpay credentials if mode is live
+if (SECRET.razorpay.mode === 'live') {
+    if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
+        console.error("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
+        process.exit(1);
+    }
+}
+
+// Validate JWT issuer
+if (!SECRET.jwt.issuer) {
+    console.error("❌ JWT_ISSUER must be set. Refusing to start.");
+    process.exit(1);
+}
 
 module.exports = SECRET;
 

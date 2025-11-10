@@ -1,4 +1,5 @@
-const { PACKAGE_STATUS, CURRENCIES } = require('@src/constants/enum/package.enum');
+const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
+const mongoose = require('mongoose');
 
 // Validate package creation data
 function validatePackage(data) {
@@ -13,44 +14,30 @@ function validatePackage(data) {
 
     if (!data.pricing) {
         errors.pricing = 'Pricing information is required';
+    } else if (!Array.isArray(data.pricing) || data.pricing.length === 0) {
+        errors.pricing = 'At least one pricing option is required';
     } else {
-        if (data.pricing.currency && !CURRENCIES.includes(data.pricing.currency)) {
-            errors['pricing.currency'] = `Currency must be one of: ${CURRENCIES.join(', ')}`;
-        }
-
-        if (data.pricing.setupFee && (data.pricing.setupFee < 0)) {
-            errors['pricing.setupFee'] = 'Setup fee must be a positive number';
-        }
-
-        if (data.pricing.gstPercentage !== undefined && (data.pricing.gstPercentage < 0 || data.pricing.gstPercentage > 100)) {
-            errors['pricing.gstPercentage'] = 'GST percentage must be a number between 0 and 100';
-        }
-
-        if (!data.pricing.durationPricing || !Array.isArray(data.pricing.durationPricing) || data.pricing.durationPricing.length === 0) {
-            errors['pricing.durationPricing'] = 'At least one duration pricing is required';
-        } else {
-            const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
-            const seenMonths = new Set();
+        const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
+        const seenMonths = new Set();
+        
+        data.pricing.forEach((pricingOption, index) => {
+            if (!pricingOption.months || !validMonths.includes(pricingOption.months)) {
+                errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
+            }
             
-            data.pricing.durationPricing.forEach((dp, index) => {
-                if (!dp.months || !validMonths.includes(dp.months)) {
-                    errors[`pricing.durationPricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
-                }
-                
-                if (seenMonths.has(dp.months)) {
-                    errors[`pricing.durationPricing[${index}].months`] = `Duplicate months value: ${dp.months}`;
-                }
-                seenMonths.add(dp.months);
+            if (seenMonths.has(pricingOption.months)) {
+                errors[`pricing[${index}].months`] = `Duplicate months value: ${pricingOption.months}`;
+            }
+            seenMonths.add(pricingOption.months);
 
-                if (dp.price === undefined || dp.price < 0) {
-                    errors[`pricing.durationPricing[${index}].price`] = 'Price is required and must be a positive number';
-                }
+            if (pricingOption.price === undefined || pricingOption.price < 0) {
+                errors[`pricing[${index}].price`] = 'Price is required and must be a positive number';
+            }
 
-                if (dp.discount !== undefined && (dp.discount < 0 || dp.discount > 100)) {
-                    errors[`pricing.durationPricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
-                }
-            });
-        }
+            if (pricingOption.discount !== undefined && (pricingOption.discount < 0 || pricingOption.discount > 100)) {
+                errors[`pricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
+            }
+        });
     }
 
     // Optional fields validation
@@ -72,13 +59,27 @@ function validatePackage(data) {
 
     // Validate features array if provided
     if (data.features && Array.isArray(data.features)) {
+        const seenFeatures = new Set();
         data.features.forEach((feature, index) => {
-            if (!feature.feature) {
-                errors[`features[${index}].feature`] = 'Feature ID is required';
+            const featureId = typeof feature === 'object' ? feature?.feature : feature;
+
+            if (!featureId || typeof featureId !== 'string' || featureId.trim().length === 0) {
+                errors[`features[${index}]`] = 'Feature ID is required';
+                return;
             }
-            if (feature.limit !== undefined && feature.limit !== null && (typeof feature.limit !== 'number' || feature.limit < 0)) {
-                errors[`features[${index}].limit`] = 'Feature limit must be a positive number or null';
+
+            if (!mongoose.Types.ObjectId.isValid(featureId)) {
+                errors[`features[${index}]`] = 'Invalid feature ID format';
+                return;
             }
+
+            const normalizedId = featureId.trim();
+            if (seenFeatures.has(normalizedId)) {
+                errors[`features[${index}]`] = 'Duplicate feature ID';
+                return;
+            }
+
+            seenFeatures.add(normalizedId);
         });
     }
 
@@ -108,49 +109,33 @@ function validatePackageUpdate(data) {
         }
     }
 
-    if (data.pricing) {
-        if (data.pricing.currency && !CURRENCIES.includes(data.pricing.currency)) {
-            errors['pricing.currency'] = `Currency must be one of: ${CURRENCIES.join(', ')}`;
-        }
-
-        if (data.pricing.setupFee !== undefined && (typeof data.pricing.setupFee !== 'number' || data.pricing.setupFee < 0)) {
-            errors['pricing.setupFee'] = 'Setup fee must be a positive number';
-        }
-
-        if (data.pricing.gstPercentage !== undefined) {
-            if (typeof data.pricing.gstPercentage !== 'number' || data.pricing.gstPercentage < 0 || data.pricing.gstPercentage > 100) {
-                errors['pricing.gstPercentage'] = 'GST percentage must be a number between 0 and 100';
-            }
-        }
-
-        if (data.pricing.durationPricing !== undefined) {
-            if (!Array.isArray(data.pricing.durationPricing) || data.pricing.durationPricing.length === 0) {
-                errors['pricing.durationPricing'] = 'At least one duration pricing is required';
-            } else {
-                const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
-                const seenMonths = new Set();
-                
-                data.pricing.durationPricing.forEach((dp, index) => {
-                    if (dp.months !== undefined) {
-                        if (!validMonths.includes(dp.months)) {
-                            errors[`pricing.durationPricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
-                        }
-                        
-                        if (seenMonths.has(dp.months)) {
-                            errors[`pricing.durationPricing[${index}].months`] = `Duplicate months value: ${dp.months}`;
-                        }
-                        seenMonths.add(dp.months);
+    if (data.pricing !== undefined) {
+        if (!Array.isArray(data.pricing) || data.pricing.length === 0) {
+            errors.pricing = 'At least one pricing option is required';
+        } else {
+            const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
+            const seenMonths = new Set();
+            
+            data.pricing.forEach((pricingOption, index) => {
+                if (pricingOption.months !== undefined) {
+                    if (!validMonths.includes(pricingOption.months)) {
+                        errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
                     }
-
-                    if (dp.price !== undefined && (typeof dp.price !== 'number' || dp.price < 0)) {
-                        errors[`pricing.durationPricing[${index}].price`] = 'Price must be a positive number';
+                    
+                    if (seenMonths.has(pricingOption.months)) {
+                        errors[`pricing[${index}].months`] = `Duplicate months value: ${pricingOption.months}`;
                     }
+                    seenMonths.add(pricingOption.months);
+                }
 
-                    if (dp.discount !== undefined && (typeof dp.discount !== 'number' || dp.discount < 0 || dp.discount > 100)) {
-                        errors[`pricing.durationPricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
-                    }
-                });
-            }
+                if (pricingOption.price !== undefined && (typeof pricingOption.price !== 'number' || pricingOption.price < 0)) {
+                    errors[`pricing[${index}].price`] = 'Price must be a positive number';
+                }
+
+                if (pricingOption.discount !== undefined && (typeof pricingOption.discount !== 'number' || pricingOption.discount < 0 || pricingOption.discount > 100)) {
+                    errors[`pricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
+                }
+            });
         }
     }
 
@@ -172,13 +157,27 @@ function validatePackageUpdate(data) {
 
     // Validate features array if provided
     if (data.features && Array.isArray(data.features)) {
+        const seenFeatures = new Set();
         data.features.forEach((feature, index) => {
-            if (!feature.feature) {
-                errors[`features[${index}].feature`] = 'Feature ID is required';
+            const featureId = typeof feature === 'object' ? feature?.feature : feature;
+
+            if (!featureId || typeof featureId !== 'string' || featureId.trim().length === 0) {
+                errors[`features[${index}]`] = 'Feature ID is required';
+                return;
             }
-            if (feature.limit !== undefined && feature.limit !== null && (typeof feature.limit !== 'number' || feature.limit < 0)) {
-                errors[`features[${index}].limit`] = 'Feature limit must be a positive number or null';
+
+            if (!mongoose.Types.ObjectId.isValid(featureId)) {
+                errors[`features[${index}]`] = 'Invalid feature ID format';
+                return;
             }
+
+            const normalizedId = featureId.trim();
+            if (seenFeatures.has(normalizedId)) {
+                errors[`features[${index}]`] = 'Duplicate feature ID';
+                return;
+            }
+
+            seenFeatures.add(normalizedId);
         });
     }
 

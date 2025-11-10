@@ -4,27 +4,38 @@ const mongoose = require("mongoose");
 // Validate and process features (helper function)
 async function validateAndProcessFeatures(packageData) {
     if (packageData.features && packageData.features.length > 0) {
-        const featureIds = packageData.features.map(f => f.feature).filter(Boolean);
-        
+        const featureIds = packageData.features
+            .map(feature => {
+                if (!feature) return null;
+                if (typeof feature === 'object' && feature.feature) {
+                    return feature.feature;
+                }
+                return feature;
+            })
+            .filter(Boolean)
+            .map(id => id.toString().trim())
+            .filter(id => id.length > 0);
+
         if (featureIds.length > 0) {
+            const uniqueIds = [...new Set(featureIds)];
+
             const validFeatures = await FeatureModel.find({
-                _id: { $in: featureIds },
+                _id: { $in: uniqueIds },
                 isActive: true,
                 deletedAt: null
             }).select('_id').lean();
 
-            const validFeatureIds = validFeatures.map(f => f._id.toString());
-            const invalidFeatures = featureIds.filter(id => !validFeatureIds.includes(id.toString()));
+            const validFeatureIds = new Set(validFeatures.map(f => f._id.toString()));
+            const invalidFeatures = uniqueIds.filter(id => !validFeatureIds.has(id));
 
             if (invalidFeatures.length > 0) {
                 throw new Error(`Invalid feature IDs: ${invalidFeatures.join(', ')}`);
             }
 
             // Ensure feature references are ObjectIds
-            packageData.features = packageData.features.map(feature => ({
-                ...feature,
-                feature: new mongoose.Types.ObjectId(feature.feature)
-            }));
+            packageData.features = uniqueIds.map(id => new mongoose.Types.ObjectId(id));
+        } else {
+            packageData.features = [];
         }
     }
 }
@@ -42,7 +53,7 @@ class PackageService {
 
             // Populate features for response
             const populatedPackage = await PackageModel.findById(packageDoc._id)
-                .populate('features.feature', 'name description category icon')
+                .populate('features', 'name description category icon isActive')
                 .lean();
 
             return populatedPackage;
@@ -72,7 +83,7 @@ class PackageService {
 
             // Populate features for response
             const populatedPackage = await PackageModel.findById(existingPackage._id)
-                .populate('features.feature', 'name description category icon')
+                .populate('features', 'name description category icon isActive')
                 .lean();
 
             return populatedPackage;
@@ -121,7 +132,8 @@ class PackageService {
                     { deletedAt: { $exists: false } }
                 ]
             })
-                .populate('features.feature', 'name description category icon')
+                .populate('features', 'name description category icon isActive')
+                .select('+metadata') // Include metadata field
                 .lean();
 
             if (!packageDoc) {
@@ -244,7 +256,7 @@ class PackageService {
 
             // Get paginated packages
             const packages = await PackageModel.find(query)
-                .populate('features.feature', 'name description category icon')
+                .populate('features', 'name description category icon isActive')
                 .sort(sort)
                 .skip(skip)
                 .limit(limitNum)

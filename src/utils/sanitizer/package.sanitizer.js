@@ -15,27 +15,47 @@ function sanitizePackageData(data) {
         sanitized.shortDescription = data.shortDescription.trim();
     }
 
+    // Handle pricing - can be array or object with durationPricing
     if (data.pricing) {
-        sanitized.pricing = {
-            currency: data.pricing.currency || 'INR',
-            setupFee: data.pricing.setupFee || 0,
-            gstPercentage: data.pricing.gstPercentage || 0,
-            durationPricing: data.pricing.durationPricing?.map(dp => ({
-                months: dp.months,
-                price: dp.price,
-                discount: dp.discount || 0
-            })) || []
-        };
+        if (Array.isArray(data.pricing)) {
+            // Direct array format
+            sanitized.pricing = data.pricing.map(pricingOption => ({
+                months: pricingOption.months,
+                price: pricingOption.price,
+                discount: pricingOption.discount || 0
+            }));
+        } else if (data.pricing.durationPricing && Array.isArray(data.pricing.durationPricing)) {
+            // Object format with durationPricing array
+            sanitized.pricing = data.pricing.durationPricing.map(pricingOption => ({
+                months: pricingOption.months,
+                price: pricingOption.price,
+                discount: pricingOption.discount || 0
+            }));
+            
+            // Store currency, gstPercentage, and setupFee in metadata
+            sanitized.metadata = {
+                ...(sanitized.metadata || {}),
+                currency: data.pricing.currency || 'INR',
+                gstPercentage: data.pricing.gstPercentage || 0,
+                setupFee: data.pricing.setupFee || 0
+            };
+        }
     }
 
     // Features
     if (data.features && Array.isArray(data.features)) {
-        sanitized.features = data.features.map(feature => ({
-            feature: feature.feature,
-            enabled: feature.enabled !== undefined ? feature.enabled : true,
-            limit: feature.limit !== undefined ? feature.limit : null,
-            unit: feature.unit || null
-        }));
+        sanitized.features = data.features
+            .map(feature => {
+                if (!feature) return null;
+                if (typeof feature === 'string') {
+                    return feature.trim();
+                }
+                if (typeof feature === 'object' && feature.feature) {
+                    return feature.feature;
+                }
+                return null;
+            })
+            .filter(Boolean);
     }
 
     // Plan Metadata

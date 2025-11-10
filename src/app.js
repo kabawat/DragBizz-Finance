@@ -10,7 +10,7 @@ const router = require("@routes/");
 const app = express();
 
 const isProduction = SECRET.ENVIRONMENT === "production";
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || (isProduction ? "https://dragbizz.com" : "http://localhost:3000,https://test.dragbizz.com")).split(",").map(o => o.trim());
+const allowedOrigins = SECRET.server.allowedOrigins.split(",").map(o => o.trim());
 
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));

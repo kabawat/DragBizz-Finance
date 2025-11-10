@@ -76,26 +76,9 @@
  *               features:
  *                 type: array
  *                 items:
- *                   type: object
- *                   properties:
- *                     feature:
- *                       type: string
- *                       example: "64a1b2c3d4e5f6789abcdef0"
- *                       description: Feature ID (required if features array is provided)
- *                     enabled:
- *                       type: boolean
- *                       example: true
- *                       default: true
- *                       description: Whether feature is enabled (optional, defaults to true)
- *                     limit:
- *                       type: number
- *                       example: 10
- *                       default: null
- *                       description: Feature limit, null means unlimited (optional)
- *                     unit:
- *                       type: string
- *                       example: "stores"
- *                       description: Unit of measurement (optional)
+ *                   type: string
+ *                   example: "64a1b2c3d4e5f6789abcdef0"
+ *                 description: Array of feature IDs linked to this package
  *               planType:
  *                 type: string
  *                 enum: [BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM]

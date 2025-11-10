@@ -35,6 +35,10 @@ const options = {
                 description: 'Package/Plan management APIs (Admin only)'
             },
             {
+                name: 'Features',
+                description: 'Feature management APIs (Admin only)'
+            },
+            {
                 name: 'Subscriptions',
                 description: 'Subscription management APIs'
             },

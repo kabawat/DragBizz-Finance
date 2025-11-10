@@ -32,6 +32,14 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+
+    // Internal payment identifier (ensures uniqueness for existing indexes)
+    paymentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: () => new mongoose.Types.ObjectId(),
+        unique: true,
+        index: true
+    },
     
     // Razorpay Specific Fields
     razorpayOrderId: {

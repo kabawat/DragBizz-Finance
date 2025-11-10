@@ -6,6 +6,7 @@ const { generateIdempotencyKey } = require('@src/utils/security/idempotency');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
 const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
+const SECRET = require('@config/env.config');
 
 class PaymentService {
     static async createOrder(orderData) {
@@ -38,13 +39,17 @@ class PaymentService {
             }
 
             const pricing = packageDoc.pricing;
-            const durationPricing = pricing.durationPricing?.find(dp => dp.months === monthsNum);
+            if (!Array.isArray(pricing) || pricing.length === 0) {
+                throw new Error('Package pricing not available');
+            }
             
-            if (!durationPricing) {
+            const pricingOption = pricing.find(p => p.months === monthsNum);
+            
+            if (!pricingOption) {
                 throw new Error(`Pricing not available for ${monthsNum} month(s)`);
             }
 
-            const baseAmount = durationPricing.discountedPrice || durationPricing.price;
+            const baseAmount = pricingOption.discountedPrice || pricingOption.price;
             const amountValidation = validateAmount(baseAmount);
             if (!amountValidation.isValid) {
                 throw new Error(amountValidation.error);
@@ -53,15 +58,15 @@ class PaymentService {
             const discountAmount = couponCode ? await this._calculateCouponDiscount(baseAmount, couponCode) : 0;
             const amountAfterDiscount = Math.max(0, baseAmount - discountAmount);
             
-            const gstPercentage = pricing.gstPercentage || 0;
-            const taxAmount = (amountAfterDiscount * gstPercentage) / 100;
-            const finalAmount = amountAfterDiscount + taxAmount;
+            // No GST in new structure, final amount is after discount
+            const finalAmount = amountAfterDiscount;
 
             const finalAmountValidation = validateAmount(finalAmount);
             if (!finalAmountValidation.isValid) {
                 throw new Error(finalAmountValidation.error);
             }
 
+            const taxAmount = 0; // No tax in new structure
             const breakdownValidation = validateAmountBreakdown(baseAmount, discountAmount, taxAmount, finalAmount);
             if (!breakdownValidation.isValid) {
                 throw new Error(breakdownValidation.error);
@@ -75,11 +80,50 @@ class PaymentService {
             const orderId = `order_${nanoid(16)}`;
             const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, packageId, finalAmount);
 
+            // Idempotency: reuse existing pending order when available
+            const existingPayment = await PaymentModel.findOne({
+                userId,
+                status: { $in: ['PENDING', 'PROCESSING'] },
+                'metadata.idempotencyKey': finalIdempotencyKey
+            });
+
+            if (existingPayment) {
+                const now = new Date();
+                if (existingPayment.expiresAt && existingPayment.expiresAt <= now) {
+                    existingPayment.status = 'CANCELLED';
+                    existingPayment.failureReason = 'Payment order expired before completion';
+                    existingPayment.failureCode = 'ORDER_EXPIRED';
+                    existingPayment.expiresAt = now;
+                    await existingPayment.save();
+
+                    await logPaymentEvent('PAYMENT_ORDER_EXPIRED', {
+                        paymentId: existingPayment._id,
+                        orderId: existingPayment.orderId,
+                        userId,
+                        amount: existingPayment.finalAmount,
+                        status: existingPayment.status,
+                        ipAddress,
+                        userAgent
+                    });
+                } else {
+                    await logPaymentEvent('PAYMENT_ORDER_REUSED', {
+                        paymentId: existingPayment._id,
+                        orderId: existingPayment.orderId,
+                        userId,
+                        amount: existingPayment.finalAmount,
+                        status: existingPayment.status,
+                        ipAddress,
+                        userAgent
+                    });
+                    return this._buildOrderResponse(existingPayment);
+                }
+            }
+
             const billingCycle = this._getBillingCycleFromMonths(monthsNum);
 
             const razorpayOrder = await getRazorpayInstance().orders.create({
                 amount: amountInPaise,
-                currency: pricing.currency || 'INR',
+                currency: 'INR', // Default currency
                 receipt: orderId,
                 notes: {
                     userId,
@@ -93,13 +137,14 @@ class PaymentService {
             const paymentData = {
                 userId,
                 packageId: new mongoose.Types.ObjectId(packageId),
+                paymentId: new mongoose.Types.ObjectId(),
                 orderId,
                 razorpayOrderId: razorpayOrder.id,
                 amount: finalAmount,
-                currency: pricing.currency || 'INR',
+                currency: 'INR', // Default currency
                 baseAmount: baseAmount,
                 discountAmount,
-                taxAmount,
+                taxAmount: 0, // No tax in new structure
                 finalAmount,
                 billingCycle,
                 months: monthsNum,
@@ -107,7 +152,7 @@ class PaymentService {
                 gateway: 'RAZORPAY',
                 couponCode: couponCode || null,
                 discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
-                gstPercentage: gstPercentage,
+                gstPercentage: 0, // No GST in new structure
                 razorpayResponse: razorpayOrder,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                 metadata: {
@@ -118,26 +163,65 @@ class PaymentService {
             };
 
             const payment = new PaymentModel(paymentData);
-            await payment.save();
+            let savedPayment;
+
+            try {
+                savedPayment = await payment.save();
+            } catch (error) {
+                if (error.code === 11000) {
+                    const duplicateField = Object.keys(error.keyPattern || {})[0];
+                    let duplicateQuery = null;
+
+                    if (duplicateField === 'orderId') {
+                        duplicateQuery = { orderId };
+                    } else if (duplicateField === 'razorpayOrderId') {
+                        duplicateQuery = { razorpayOrderId: razorpayOrder.id };
+                    } else if (duplicateField === '_id') {
+                        duplicateQuery = { _id: payment._id };
+                    } else if (duplicateField === 'paymentId' && error.keyValue?.paymentId) {
+                        duplicateQuery = { _id: error.keyValue.paymentId };
+                    }
+
+                    let duplicatePayment = duplicateQuery
+                        ? await PaymentModel.findOne(duplicateQuery)
+                        : null;
+
+                    if (!duplicatePayment) {
+                        duplicatePayment = await PaymentModel.findOne({
+                            userId,
+                            status: { $in: ['PENDING', 'PROCESSING'] },
+                            'metadata.idempotencyKey': finalIdempotencyKey
+                        });
+                    }
+
+                    if (duplicatePayment) {
+                        await logPaymentEvent('PAYMENT_ORDER_DUPLICATE_REUSED', {
+                            paymentId: duplicatePayment._id,
+                            orderId: duplicatePayment.orderId,
+                            userId,
+                            amount: duplicatePayment.finalAmount,
+                            status: duplicatePayment.status,
+                            ipAddress,
+                            userAgent
+                        });
+                        return this._buildOrderResponse(duplicatePayment);
+                    }
+                }
+
+                throw error;
+            }
 
             await logPaymentEvent('PAYMENT_ORDER_CREATED', {
-                paymentId: payment._id,
+                paymentId: savedPayment._id,
                 orderId,
                 userId,
-                amount: finalAmount,
-                status: 'PENDING',
+                amount: savedPayment.finalAmount,
+                status: savedPayment.status,
                 ipAddress,
                 userAgent
             });
 
-            return {
-                orderId,
-                razorpayOrderId: razorpayOrder.id,
-                amount: finalAmount,
-                currency: pricing.currency || 'INR',
-                keyId: require('@config/env.config').razorpay.keyId,
-                payment
-            };
+            return this._buildOrderResponse(savedPayment);
         } catch (error) {
             console.error('Error creating payment order:', error);
             throw error;
@@ -327,6 +411,17 @@ class PaymentService {
 
     static async _calculateCouponDiscount(amount, couponCode) {
         return 0;
+    }
+
+    static _buildOrderResponse(paymentDoc) {
+        return {
+            orderId: paymentDoc.orderId,
+            razorpayOrderId: paymentDoc.razorpayOrderId,
+            amount: paymentDoc.finalAmount,
+            currency: paymentDoc.currency || 'INR',
+            keyId: SECRET.razorpay.keyId,
+            payment: paymentDoc
+        };
     }
 }
 
