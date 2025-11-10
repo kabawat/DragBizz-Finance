@@ -2,10 +2,10 @@ const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
 const Response = require("@src/utils/responseHandler/standardized");
 
 const accessMiddleware = async (req, res, next) => {
+    console.log("access Middleware : ", req.method, req.path);
     try {
         const authHeader = req.headers["authorization"];
         const token = extractBearerToken(authHeader);
-
         if (!token) {
             return Response.validationError(res, "Access token missing or invalid.");
         }
@@ -21,6 +21,7 @@ const accessMiddleware = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
+        console.log("err", err);
         return Response.handleError(res, err, "accessMiddleware");
     }
 };

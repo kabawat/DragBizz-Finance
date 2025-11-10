@@ -1,8 +1,7 @@
-// Sanitize create order data
 function sanitizeCreateOrderData(data) {
     return {
         packageId: data.packageId?.trim(),
-        billingCycle: data.billingCycle?.toUpperCase().trim(),
+        months: data.months ? parseInt(data.months) : null,
         couponCode: data.couponCode?.trim() || null
     };
 }

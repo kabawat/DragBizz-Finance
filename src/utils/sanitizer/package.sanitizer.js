@@ -15,14 +15,16 @@ function sanitizePackageData(data) {
         sanitized.shortDescription = data.shortDescription.trim();
     }
 
-    // Pricing Information
     if (data.pricing) {
         sanitized.pricing = {
-            amount: data.pricing.amount,
             currency: data.pricing.currency || 'INR',
-            billingCycle: data.pricing.billingCycle,
             setupFee: data.pricing.setupFee || 0,
-            discount: data.pricing.discount || 0
+            gstPercentage: data.pricing.gstPercentage || 0,
+            durationPricing: data.pricing.durationPricing?.map(dp => ({
+                months: dp.months,
+                price: dp.price,
+                discount: dp.discount || 0
+            })) || []
         };
     }
 

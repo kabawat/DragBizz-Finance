@@ -35,12 +35,15 @@ function packageCreationSerializer(package) {
         description: package.description,
         shortDescription: package.shortDescription,
         pricing: {
-            amount: package.pricing?.amount,
-            currency: package.pricing?.currency,
-            billingCycle: package.pricing?.billingCycle,
+            currency: package.pricing?.currency || 'INR',
             setupFee: package.pricing?.setupFee || 0,
-            discount: package.pricing?.discount || 0,
-            discountedAmount: package.pricing?.discountedAmount
+            gstPercentage: package.pricing?.gstPercentage || 0,
+            durationPricing: package.pricing?.durationPricing?.map(dp => ({
+                months: dp.months,
+                price: dp.price,
+                discount: dp.discount || 0,
+                discountedPrice: dp.discountedPrice || dp.price
+            })) || []
         },
         features: serializedFeatures,
         planType: package.planType,

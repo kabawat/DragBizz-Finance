@@ -92,6 +92,12 @@ const paymentSchema = new mongoose.Schema({
         enum: ['MONTHLY', 'QUARTERLY', 'YEARLY', 'ONE_TIME'],
         index: true
     },
+    months: {
+        type: Number,
+        required: true,
+        min: 1,
+        index: true
+    },
     
     // Payment Status
     status: {
@@ -123,6 +129,12 @@ const paymentSchema = new mongoose.Schema({
         index: true
     },
     discountPercentage: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    },
+    gstPercentage: {
         type: Number,
         default: 0,
         min: 0,

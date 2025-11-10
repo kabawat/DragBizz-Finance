@@ -9,10 +9,7 @@ const webhookRouter = require('./routes/webhooks.routes');
 const paymentRouter = require('./routes/payment.routes');
 
 const router = express.Router();
-// admin only routes
-router.use('/packages', accessMiddleware, packageRouter);
-
-// user only routes
+router.use('/packages', packageRouter);
 router.use('/subscriptions', accessMiddleware, subsRouter);
 router.use('/checkout', accessMiddleware, checkoutRouter);
 router.use('/payment', accessMiddleware, paymentRouter);

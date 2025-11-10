@@ -10,7 +10,7 @@ const { nanoid } = require('nanoid');
 class PaymentService {
     static async createOrder(orderData) {
         try {
-            const { userId, packageId, billingCycle, couponCode, idempotencyKey, ipAddress, userAgent } = orderData;
+            const { userId, packageId, months, couponCode, idempotencyKey, ipAddress, userAgent } = orderData;
 
             if (!mongoose.Types.ObjectId.isValid(packageId)) {
                 throw new Error('Invalid package ID format');
@@ -27,26 +27,42 @@ class PaymentService {
                 throw new Error('Package not found or not available');
             }
 
-            const pricing = packageDoc.pricing;
-            if (pricing.billingCycle !== billingCycle) {
-                throw new Error(`Package does not support ${billingCycle} billing cycle`);
+            const monthsNum = parseInt(months);
+            if (isNaN(monthsNum) || monthsNum < 1) {
+                throw new Error('Invalid number of months');
             }
 
-            const baseAmount = pricing.discountedAmount || pricing.amount;
+            const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
+            if (!validMonths.includes(monthsNum)) {
+                throw new Error(`Months must be one of: ${validMonths.join(', ')}`);
+            }
+
+            const pricing = packageDoc.pricing;
+            const durationPricing = pricing.durationPricing?.find(dp => dp.months === monthsNum);
+            
+            if (!durationPricing) {
+                throw new Error(`Pricing not available for ${monthsNum} month(s)`);
+            }
+
+            const baseAmount = durationPricing.discountedPrice || durationPricing.price;
             const amountValidation = validateAmount(baseAmount);
             if (!amountValidation.isValid) {
                 throw new Error(amountValidation.error);
             }
 
             const discountAmount = couponCode ? await this._calculateCouponDiscount(baseAmount, couponCode) : 0;
-            const finalAmount = Math.max(0, baseAmount - discountAmount);
+            const amountAfterDiscount = Math.max(0, baseAmount - discountAmount);
+            
+            const gstPercentage = pricing.gstPercentage || 0;
+            const taxAmount = (amountAfterDiscount * gstPercentage) / 100;
+            const finalAmount = amountAfterDiscount + taxAmount;
 
             const finalAmountValidation = validateAmount(finalAmount);
             if (!finalAmountValidation.isValid) {
                 throw new Error(finalAmountValidation.error);
             }
 
-            const breakdownValidation = validateAmountBreakdown(baseAmount, discountAmount, 0, finalAmount);
+            const breakdownValidation = validateAmountBreakdown(baseAmount, discountAmount, taxAmount, finalAmount);
             if (!breakdownValidation.isValid) {
                 throw new Error(breakdownValidation.error);
             }
@@ -59,6 +75,8 @@ class PaymentService {
             const orderId = `order_${nanoid(16)}`;
             const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, packageId, finalAmount);
 
+            const billingCycle = this._getBillingCycleFromMonths(monthsNum);
+
             const razorpayOrder = await getRazorpayInstance().orders.create({
                 amount: amountInPaise,
                 currency: pricing.currency || 'INR',
@@ -66,6 +84,7 @@ class PaymentService {
                 notes: {
                     userId,
                     packageId: packageId.toString(),
+                    months: monthsNum,
                     billingCycle,
                     packageName: packageDoc.name
                 }
@@ -78,15 +97,17 @@ class PaymentService {
                 razorpayOrderId: razorpayOrder.id,
                 amount: finalAmount,
                 currency: pricing.currency || 'INR',
-                baseAmount: pricing.amount,
+                baseAmount: baseAmount,
                 discountAmount,
-                taxAmount: 0,
+                taxAmount,
                 finalAmount,
                 billingCycle,
+                months: monthsNum,
                 status: 'PENDING',
                 gateway: 'RAZORPAY',
                 couponCode: couponCode || null,
                 discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
+                gstPercentage: gstPercentage,
                 razorpayResponse: razorpayOrder,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                 metadata: {
@@ -297,8 +318,14 @@ class PaymentService {
         }
     }
 
+    static _getBillingCycleFromMonths(months) {
+        if (months === 1) return 'MONTHLY';
+        if (months === 3) return 'QUARTERLY';
+        if (months === 12) return 'YEARLY';
+        return 'ONE_TIME';
+    }
+
     static async _calculateCouponDiscount(amount, couponCode) {
-        // TODO: Implement coupon validation logic
         return 0;
     }
 }

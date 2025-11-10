@@ -1,29 +1,27 @@
 const mongoose = require('mongoose');
-const { BILLING_CYCLE } = require('@src/constants/enum/package.enum');
 
-/**
- * Validate create order request
- * @param {Object} data - Request data
- * @returns {Object} - Validation result
- */
+const VALID_MONTHS = [1, 3, 6, 12, 18, 24, 36, 48];
+
 function validateCreateOrder(data) {
     const errors = {};
 
-    // Validate packageId
     if (!data.packageId) {
         errors.packageId = 'Package ID is required';
     } else if (!mongoose.Types.ObjectId.isValid(data.packageId)) {
         errors.packageId = 'Invalid package ID format';
     }
 
-    // Validate billingCycle
-    if (!data.billingCycle) {
-        errors.billingCycle = 'Billing cycle is required';
-    } else if (!BILLING_CYCLE.includes(data.billingCycle)) {
-        errors.billingCycle = `Billing cycle must be one of: ${BILLING_CYCLE.join(', ')}`;
+    if (!data.months) {
+        errors.months = 'Number of months is required';
+    } else {
+        const months = parseInt(data.months);
+        if (isNaN(months) || months < 1) {
+            errors.months = 'Months must be a positive number';
+        } else if (!VALID_MONTHS.includes(months)) {
+            errors.months = `Months must be one of: ${VALID_MONTHS.join(', ')}`;
+    }
     }
 
-    // Validate couponCode (optional)
     if (data.couponCode && typeof data.couponCode !== 'string') {
         errors.couponCode = 'Coupon code must be a string';
     }

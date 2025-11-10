@@ -1,5 +1,4 @@
-// models/schema/package.schema.js
-const { PACKAGE_STATUS, BILLING_CYCLE, CURRENCIES } = require('@src/constants/enum/package.enum');
+const { PACKAGE_STATUS, CURRENCIES } = require('@src/constants/enum/package.enum');
 const mongoose = require('mongoose');
 
 // Package-specific feature configuration (limit, enabled for this package)
@@ -24,27 +23,16 @@ const PackageFeatureSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
-const PricingSchema = new mongoose.Schema({
-    amount: {
+const DurationPricingSchema = new mongoose.Schema({
+    months: {
         type: Number,
         required: true,
-        min: 0,
+        enum: [1, 3, 6, 12, 18, 24, 36, 48],
         index: true
     },
-    currency: {
-        type: String,
-        default: 'INR',
-        enum: CURRENCIES
-    },
-    billingCycle: {
-        type: String,
-        required: true,
-        enum: BILLING_CYCLE,
-        index: true
-    },
-    setupFee: {
+    price: {
         type: Number,
-        default: 0,
+        required: true,
         min: 0
     },
     discount: {
@@ -53,9 +41,38 @@ const PricingSchema = new mongoose.Schema({
         min: 0,
         max: 100
     },
-    discountedAmount: {
+    discountedPrice: {
         type: Number,
         min: 0
+    }
+}, { _id: false });
+
+const PricingSchema = new mongoose.Schema({
+    currency: {
+        type: String,
+        default: 'INR',
+        enum: CURRENCIES
+    },
+    setupFee: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    gstPercentage: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    },
+    durationPricing: {
+        type: [DurationPricingSchema],
+        required: true,
+        validate: {
+            validator: function(v) {
+                return v && v.length > 0;
+            },
+            message: 'At least one duration pricing is required'
+        }
     }
 }, { _id: false });
 
@@ -210,27 +227,25 @@ packageSchema.index({
 // Composite indexes for common query patterns
 packageSchema.index({ status: 1, isVisible: 1, displayOrder: 1 }, { name: "package_status_visible_order_idx" });
 packageSchema.index({ planType: 1, status: 1 }, { name: "package_type_status_idx" });
-packageSchema.index({ 'pricing.billingCycle': 1, status: 1 }, { name: "package_billing_status_idx" });
 packageSchema.index({ isPopular: 1, status: 1 }, { name: "package_popular_status_idx" });
 packageSchema.index({ createdAt: -1 }, { name: "package_created_desc_idx" });
 packageSchema.index({ 'features.feature': 1 }, { name: "package_features_idx" });
 
-// Pre-save hooks
 packageSchema.pre('save', function (next) {
-    // Generate slug from name
     if (this.isModified('name')) {
         this.slug = this.name.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '');
     }
 
-    // Calculate discounted amount
-    if (this.pricing && this.isModified('pricing')) {
-        if (this.pricing.discount > 0) {
-            this.pricing.discountedAmount = this.pricing.amount - (this.pricing.amount * this.pricing.discount / 100);
+    if (this.pricing && this.pricing.durationPricing && this.isModified('pricing')) {
+        this.pricing.durationPricing.forEach(duration => {
+            if (duration.discount > 0) {
+                duration.discountedPrice = duration.price - (duration.price * duration.discount / 100);
         } else {
-            this.pricing.discountedAmount = this.pricing.amount;
+                duration.discountedPrice = duration.price;
         }
+        });
     }
 
     next();

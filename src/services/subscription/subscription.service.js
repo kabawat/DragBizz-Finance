@@ -43,22 +43,9 @@ class SubscriptionService {
             }
 
             const startDate = new Date();
-            let endDate = new Date(startDate);
-
-            switch (payment.billingCycle) {
-                case 'MONTHLY':
-                    endDate.setMonth(endDate.getMonth() + 1);
-                    break;
-                case 'QUARTERLY':
-                    endDate.setMonth(endDate.getMonth() + 3);
-                    break;
-                case 'YEARLY':
-                    endDate.setFullYear(endDate.getFullYear() + 1);
-                    break;
-                case 'ONE_TIME':
-                    endDate.setFullYear(endDate.getFullYear() + 100);
-                    break;
-            }
+            const endDate = new Date(startDate);
+            const months = payment.months || 1;
+            endDate.setMonth(endDate.getMonth() + months);
 
             let trialEndDate = null;
             if (packageDoc.trialPeriod && packageDoc.trialPeriod.enabled) {
@@ -75,8 +62,8 @@ class SubscriptionService {
                 startDate,
                 endDate,
                 trialEndDate,
-                autoRenew: true,
-                nextBillingDate: payment.billingCycle !== 'ONE_TIME' ? endDate : null,
+                autoRenew: months === 1,
+                nextBillingDate: months === 1 ? endDate : null,
                 limits: {
                     maxStores: packageDoc.maxStores || 1,
                     maxUsers: packageDoc.maxUsers || 1,
@@ -154,22 +141,9 @@ class SubscriptionService {
         }
 
         const startDate = new Date();
-        let endDate = new Date(startDate);
-
-        switch (payment.billingCycle) {
-            case 'MONTHLY':
-                endDate.setMonth(endDate.getMonth() + 1);
-                break;
-            case 'QUARTERLY':
-                endDate.setMonth(endDate.getMonth() + 3);
-                break;
-            case 'YEARLY':
-                endDate.setFullYear(endDate.getFullYear() + 1);
-                break;
-            case 'ONE_TIME':
-                endDate.setFullYear(endDate.getFullYear() + 100);
-                break;
-        }
+        const endDate = new Date(startDate);
+        const months = payment.months || 1;
+        endDate.setMonth(endDate.getMonth() + months);
 
         let trialEndDate = null;
         if (packageDoc.trialPeriod && packageDoc.trialPeriod.enabled) {
@@ -186,8 +160,8 @@ class SubscriptionService {
             startDate,
             endDate,
             trialEndDate,
-            autoRenew: true,
-            nextBillingDate: payment.billingCycle !== 'ONE_TIME' ? endDate : null,
+            autoRenew: months === 1,
+            nextBillingDate: months === 1 ? endDate : null,
             limits: {
                 maxStores: packageDoc.maxStores || 1,
                 maxUsers: packageDoc.maxUsers || 1,
