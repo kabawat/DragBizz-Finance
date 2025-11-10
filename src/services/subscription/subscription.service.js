@@ -196,8 +196,21 @@ class SubscriptionService {
                 startDate: { $lte: now },
                 endDate: { $gte: now }
             })
-                .populate('packageId', 'name description pricing features')
+                .populate({
+                    path: 'packageId',
+                    select: 'name description pricing features',
+                    populate: {
+                        path: 'features',
+                        select: 'name description category icon isActive',
+                        match: { isActive: true, deletedAt: null }
+                    }
+                })
                 .populate('paymentId', 'amount currency status')
+                .populate({
+                    path: 'features.feature',
+                    select: 'name description category icon isActive',
+                    match: { isActive: true, deletedAt: null }
+                })
                 .sort({ createdAt: -1 })
                 .lean();
 
