@@ -221,9 +221,6 @@ class UsageService {
      * Increment usage for a feature
      */
     static async incrementUsage(subscriptionId, userId, featureKey, quantity = 1, metadata = {}) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {
             const date = this.getCurrentDate();
             const month = this.getCurrentMonth();
@@ -247,20 +244,14 @@ class UsageService {
                 },
                 {
                     upsert: true,
-                    new: true,
-                    session
+                    new: true
                 }
             );
 
-            await session.commitTransaction();
-
             return usage;
         } catch (error) {
-            await session.abortTransaction();
             console.error('Error incrementing usage:', error);
             throw error;
-        } finally {
-            session.endSession();
         }
     }
 

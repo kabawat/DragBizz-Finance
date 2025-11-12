@@ -5,9 +5,6 @@ const mongoose = require('mongoose');
 
 class SubscriptionService {
     static async createSubscription(subscriptionData) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {
             const { userId, paymentId, ipAddress, userAgent } = subscriptionData;
 
@@ -15,7 +12,7 @@ class SubscriptionService {
                 throw new Error('Invalid payment ID format');
             }
 
-            const payment = await PaymentModel.findById(paymentId).session(session);
+            const payment = await PaymentModel.findById(paymentId);
             if (!payment) {
                 throw new Error('Payment not found');
             }
@@ -28,15 +25,16 @@ class SubscriptionService {
                 throw new Error('Payment does not belong to user');
             }
 
-            const existingSubscription = await SubscriptionModel.findOne({ paymentId }).session(session);
+            const existingSubscription = await SubscriptionModel.findOne({ paymentId });
             if (existingSubscription) {
-                await session.commitTransaction();
-                return existingSubscription;
+                const populatedSubscription = await SubscriptionModel.findById(existingSubscription._id)
+                    .populate('packageId', 'name description pricing featureUsageLimits')
+                    .populate('paymentId', 'amount currency status')
+                    .lean();
+                return populatedSubscription;
             }
 
-            const packageDoc = await PackageModel.findById(payment.packageId)
-                .session(session)
-                .lean();
+            const packageDoc = await PackageModel.findById(payment.packageId).lean();
             
             if (!packageDoc) {
                 throw new Error('Package not found');
@@ -89,12 +87,10 @@ class SubscriptionService {
             };
 
             const subscription = new SubscriptionModel(newSubscriptionData);
-            await subscription.save({ session });
+            await subscription.save();
 
             payment.subscriptionId = subscription._id;
-            await payment.save({ session });
-
-            await session.commitTransaction();
+            await payment.save();
 
             await logSubscriptionEvent('SUBSCRIPTION_CREATED', {
                 subscriptionId: subscription._id,
@@ -113,107 +109,9 @@ class SubscriptionService {
 
             return populatedSubscription;
         } catch (error) {
-            await session.abortTransaction();
             console.error('Error creating subscription:', error);
             throw error;
-        } finally {
-            session.endSession();
         }
-    }
-
-    static async createSubscriptionInTransaction(subscriptionData) {
-        const { userId, paymentId, session, ipAddress, userAgent } = subscriptionData;
-
-        if (!mongoose.Types.ObjectId.isValid(paymentId)) {
-            throw new Error('Invalid payment ID format');
-        }
-
-        const payment = await PaymentModel.findById(paymentId).session(session);
-        if (!payment) {
-            throw new Error('Payment not found');
-        }
-
-        if (payment.status !== 'SUCCESS') {
-            throw new Error('Payment not successful');
-        }
-
-        if (payment.userId !== userId) {
-            throw new Error('Payment does not belong to user');
-        }
-
-        const existingSubscription = await SubscriptionModel.findOne({ paymentId }).session(session);
-        if (existingSubscription) {
-            return existingSubscription;
-        }
-
-        const packageDoc = await PackageModel.findById(payment.packageId)
-                .session(session)
-                .lean();
-        
-        if (!packageDoc) {
-            throw new Error('Package not found');
-        }
-
-        if (packageDoc.status !== 'ACTIVE') {
-            throw new Error('Package is not active');
-        }
-
-        const startDate = new Date();
-        const endDate = new Date(startDate);
-        const months = payment.months || 1;
-        endDate.setMonth(endDate.getMonth() + months);
-
-        let trialEndDate = null;
-        if (packageDoc.trialPeriod && packageDoc.trialPeriod.enabled) {
-            trialEndDate = new Date(startDate);
-            trialEndDate.setDate(trialEndDate.getDate() + packageDoc.trialPeriod.days);
-        }
-
-        const processedFeatures = Array.isArray(packageDoc.featureUsageLimits)
-            ? packageDoc.featureUsageLimits
-                .filter(limit => limit && limit.featureKey)
-                .map(limit => ({
-                    featureKey: limit.featureKey,
-                    featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
-                    enabled: limit.enabled !== false,
-                    usageLimits: {
-                        usageType: limit.usageType || 'UNLIMITED',
-                        totalLimit: limit.totalLimit ?? null,
-                        customDailyLimit: limit.customDailyLimit ?? null
-                    },
-                    metadata: limit.metadata || {}
-                }))
-            : [];
-
-        const newSubscriptionData = {
-            userId,
-            packageId: payment.packageId,
-            paymentId: payment._id,
-            status: trialEndDate ? 'TRIAL' : 'ACTIVE',
-            billingCycle: payment.billingCycle,
-            startDate,
-            endDate,
-            trialEndDate,
-            autoRenew: months === 1,
-            nextBillingDate: months === 1 ? endDate : null,
-            maxSubscribersSnapshot: packageDoc.maxSubscribers ?? null,
-            features: processedFeatures
-        };
-
-        const subscription = new SubscriptionModel(newSubscriptionData);
-        await subscription.save({ session });
-
-        await logSubscriptionEvent('SUBSCRIPTION_CREATED', {
-            subscriptionId: subscription._id,
-            userId,
-            packageId: payment.packageId,
-            paymentId: payment._id,
-            status: subscription.status,
-            ipAddress,
-            userAgent
-        });
-
-        return subscription;
     }
 
     static async getActiveSubscription(userId) {
