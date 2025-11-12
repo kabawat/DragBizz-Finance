@@ -81,39 +81,40 @@ const subscriptionSchema = new mongoose.Schema({
         default: null
     },
     
-    // Package Limits (snapshot at subscription time)
-    limits: {
-        maxStores: {
-            type: Number,
-            default: 1
-        },
-        maxUsers: {
-            type: Number,
-            default: 1
-        },
-        maxProducts: {
-            type: Number,
-            default: null
-        },
-        maxStorage: {
-            type: Number,
-            default: null // in GB
-        }
-    },
-    
     // Features (snapshot at subscription time)
     features: [{
-        feature: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Feature'
+        featureKey: {
+            type: String,
+            required: true,
+            trim: true,
+            index: true
+        },
+        featureName: {
+            type: String,
+            trim: true
         },
         enabled: {
             type: Boolean,
             default: true
         },
-        limit: {
+        usageLimits: {
+            usageType: {
+                type: String,
+                enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'UNLIMITED'],
+                default: 'UNLIMITED'
+            },
+            totalLimit: {
+                type: Number,
+                default: null
+            },
+            customDailyLimit: {
             type: Number,
             default: null
+            }
+        },
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
         }
     }],
     
@@ -128,6 +129,10 @@ const subscriptionSchema = new mongoose.Schema({
     metadata: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
+    },
+    maxSubscribersSnapshot: {
+        type: Number,
+        default: null
     }
 }, {
     timestamps: true,

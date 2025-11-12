@@ -35,12 +35,19 @@ services:
   mongo-dev:
     image: mongo:7.0
     container_name: dragbizz_subscription_mongo_dev
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
     environment:
       MONGO_INITDB_ROOT_USERNAME: subs_dev
       MONGO_INITDB_ROOT_PASSWORD: dev_password_123
     volumes:
       - mongo_dev_data:/data/db
     restart: "no"
+    ports:
+      - "5002:27017"
     deploy:
       resources:
         limits:
@@ -49,6 +56,34 @@ services:
         reservations:
           memory: 128M
           cpus: '0.1'
+
+  mongo-init-replica:
+    image: mongo:7.0
+    container_name: dragbizz_subscription_mongo_init
+    depends_on:
+      - mongo-dev
+    entrypoint:
+      - bash
+      - -c
+      - |
+        sleep 5
+        mongosh --host dragbizz_subscription_mongo_dev --username subs_dev --password dev_password_123 --authenticationDatabase admin --eval "
+          try {
+            const status = rs.status();
+            if (status.ok === 1) {
+              quit(0);
+            }
+          } catch (error) {
+            if (error.codeName !== 'NotYetInitialized') {
+              throw error;
+            }
+          }
+          rs.initiate({
+            _id: 'rs0',
+            members: [{ _id: 0, host: 'mongo-dev:27017' }]
+          });
+        "
+    restart: "no"
 
   redis-dev:
     image: redis:7.2-alpine

@@ -11,10 +11,6 @@ function validateAmount(amount) {
         return { isValid: false, error: 'Amount cannot be negative' };
     }
 
-    if (amount === 0) {
-        return { isValid: false, error: 'Amount must be greater than zero' };
-    }
-
     if (amount > 100000000) {
         return { isValid: false, error: 'Amount exceeds maximum limit' };
     }

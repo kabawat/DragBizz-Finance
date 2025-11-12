@@ -111,26 +111,11 @@
  *                 example: true
  *                 default: true
  *                 description: Visibility status (optional)
- *               maxStores:
+ *               maxSubscribers:
  *                 type: number
- *                 example: 5
- *                 default: 1
- *                 description: Maximum number of stores allowed (optional)
- *               maxUsers:
- *                 type: number
- *                 example: 10
- *                 default: 1
- *                 description: Maximum number of users allowed (optional)
- *               maxProducts:
- *                 type: number
- *                 example: 1000
+ *                 example: 500
  *                 default: null
- *                 description: Maximum number of products, null means unlimited (optional)
- *               maxStorage:
- *                 type: number
- *                 example: 100
- *                 default: null
- *                 description: Maximum storage in GB, null means unlimited (optional)
+ *                 description: Total number of subscriptions available for this package (null means unlimited)
  *               trialPeriod:
  *                 type: object
  *                 properties:
@@ -161,8 +146,7 @@
  *                   currency: "INR"
  *                   billingCycle: "MONTHLY"
  *                 planType: "BASIC"
- *                 maxStores: 1
- *                 maxUsers: 2
+ *                 maxSubscribers: 100
  *             professional_plan:
  *               summary: Professional Plan Example
  *               value:
@@ -176,9 +160,7 @@
  *                   discount: 10
  *                 planType: "PROFESSIONAL"
  *                 isPopular: true
- *                 maxStores: 5
- *                 maxUsers: 10
- *                 maxProducts: 1000
+ *                 maxSubscribers: 500
  *                 trialPeriod:
  *                   enabled: true
  *                   days: 14
@@ -277,18 +259,9 @@
  *                     isVisible:
  *                       type: boolean
  *                       example: true
- *                     maxStores:
+ *                     maxSubscribers:
  *                       type: number
- *                       example: 5
- *                     maxUsers:
- *                       type: number
- *                       example: 10
- *                     maxProducts:
- *                       type: number
- *                       example: 1000
- *                     maxStorage:
- *                       type: number
- *                       example: 100
+ *                       example: 500
  *                     trialPeriod:
  *                       type: object
  *                       properties:

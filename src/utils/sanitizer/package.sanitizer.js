@@ -42,18 +42,22 @@ function sanitizePackageData(data) {
         }
     }
 
-    // Features
-    if (data.features && Array.isArray(data.features)) {
-        sanitized.features = data.features
-            .map(feature => {
-                if (!feature) return null;
-                if (typeof feature === 'string') {
-                    return feature.trim();
-                }
-                if (typeof feature === 'object' && feature.feature) {
-                    return feature.feature;
-                }
-                return null;
+    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
+        sanitized.featureUsageLimits = data.featureUsageLimits
+            .map(limit => {
+                if (!limit || !limit.featureKey) return null;
+                return {
+                    featureKey: limit.featureKey.trim(),
+                    enabled: limit.enabled !== false,
+                    usageType: limit.usageType || 'UNLIMITED',
+                    totalLimit: limit.totalLimit !== undefined && limit.totalLimit !== null && limit.totalLimit !== ''
+                        ? Number(limit.totalLimit)
+                        : null,
+                    customDailyLimit: limit.customDailyLimit !== undefined && limit.customDailyLimit !== null && limit.customDailyLimit !== ''
+                        ? Number(limit.customDailyLimit)
+                        : null,
+                    metadata: limit.metadata || {}
+                };
             })
             .filter(Boolean);
     }
@@ -84,23 +88,6 @@ function sanitizePackageData(data) {
         sanitized.isVisible = data.isVisible;
     }
 
-    // Limits
-    if (data.maxStores !== undefined) {
-        sanitized.maxStores = data.maxStores;
-    }
-
-    if (data.maxUsers !== undefined) {
-        sanitized.maxUsers = data.maxUsers;
-    }
-
-    if (data.maxProducts !== undefined) {
-        sanitized.maxProducts = data.maxProducts;
-    }
-
-    if (data.maxStorage !== undefined) {
-        sanitized.maxStorage = data.maxStorage;
-    }
-
     // Trial Information
     if (data.trialPeriod) {
         sanitized.trialPeriod = {
@@ -117,6 +104,12 @@ function sanitizePackageData(data) {
     // Metadata
     if (data.metadata) {
         sanitized.metadata = data.metadata;
+    }
+
+    if (data.maxSubscribers !== undefined) {
+        sanitized.maxSubscribers = data.maxSubscribers === '' || data.maxSubscribers === null
+            ? null
+            : Number(data.maxSubscribers);
     }
 
     return sanitized;

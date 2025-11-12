@@ -4,6 +4,7 @@ const { verifyPaymentSignature } = require('@src/utils/payment/razorpay.verify')
 const { validateAmount, validateAmountBreakdown } = require('@src/utils/security/amount.validation');
 const { generateIdempotencyKey } = require('@src/utils/security/idempotency');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
+const SubscriptionService = require('@src/services/subscription/subscription.service');
 const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
 const SECRET = require('@config/env.config');
@@ -50,14 +51,14 @@ class PaymentService {
             }
 
             const baseAmount = pricingOption.discountedPrice || pricingOption.price;
-            const amountValidation = validateAmount(baseAmount);
-            if (!amountValidation.isValid) {
-                throw new Error(amountValidation.error);
+            const baseValidation = validateAmount(baseAmount);
+            if (!baseValidation.isValid) {
+                throw new Error(baseValidation.error);
             }
 
             const discountAmount = couponCode ? await this._calculateCouponDiscount(baseAmount, couponCode) : 0;
             const amountAfterDiscount = Math.max(0, baseAmount - discountAmount);
-            
+
             // No GST in new structure, final amount is after discount
             const finalAmount = amountAfterDiscount;
 
@@ -72,18 +73,13 @@ class PaymentService {
                 throw new Error(breakdownValidation.error);
             }
 
-            const amountInPaise = Math.round(finalAmount * 100);
-            if (amountInPaise < 100) {
-                throw new Error('Minimum amount is ₹1.00');
-            }
-
-            const orderId = `order_${nanoid(16)}`;
+            const billingCycle = this._getBillingCycleFromMonths(monthsNum);
             const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, packageId, finalAmount);
 
             // Idempotency: reuse existing pending order when available
             const existingPayment = await PaymentModel.findOne({
                 userId,
-                status: { $in: ['PENDING', 'PROCESSING'] },
+                status: { $in: ['PENDING', 'PROCESSING', 'SUCCESS'] },
                 'metadata.idempotencyKey': finalIdempotencyKey
             });
 
@@ -119,7 +115,82 @@ class PaymentService {
                 }
             }
 
-            const billingCycle = this._getBillingCycleFromMonths(monthsNum);
+            if (finalAmount === 0) {
+                const orderId = `free_${nanoid(16)}`;
+                const freeRazorpayId = `free_rzp_${nanoid(16)}`;
+
+                const paymentData = {
+                    userId,
+                    packageId: new mongoose.Types.ObjectId(packageId),
+                    paymentId: new mongoose.Types.ObjectId(),
+                    orderId,
+                    razorpayOrderId: freeRazorpayId,
+                    amount: 0,
+                    currency: 'INR',
+                    baseAmount,
+                    discountAmount,
+                    taxAmount: 0,
+                    finalAmount: 0,
+                    billingCycle,
+                    months: monthsNum,
+                    status: 'SUCCESS',
+                    gateway: 'INTERNAL',
+                    paymentMethod: 'FREE',
+                    couponCode: couponCode || null,
+                    discountPercentage: baseAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
+                    gstPercentage: 0,
+                    razorpayResponse: { freeOrder: true },
+                    expiresAt: null,
+                    metadata: {
+                        idempotencyKey: finalIdempotencyKey,
+                        ipAddress,
+                        userAgent
+                    },
+                    paidAt: new Date()
+                };
+
+                const payment = await PaymentModel.create(paymentData);
+
+                await logPaymentEvent('PAYMENT_ORDER_CREATED', {
+                    paymentId: payment._id,
+                    orderId,
+                    userId,
+                    amount: 0,
+                    status: payment.status,
+                    ipAddress,
+                    userAgent
+                });
+
+                await logPaymentEvent('PAYMENT_SUCCESS', {
+                    paymentId: payment._id,
+                    orderId,
+                    userId,
+                    amount: 0,
+                    status: payment.status,
+                    ipAddress,
+                    userAgent
+                });
+
+                try {
+                    await SubscriptionService.createSubscription({
+                        userId,
+                        paymentId: payment._id,
+                        ipAddress,
+                        userAgent
+                    });
+                } catch (subError) {
+                    console.error('Error creating subscription for free package:', subError);
+                }
+
+                return this._buildOrderResponse(payment);
+            }
+
+            const amountInPaise = Math.round(finalAmount * 100);
+            if (amountInPaise < 100) {
+                throw new Error('Minimum amount is ₹1.00');
+            }
+
+            const orderId = `order_${nanoid(16)}`;
 
             const razorpayOrder = await getRazorpayInstance().orders.create({
                 amount: amountInPaise,
@@ -142,7 +213,7 @@ class PaymentService {
                 razorpayOrderId: razorpayOrder.id,
                 amount: finalAmount,
                 currency: 'INR', // Default currency
-                baseAmount: baseAmount,
+                baseAmount,
                 discountAmount,
                 taxAmount: 0, // No tax in new structure
                 finalAmount,
@@ -414,12 +485,15 @@ class PaymentService {
     }
 
     static _buildOrderResponse(paymentDoc) {
+        const requiresPayment = paymentDoc.finalAmount > 0;
         return {
             orderId: paymentDoc.orderId,
             razorpayOrderId: paymentDoc.razorpayOrderId,
             amount: paymentDoc.finalAmount,
             currency: paymentDoc.currency || 'INR',
-            keyId: SECRET.razorpay.keyId,
+            keyId: requiresPayment ? SECRET.razorpay.keyId : null,
+            status: paymentDoc.status,
+            requiresPayment,
             payment: paymentDoc
         };
     }

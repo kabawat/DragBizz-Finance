@@ -103,22 +103,10 @@
  *                 type: boolean
  *                 example: true
  *                 description: Visibility status (optional)
- *               maxStores:
+ *               maxSubscribers:
  *                 type: number
- *                 example: 10
- *                 description: Maximum number of stores allowed (optional)
- *               maxUsers:
- *                 type: number
- *                 example: 20
- *                 description: Maximum number of users allowed (optional)
- *               maxProducts:
- *                 type: number
- *                 example: 5000
- *                 description: Maximum number of products, null means unlimited (optional)
- *               maxStorage:
- *                 type: number
- *                 example: 200
- *                 description: Maximum storage in GB, null means unlimited (optional)
+ *                 example: 750
+ *                 description: Total number of subscriptions that can be sold for this package (null for unlimited)
  *               trialPeriod:
  *                 type: object
  *                 properties:
@@ -157,7 +145,7 @@
  *                   amount: 1299
  *                   discount: 15
  *                 isPopular: true
- *                 maxStores: 10
+ *                 maxSubscribers: 750
  *     responses:
  *       200:
  *         description: Package updated successfully

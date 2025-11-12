@@ -1,5 +1,7 @@
 const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
-const mongoose = require('mongoose');
+const { FEATURES, USAGE_TYPES } = require('@src/constants/features');
+
+const validFeatureKeys = new Set(Object.values(FEATURES));
 
 // Validate package creation data
 function validatePackage(data) {
@@ -14,13 +16,20 @@ function validatePackage(data) {
 
     if (!data.pricing) {
         errors.pricing = 'Pricing information is required';
-    } else if (!Array.isArray(data.pricing) || data.pricing.length === 0) {
+    } else {
+        const pricingArray = Array.isArray(data.pricing)
+            ? data.pricing
+            : Array.isArray(data.pricing.durationPricing)
+                ? data.pricing.durationPricing
+                : [];
+
+        if (pricingArray.length === 0) {
         errors.pricing = 'At least one pricing option is required';
     } else {
         const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
         const seenMonths = new Set();
         
-        data.pricing.forEach((pricingOption, index) => {
+            pricingArray.forEach((pricingOption, index) => {
             if (!pricingOption.months || !validMonths.includes(pricingOption.months)) {
                 errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
             }
@@ -30,14 +39,17 @@ function validatePackage(data) {
             }
             seenMonths.add(pricingOption.months);
 
-            if (pricingOption.price === undefined || pricingOption.price < 0) {
-                errors[`pricing[${index}].price`] = 'Price is required and must be a positive number';
+                if (pricingOption.price === undefined || pricingOption.price === null || isNaN(Number(pricingOption.price))) {
+                    errors[`pricing[${index}].price`] = 'Price is required and must be zero or greater';
+                } else if (Number(pricingOption.price) < 0) {
+                    errors[`pricing[${index}].price`] = 'Price must be zero or greater';
             }
 
             if (pricingOption.discount !== undefined && (pricingOption.discount < 0 || pricingOption.discount > 100)) {
                 errors[`pricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
             }
         });
+        }
     }
 
     // Optional fields validation
@@ -57,30 +69,46 @@ function validatePackage(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-    // Validate features array if provided
-    if (data.features && Array.isArray(data.features)) {
-        const seenFeatures = new Set();
-        data.features.forEach((feature, index) => {
-            const featureId = typeof feature === 'object' ? feature?.feature : feature;
+    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
+        const seenFeatureKeys = new Set();
 
-            if (!featureId || typeof featureId !== 'string' || featureId.trim().length === 0) {
-                errors[`features[${index}]`] = 'Feature ID is required';
+        data.featureUsageLimits.forEach((limit, index) => {
+            const key = limit.featureKey;
+
+            if (!key || typeof key !== 'string' || !validFeatureKeys.has(key)) {
+                errors[`featureUsageLimits[${index}].featureKey`] = 'Invalid feature key';
                 return;
             }
 
-            if (!mongoose.Types.ObjectId.isValid(featureId)) {
-                errors[`features[${index}]`] = 'Invalid feature ID format';
+            if (seenFeatureKeys.has(key)) {
+                errors[`featureUsageLimits[${index}].featureKey`] = 'Duplicate feature key';
                 return;
             }
+            seenFeatureKeys.add(key);
 
-            const normalizedId = featureId.trim();
-            if (seenFeatures.has(normalizedId)) {
-                errors[`features[${index}]`] = 'Duplicate feature ID';
-                return;
+            const usageType = limit.usageType || USAGE_TYPES.UNLIMITED;
+            if (!Object.values(USAGE_TYPES).includes(usageType)) {
+                errors[`featureUsageLimits[${index}].usageType`] = 'Invalid usage type';
             }
 
-            seenFeatures.add(normalizedId);
+            if (usageType !== USAGE_TYPES.UNLIMITED) {
+                if (limit.totalLimit === undefined || limit.totalLimit === null || Number(limit.totalLimit) <= 0) {
+                    errors[`featureUsageLimits[${index}].totalLimit`] = 'Total limit must be greater than 0';
+                }
+            }
+
+            if (usageType === USAGE_TYPES.DAILY_ROLLING && limit.customDailyLimit !== undefined && limit.customDailyLimit !== null) {
+                if (Number(limit.customDailyLimit) < 0) {
+                    errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
+                }
+            }
         });
+            }
+
+    if (data.maxSubscribers !== undefined && data.maxSubscribers !== null) {
+        if (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0) {
+            errors.maxSubscribers = 'Max subscribers must be greater than or equal to 0';
+        }
     }
 
     // Validate trial period if provided
@@ -110,13 +138,19 @@ function validatePackageUpdate(data) {
     }
 
     if (data.pricing !== undefined) {
-        if (!Array.isArray(data.pricing) || data.pricing.length === 0) {
+        const pricingArray = Array.isArray(data.pricing)
+            ? data.pricing
+            : Array.isArray(data.pricing.durationPricing)
+                ? data.pricing.durationPricing
+                : [];
+
+        if (pricingArray.length === 0) {
             errors.pricing = 'At least one pricing option is required';
         } else {
             const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
             const seenMonths = new Set();
             
-            data.pricing.forEach((pricingOption, index) => {
+            pricingArray.forEach((pricingOption, index) => {
                 if (pricingOption.months !== undefined) {
                     if (!validMonths.includes(pricingOption.months)) {
                         errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
@@ -128,8 +162,12 @@ function validatePackageUpdate(data) {
                     seenMonths.add(pricingOption.months);
                 }
 
-                if (pricingOption.price !== undefined && (typeof pricingOption.price !== 'number' || pricingOption.price < 0)) {
-                    errors[`pricing[${index}].price`] = 'Price must be a positive number';
+                if (pricingOption.price !== undefined && pricingOption.price !== null) {
+                    if (isNaN(Number(pricingOption.price))) {
+                        errors[`pricing[${index}].price`] = 'Price must be zero or greater';
+                    } else if (Number(pricingOption.price) < 0) {
+                        errors[`pricing[${index}].price`] = 'Price must be zero or greater';
+                    }
                 }
 
                 if (pricingOption.discount !== undefined && (typeof pricingOption.discount !== 'number' || pricingOption.discount < 0 || pricingOption.discount > 100)) {
@@ -155,30 +193,43 @@ function validatePackageUpdate(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-    // Validate features array if provided
-    if (data.features && Array.isArray(data.features)) {
-        const seenFeatures = new Set();
-        data.features.forEach((feature, index) => {
-            const featureId = typeof feature === 'object' ? feature?.feature : feature;
+     if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
+        const seenFeatureKeys = new Set();
 
-            if (!featureId || typeof featureId !== 'string' || featureId.trim().length === 0) {
-                errors[`features[${index}]`] = 'Feature ID is required';
-                return;
+        data.featureUsageLimits.forEach((limit, index) => {
+            if (limit.featureKey !== undefined) {
+                if (typeof limit.featureKey !== 'string' || !validFeatureKeys.has(limit.featureKey)) {
+                    errors[`featureUsageLimits[${index}].featureKey`] = 'Invalid feature key';
+                } else if (seenFeatureKeys.has(limit.featureKey)) {
+                    errors[`featureUsageLimits[${index}].featureKey`] = 'Duplicate feature key';
+                } else {
+                    seenFeatureKeys.add(limit.featureKey);
+                }
             }
 
-            if (!mongoose.Types.ObjectId.isValid(featureId)) {
-                errors[`features[${index}]`] = 'Invalid feature ID format';
-                return;
+            if (limit.usageType !== undefined && !Object.values(USAGE_TYPES).includes(limit.usageType)) {
+                errors[`featureUsageLimits[${index}].usageType`] = 'Invalid usage type';
             }
 
-            const normalizedId = featureId.trim();
-            if (seenFeatures.has(normalizedId)) {
-                errors[`features[${index}]`] = 'Duplicate feature ID';
-                return;
+            const usageType = limit.usageType || USAGE_TYPES.UNLIMITED;
+            if (usageType !== USAGE_TYPES.UNLIMITED && limit.totalLimit !== undefined) {
+                if (limit.totalLimit === null || Number(limit.totalLimit) <= 0) {
+                    errors[`featureUsageLimits[${index}].totalLimit`] = 'Total limit must be greater than 0';
+                }
             }
 
-            seenFeatures.add(normalizedId);
+            if (usageType === USAGE_TYPES.DAILY_ROLLING && limit.customDailyLimit !== undefined && limit.customDailyLimit !== null) {
+                if (Number(limit.customDailyLimit) < 0) {
+                    errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
+                }
+            }
         });
+            }
+
+    if (data.maxSubscribers !== undefined) {
+        if (data.maxSubscribers !== null && (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0)) {
+            errors.maxSubscribers = 'Max subscribers must be greater than or equal to 0';
+        }
     }
 
     return {

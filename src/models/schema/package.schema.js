@@ -61,13 +61,37 @@ const packageSchema = new mongoose.Schema({
         }
     },
 
-    features: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Feature'
-        }],
-        default: []
-    },
+    featureUsageLimits: [{
+        featureKey: {
+            type: String,
+            required: true,
+            trim: true,
+            index: true
+        },
+        enabled: {
+            type: Boolean,
+            default: true
+        },
+        usageType: {
+            type: String,
+            enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'UNLIMITED'],
+            default: 'UNLIMITED'
+        },
+        totalLimit: {
+            type: Number,
+            default: null,
+            min: 0
+        },
+        customDailyLimit: {
+            type: Number,
+            default: null,
+            min: 0
+        },
+        metadata: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
+        }
+    }],
 
     // Plan Metadata
     planType: {
@@ -110,28 +134,6 @@ const packageSchema = new mongoose.Schema({
         index: true
     },
 
-    // Limits and Restrictions
-    maxStores: {
-        type: Number,
-        default: 1,
-        min: 0
-    },
-    maxUsers: {
-        type: Number,
-        default: 1,
-        min: 0
-    },
-    maxProducts: {
-        type: Number,
-        default: null, // null means unlimited
-        min: 0
-    },
-    maxStorage: {
-        type: Number,
-        default: null, // in GB, null means unlimited
-        min: 0
-    },
-
     // Trial Information
     trialPeriod: {
         enabled: {
@@ -143,6 +145,13 @@ const packageSchema = new mongoose.Schema({
             default: 0,
             min: 0
         }
+    },
+
+    // Purchase Limit
+    maxSubscribers: {
+        type: Number,
+        default: null,
+        min: 0
     },
 
     // Tags and Metadata
@@ -178,7 +187,7 @@ packageSchema.index({ status: 1, isVisible: 1, displayOrder: 1 }, { name: "packa
 packageSchema.index({ planType: 1, status: 1 }, { name: "package_type_status_idx" });
 packageSchema.index({ isPopular: 1, status: 1 }, { name: "package_popular_status_idx" });
 packageSchema.index({ createdAt: -1 }, { name: "package_created_desc_idx" });
-packageSchema.index({ features: 1 }, { name: "package_features_idx" });
+packageSchema.index({ featureUsageLimits: 1 }, { name: "package_features_idx" });
 
 packageSchema.pre('save', function (next) {
     if (this.isModified('name')) {

@@ -1,30 +1,21 @@
+const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
+
 // Package Serializers
 
 // Serialize package for creation response
 function packageCreationSerializer(package) {
     if (!package) return null;
 
-    // Handle populated features
-    const serializedFeatures = package.features?.map(feature => {
-        if (feature && typeof feature === 'object' && feature._id) {
-            return {
-                feature: {
-                    id: feature._id,
-                    name: feature.name,
-                    description: feature.description,
-                    category: feature.category,
-                    icon: feature.icon,
-                    isActive: feature.isActive
-                },
-                enabled: true
-            };
-        }
-        const featureId = typeof feature === 'string' ? feature : feature?.toString?.();
-        return {
-            feature: featureId,
-            enabled: true
-        };
-    }) || [];
+    const featureUsageLimits = Array.isArray(package.featureUsageLimits)
+        ? package.featureUsageLimits.map(limit => ({
+            featureKey: limit.featureKey,
+            featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
+            usageType: limit.usageType || 'UNLIMITED',
+            totalLimit: limit.totalLimit ?? null,
+            customDailyLimit: limit.customDailyLimit ?? null,
+            enabled: limit.enabled !== false
+        }))
+        : [];
 
     // Transform pricing array to object format with durationPricing
     const pricingArray = Array.isArray(package.pricing) ? package.pricing : [];
@@ -51,7 +42,7 @@ function packageCreationSerializer(package) {
         description: package.description,
         shortDescription: package.shortDescription,
         pricing: pricing,
-        features: serializedFeatures,
+        featureUsageLimits,
         planType: package.planType,
         label: package.label,
         displayOrder: package.displayOrder,
@@ -59,10 +50,7 @@ function packageCreationSerializer(package) {
         isRecommended: package.isRecommended,
         status: package.status,
         isVisible: package.isVisible,
-        maxStores: package.maxStores,
-        maxUsers: package.maxUsers,
-        maxProducts: package.maxProducts,
-        maxStorage: package.maxStorage,
+        maxSubscribers: package.maxSubscribers,
         trialPeriod: package.trialPeriod,
         tags: package.tags || [],
         createdAt: package.createdAt,

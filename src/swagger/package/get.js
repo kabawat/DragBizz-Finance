@@ -188,10 +188,7 @@
  *                     isRecommended: false
  *                     status: "ACTIVE"
  *                     isVisible: true
- *                     maxStores: 5
- *                     maxUsers: 10
- *                     maxProducts: 1000
- *                     maxStorage: 100
+ *                     maxSubscribers: 500
  *                     trialPeriod:
  *                       enabled: true
  *                       days: 14
@@ -436,20 +433,9 @@
  *         isVisible:
  *           type: boolean
  *           example: true
- *         maxStores:
+ *         maxSubscribers:
  *           type: number
- *           example: 5
- *         maxUsers:
- *           type: number
- *           example: 10
- *         maxProducts:
- *           type: number
- *           nullable: true
- *           example: 1000
- *         maxStorage:
- *           type: number
- *           nullable: true
- *           example: 100
+ *           example: 500
  *         trialPeriod:
  *           type: object
  *           properties:

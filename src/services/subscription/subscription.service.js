@@ -1,5 +1,6 @@
 const { SubscriptionModel, PaymentModel, PackageModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
+const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 const mongoose = require('mongoose');
 
 class SubscriptionService {
@@ -33,7 +34,10 @@ class SubscriptionService {
                 return existingSubscription;
             }
 
-            const packageDoc = await PackageModel.findById(payment.packageId).session(session).lean();
+            const packageDoc = await PackageModel.findById(payment.packageId)
+                .session(session)
+                .lean();
+            
             if (!packageDoc) {
                 throw new Error('Package not found');
             }
@@ -53,6 +57,22 @@ class SubscriptionService {
                 trialEndDate.setDate(trialEndDate.getDate() + packageDoc.trialPeriod.days);
             }
 
+            const processedFeatures = Array.isArray(packageDoc.featureUsageLimits)
+                ? packageDoc.featureUsageLimits
+                    .filter(limit => limit && limit.featureKey)
+                    .map(limit => ({
+                        featureKey: limit.featureKey,
+                        featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
+                        enabled: limit.enabled !== false,
+                        usageLimits: {
+                            usageType: limit.usageType || 'UNLIMITED',
+                            totalLimit: limit.totalLimit ?? null,
+                            customDailyLimit: limit.customDailyLimit ?? null
+                        },
+                        metadata: limit.metadata || {}
+                    }))
+                : [];
+
             const newSubscriptionData = {
                 userId,
                 packageId: payment.packageId,
@@ -64,13 +84,8 @@ class SubscriptionService {
                 trialEndDate,
                 autoRenew: months === 1,
                 nextBillingDate: months === 1 ? endDate : null,
-                limits: {
-                    maxStores: packageDoc.maxStores || 1,
-                    maxUsers: packageDoc.maxUsers || 1,
-                    maxProducts: packageDoc.maxProducts || null,
-                    maxStorage: packageDoc.maxStorage || null
-                },
-                features: packageDoc.features || []
+                maxSubscribersSnapshot: packageDoc.maxSubscribers ?? null,
+                features: processedFeatures
             };
 
             const subscription = new SubscriptionModel(newSubscriptionData);
@@ -92,7 +107,7 @@ class SubscriptionService {
             });
 
             const populatedSubscription = await SubscriptionModel.findById(subscription._id)
-                .populate('packageId', 'name description pricing')
+                .populate('packageId', 'name description pricing featureUsageLimits')
                 .populate('paymentId', 'amount currency status')
                 .lean();
 
@@ -131,7 +146,10 @@ class SubscriptionService {
             return existingSubscription;
         }
 
-        const packageDoc = await PackageModel.findById(payment.packageId).session(session).lean();
+        const packageDoc = await PackageModel.findById(payment.packageId)
+                .session(session)
+                .lean();
+        
         if (!packageDoc) {
             throw new Error('Package not found');
         }
@@ -151,6 +169,22 @@ class SubscriptionService {
             trialEndDate.setDate(trialEndDate.getDate() + packageDoc.trialPeriod.days);
         }
 
+        const processedFeatures = Array.isArray(packageDoc.featureUsageLimits)
+            ? packageDoc.featureUsageLimits
+                .filter(limit => limit && limit.featureKey)
+                .map(limit => ({
+                    featureKey: limit.featureKey,
+                    featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
+                    enabled: limit.enabled !== false,
+                    usageLimits: {
+                        usageType: limit.usageType || 'UNLIMITED',
+                        totalLimit: limit.totalLimit ?? null,
+                        customDailyLimit: limit.customDailyLimit ?? null
+                    },
+                    metadata: limit.metadata || {}
+                }))
+            : [];
+
         const newSubscriptionData = {
             userId,
             packageId: payment.packageId,
@@ -162,13 +196,8 @@ class SubscriptionService {
             trialEndDate,
             autoRenew: months === 1,
             nextBillingDate: months === 1 ? endDate : null,
-            limits: {
-                maxStores: packageDoc.maxStores || 1,
-                maxUsers: packageDoc.maxUsers || 1,
-                maxProducts: packageDoc.maxProducts || null,
-                maxStorage: packageDoc.maxStorage || null
-            },
-            features: packageDoc.features || []
+            maxSubscribersSnapshot: packageDoc.maxSubscribers ?? null,
+            features: processedFeatures
         };
 
         const subscription = new SubscriptionModel(newSubscriptionData);
@@ -196,21 +225,8 @@ class SubscriptionService {
                 startDate: { $lte: now },
                 endDate: { $gte: now }
             })
-                .populate({
-                    path: 'packageId',
-                    select: 'name description pricing features',
-                    populate: {
-                        path: 'features',
-                        select: 'name description category icon isActive',
-                        match: { isActive: true, deletedAt: null }
-                    }
-                })
+                .populate('packageId', 'name description pricing featureUsageLimits')
                 .populate('paymentId', 'amount currency status')
-                .populate({
-                    path: 'features.feature',
-                    select: 'name description category icon isActive',
-                    match: { isActive: true, deletedAt: null }
-                })
                 .sort({ createdAt: -1 })
                 .lean();
 
@@ -239,7 +255,7 @@ class SubscriptionService {
 
             const total = await SubscriptionModel.countDocuments(query);
             const subscriptions = await SubscriptionModel.find(query)
-                .populate('packageId', 'name description pricing')
+                .populate('packageId', 'name description pricing featureUsageLimits')
                 .populate('paymentId', 'amount currency status')
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -268,7 +284,7 @@ class SubscriptionService {
                 _id: subscriptionId,
                 userId
             })
-                .populate('packageId', 'name description pricing features')
+                .populate('packageId', 'name description pricing featureUsageLimits')
                 .populate('paymentId', 'amount currency status razorpayOrderId')
                 .lean();
 

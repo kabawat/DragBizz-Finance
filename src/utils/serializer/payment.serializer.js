@@ -1,25 +1,25 @@
 /**
- * Serialize payment order response
- * @param {Object} orderData - Order data
- * @returns {Object} - Serialized response
+// Serialize payment order response
  */
 function serializeOrderResponse(orderData) {
+    const paymentStatus = orderData.payment?.status || orderData.status || 'PENDING';
+    const requiresPayment = typeof orderData.requiresPayment === 'boolean'
+        ? orderData.requiresPayment
+        : (orderData.payment?.finalAmount ?? orderData.amount) > 0;
+
     return {
         orderId: orderData.orderId,
         razorpayOrderId: orderData.razorpayOrderId,
         amount: orderData.amount,
         currency: orderData.currency,
-        keyId: orderData.keyId,
-        status: orderData.payment?.status || 'PENDING',
-        expiresAt: orderData.payment?.expiresAt
+        keyId: orderData.keyId || null,
+        status: paymentStatus,
+        expiresAt: orderData.payment?.expiresAt,
+        requiresPayment
     };
 }
 
-/**
- * Serialize payment details
- * @param {Object} payment - Payment document
- * @returns {Object} - Serialized payment
- */
+// Serialize payment details
 function serializePayment(payment) {
     if (!payment) return null;
 
@@ -42,11 +42,7 @@ function serializePayment(payment) {
     };
 }
 
-/**
- * Serialize payment list
- * @param {Array} payments - Array of payments
- * @returns {Array} - Serialized payments
- */
+// Serialize payment list
 function serializePaymentList(payments) {
     return payments.map(payment => serializePayment(payment));
 }

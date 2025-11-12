@@ -8,6 +8,7 @@ const Response = require('@src/utils/responseHandler/standardized');
 async function verifyPaymentController(req, res) {
     try {
         const userId = req.user?.sub;
+        
         if (!userId) {
             return Response.validationError(res, 'User ID not found in token');
         }

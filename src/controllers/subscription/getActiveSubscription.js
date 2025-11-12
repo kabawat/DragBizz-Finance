@@ -1,6 +1,13 @@
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
-const STATUS_CODES = require('@src/constants/statusCode');
+const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
+
+const DISPLAY_NAME_TO_KEY = Object.entries(FEATURE_DISPLAY_NAMES).reduce((acc, [key, name]) => {
+    if (typeof name === 'string') {
+        acc[name.toLowerCase()] = key;
+    }
+    return acc;
+}, {});
 
 async function getActiveSubscriptionController(req, res) {
     try {
@@ -19,44 +26,54 @@ async function getActiveSubscriptionController(req, res) {
             });
         }
 
-        // Populate features if not already populated
-        if (subscription.features && subscription.features.length > 0) {
-            const { FeatureModel } = require('@src/models');
-            const featureIds = subscription.features
-                .map(f => f.feature || f)
-                .filter(Boolean);
-            
-            const features = await FeatureModel.find({
-                _id: { $in: featureIds },
-                isActive: true,
-                deletedAt: null
-            }).select('name description category icon isActive').lean();
-            
-            subscription.features = subscription.features.map(subFeature => {
-                const featureId = subFeature.feature?.toString() || subFeature.feature || subFeature.toString();
-                const feature = features.find(f => f._id.toString() === featureId);
+        if (subscription.features && Array.isArray(subscription.features)) {
+            subscription.features = subscription.features.map(feature => {
+                let featureKey = feature.featureKey || null;
+                let legacyName = null;
+
+                if (!featureKey && feature.feature) {
+                    if (typeof feature.feature === 'string') {
+                        featureKey = feature.feature;
+                    } else if (typeof feature.feature === 'object' && feature.feature.name) {
+                        legacyName = feature.feature.name;
+                    }
+                }
+
+                if (!featureKey && legacyName) {
+                    const lookup = DISPLAY_NAME_TO_KEY[legacyName.toLowerCase()];
+                    featureKey = lookup || legacyName.toLowerCase().replace(/\s+/g, '_');
+                }
+
+                if (!featureKey && feature.featureName) {
+                    const lookup = DISPLAY_NAME_TO_KEY[feature.featureName.toLowerCase()];
+                    featureKey = lookup || feature.featureName.toLowerCase().replace(/\s+/g, '_');
+                }
+
+                const normalizedKey = featureKey;
+                const featureName = feature.featureName || legacyName || (normalizedKey ? FEATURE_DISPLAY_NAMES[normalizedKey] : null) || normalizedKey;
+
                 return {
-                    feature: feature || subFeature.feature,
-                    enabled: subFeature.enabled !== false,
-                    limit: subFeature.limit || null
+                    featureKey: normalizedKey,
+                    featureName,
+                    enabled: feature.enabled !== false,
+                    usageLimits: feature.usageLimits || {
+                        usageType: 'UNLIMITED',
+                        totalLimit: null,
+                        customDailyLimit: null
+                    },
+                    metadata: feature.metadata || {}
                 };
             });
         }
 
-        // Also populate package features if available
-        if (subscription.packageId && subscription.packageId.features) {
-            const { FeatureModel } = require('@src/models');
-            const packageFeatureIds = subscription.packageId.features
-                .map(f => f.toString())
-                .filter(Boolean);
-            
-            const packageFeatures = await FeatureModel.find({
-                _id: { $in: packageFeatureIds },
-                isActive: true,
-                deletedAt: null
-            }).select('name description category icon isActive').lean();
-            
-            subscription.packageId.features = packageFeatures;
+        if (subscription.packageId && subscription.packageId.featureUsageLimits) {
+            subscription.packageId.featureUsageLimits = subscription.packageId.featureUsageLimits.map(limit => {
+                const featureKey = limit.featureKey;
+                return {
+                    ...limit,
+                    featureName: FEATURE_DISPLAY_NAMES[featureKey] || featureKey
+                };
+            });
         }
 
         return Response.success(res, {
