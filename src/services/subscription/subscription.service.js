@@ -1,7 +1,12 @@
 const { SubscriptionModel, PaymentModel, PackageModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
+const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
 const mongoose = require('mongoose');
+
+// Cache configuration
+const SUBSCRIPTION_CACHE_TTL = 300; // 5 minutes
+const SUBSCRIPTION_CACHE_PREFIX = 'sub:active:';
 
 class SubscriptionService {
     static async createSubscription(subscriptionData) {
@@ -107,6 +112,10 @@ class SubscriptionService {
                 .populate('paymentId', 'amount currency status')
                 .lean();
 
+            // Invalidate cache for this user
+            const cacheKey = `${SUBSCRIPTION_CACHE_PREFIX}${userId}`;
+            await deleteCache(cacheKey);
+
             return populatedSubscription;
         } catch (error) {
             console.error('Error creating subscription:', error);
@@ -116,6 +125,30 @@ class SubscriptionService {
 
     static async getActiveSubscription(userId) {
         try {
+            // Check cache first
+            const cacheKey = `${SUBSCRIPTION_CACHE_PREFIX}${userId}`;
+            const cachedSubscription = await getCache(cacheKey);
+            
+            if (cachedSubscription) {
+                // Verify cached subscription is still active
+                const now = new Date();
+                const cachedStartDate = new Date(cachedSubscription.startDate);
+                const cachedEndDate = new Date(cachedSubscription.endDate);
+                
+                // If cached subscription is still valid, return it
+                if (
+                    (cachedSubscription.status === 'ACTIVE' || cachedSubscription.status === 'TRIAL') &&
+                    cachedStartDate <= now &&
+                    cachedEndDate >= now
+                ) {
+                    return cachedSubscription;
+                }
+                
+                // Cached subscription expired, delete from cache
+                await deleteCache(cacheKey);
+            }
+
+            // Cache miss or expired - fetch from database
             const now = new Date();
             const subscription = await SubscriptionModel.findOne({
                 userId,
@@ -128,9 +161,34 @@ class SubscriptionService {
                 .sort({ createdAt: -1 })
                 .lean();
 
+            // Cache the result (even if null, to prevent repeated queries)
+            if (subscription) {
+                await setCache(cacheKey, subscription, SUBSCRIPTION_CACHE_TTL);
+            } else {
+                // Cache null result for shorter time to allow retry
+                await setCache(cacheKey, null, 60); // 1 minute for null results
+            }
+
             return subscription;
         } catch (error) {
-            throw error;
+            // If cache fails, still try database
+            console.error('Error in getActiveSubscription (cache failed, trying DB):', error);
+            try {
+                const now = new Date();
+                const subscription = await SubscriptionModel.findOne({
+                    userId,
+                    status: { $in: ['ACTIVE', 'TRIAL'] },
+                    startDate: { $lte: now },
+                    endDate: { $gte: now }
+                })
+                    .populate('packageId', 'name description pricing featureUsageLimits')
+                    .populate('paymentId', 'amount currency status')
+                    .sort({ createdAt: -1 })
+                    .lean();
+                return subscription;
+            } catch (dbError) {
+                throw dbError;
+            }
         }
     }
 
@@ -214,6 +272,10 @@ class SubscriptionService {
             subscription.autoRenew = false;
 
             await subscription.save();
+
+            // Invalidate cache for this user
+            const cacheKey = `${SUBSCRIPTION_CACHE_PREFIX}${subscription.userId}`;
+            await deleteCache(cacheKey);
 
             return subscription;
         } catch (error) {

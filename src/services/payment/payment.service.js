@@ -58,7 +58,7 @@ class PaymentService {
 
             const discountAmount = couponCode ? await this._calculateCouponDiscount(baseAmount, couponCode) : 0;
             const amountAfterDiscount = Math.max(0, baseAmount - discountAmount);
-
+            
             // No GST in new structure, final amount is after discount
             const finalAmount = amountAfterDiscount;
 

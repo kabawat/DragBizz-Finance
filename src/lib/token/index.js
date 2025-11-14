@@ -33,7 +33,6 @@ async function verifyAccessToken(token) {
         // Check Redis cache first
         const cacheKey = getTokenCacheKey(token);
         const cachedResult = await getCache(cacheKey);
-        console.log("cachedResult", cachedResult);
         if (cachedResult) {
             return {
                 valid: cachedResult.valid,
@@ -52,7 +51,6 @@ async function verifyAccessToken(token) {
                 : [SECRET?.jwt?.audience],
             clockTolerance: 60,
         });
-        console.log("payload", payload);
         // Cache successful verification
         const result = {
             valid: true,

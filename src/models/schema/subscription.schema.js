@@ -147,6 +147,10 @@ subscriptionSchema.index({ status: 1, endDate: 1 });
 subscriptionSchema.index({ nextBillingDate: 1 });
 subscriptionSchema.index({ createdAt: -1 });
 
+// Compound index for optimized active subscription queries
+// This index optimizes the query: findOne({ userId, status: { $in: ['ACTIVE', 'TRIAL'] }, startDate: { $lte: now }, endDate: { $gte: now } })
+subscriptionSchema.index({ userId: 1, status: 1, startDate: 1, endDate: 1 });
+
 // Virtual for checking if subscription is active
 subscriptionSchema.virtual('isActive').get(function () {
     const now = new Date();

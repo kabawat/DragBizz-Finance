@@ -1,6 +1,13 @@
 const { UsageTrackingModel, SubscriptionModel } = require('@src/models');
 const { USAGE_TYPES, FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
+const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
 const mongoose = require('mongoose');
+
+// Cache configuration
+const QUOTA_CACHE_TTL = 60; // 1 minute (short for accuracy)
+const QUOTA_CACHE_PREFIX = 'quota:';
+const USAGE_DATE_CACHE_TTL = 60; // 1 minute
+const USAGE_MONTH_CACHE_TTL = 300; // 5 minutes (monthly data changes less frequently)
 
 /**
  * Usage Service
@@ -46,13 +53,25 @@ class UsageService {
         try {
             const targetDate = date || this.getCurrentDate();
             
+            // Check cache first
+            const cacheKey = `usage:date:${subscriptionId}:${featureKey}:${targetDate}`;
+            const cached = await getCache(cacheKey);
+            if (cached !== null) {
+                return cached;
+            }
+            
             const usage = await UsageTrackingModel.findOne({
                 subscriptionId,
                 featureKey,
                 date: targetDate
             }).lean();
 
-            return usage ? usage.count : 0;
+            const count = usage ? usage.count : 0;
+            
+            // Cache the result
+            await setCache(cacheKey, count, USAGE_DATE_CACHE_TTL);
+            
+            return count;
         } catch (error) {
             console.error('Error getting usage for date:', error);
             throw error;
@@ -60,19 +79,42 @@ class UsageService {
     }
 
     /**
-     * Get usage for current month
+     * Get usage for current month (Optimized with aggregation pipeline)
      */
     static async getUsageForMonth(subscriptionId, featureKey, month = null) {
         try {
             const targetMonth = month || this.getCurrentMonth();
             
-            const usages = await UsageTrackingModel.find({
-                subscriptionId,
-                featureKey,
-                month: targetMonth
-            }).lean();
-
-            return usages.reduce((total, usage) => total + usage.count, 0);
+            // Check cache first
+            const cacheKey = `usage:month:${subscriptionId}:${featureKey}:${targetMonth}`;
+            const cached = await getCache(cacheKey);
+            if (cached !== null) {
+                return cached;
+            }
+            
+            // Use aggregation pipeline for better performance
+            const result = await UsageTrackingModel.aggregate([
+                {
+                    $match: {
+                        subscriptionId: new mongoose.Types.ObjectId(subscriptionId),
+                        featureKey: featureKey,
+                        month: targetMonth
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$count' }
+                    }
+                }
+            ]);
+            
+            const total = result[0]?.total || 0;
+            
+            // Cache the result
+            await setCache(cacheKey, total, USAGE_MONTH_CACHE_TTL);
+            
+            return total;
         } catch (error) {
             console.error('Error getting usage for month:', error);
             throw error;
@@ -80,10 +122,19 @@ class UsageService {
     }
 
     /**
-     * Get remaining quota for a feature
+     * Get remaining quota for a feature (with caching)
      */
     static async getRemainingQuota(subscriptionId, featureKey) {
         try {
+            const date = this.getCurrentDate();
+            
+            // Check cache first
+            const cacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${featureKey}:${date}`;
+            const cached = await getCache(cacheKey);
+            if (cached) {
+                return cached;
+            }
+            
             const subscription = await SubscriptionModel.findById(subscriptionId)
                 .lean();
 
@@ -95,25 +146,31 @@ class UsageService {
             const feature = subscription.features?.find(f => f.featureKey === featureKey);
 
             if (!feature || !feature.enabled) {
-                return {
+                const result = {
                     hasAccess: false,
                     remaining: 0,
                     limit: 0,
                     usageType: 'UNLIMITED'
                 };
+                // Cache negative result for shorter time
+                await setCache(cacheKey, result, 30); // 30 seconds for negative results
+                return result;
             }
 
             const usageLimits = feature.usageLimits || {};
 
             // If unlimited, return unlimited
             if (usageLimits.usageType === USAGE_TYPES.UNLIMITED || !usageLimits.totalLimit) {
-                return {
+                const result = {
                     hasAccess: true,
                     remaining: -1, // -1 means unlimited
                     limit: -1,
                     usageType: USAGE_TYPES.UNLIMITED,
                     used: 0
                 };
+                // Cache unlimited results for longer time
+                await setCache(cacheKey, result, 300); // 5 minutes for unlimited
+                return result;
             }
 
             const usageType = usageLimits.usageType || USAGE_TYPES.UNLIMITED;
@@ -154,7 +211,7 @@ class UsageService {
                 remaining = Math.max(0, monthlyLimit - used);
             }
 
-            return {
+            const result = {
                 hasAccess: true,
                 remaining,
                 limit: usageType === USAGE_TYPES.MONTHLY_TOTAL ? monthlyLimit : dailyLimit,
@@ -164,6 +221,11 @@ class UsageService {
                 monthlyLimit: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? monthlyLimit : null,
                 monthlyUsed: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? used : null
             };
+            
+            // Cache the result
+            await setCache(cacheKey, result, QUOTA_CACHE_TTL);
+            
+            return result;
         } catch (error) {
             console.error('Error getting remaining quota:', error);
             throw error;
@@ -247,6 +309,17 @@ class UsageService {
                     new: true
                 }
             );
+
+            // Invalidate cache for this date and month
+            const dateCacheKey = `usage:date:${subscriptionId}:${featureKey}:${date}`;
+            const monthCacheKey = `usage:month:${subscriptionId}:${featureKey}:${month}`;
+            const quotaCacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${featureKey}:${date}`;
+            
+            await Promise.all([
+                deleteCache(dateCacheKey),
+                deleteCache(monthCacheKey),
+                deleteCache(quotaCacheKey)
+            ]);
 
             return usage;
         } catch (error) {

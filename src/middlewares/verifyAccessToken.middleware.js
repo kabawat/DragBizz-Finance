@@ -10,10 +10,7 @@ const accessMiddleware = async (req, res, next) => {
             return Response.validationError(res, "Access token missing or invalid.");
         }
 
-        const { valid, expired, decoded } = await verifyAccessToken(token);
-        console.log("decoded", decoded);
-        console.log("valid", valid);
-        console.log("expired", expired);    
+        const { valid, expired, decoded } = await verifyAccessToken(token);    
         if (!valid) {
             return Response.validationError(res, expired ? "Access token expired." : "Invalid access token.");
         }

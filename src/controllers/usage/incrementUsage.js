@@ -1,5 +1,5 @@
 const UsageService = require('@src/services/usage/usage.service');
-const { SubscriptionModel } = require('@src/models');
+const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
 
 /**
@@ -23,13 +23,8 @@ async function incrementUsageController(req, res) {
             return Response.validationError(res, 'Quantity must be at least 1');
         }
 
-        // Get active subscription
-        const subscription = await SubscriptionModel.findOne({
-            userId,
-            status: { $in: ['ACTIVE', 'TRIAL'] },
-            startDate: { $lte: new Date() },
-            endDate: { $gte: new Date() }
-        }).sort({ createdAt: -1 }).lean();
+        // Get active subscription (using cached service method)
+        const subscription = await SubscriptionService.getActiveSubscription(userId);
 
         if (!subscription) {
             return Response.forbidden(res, 'No active subscription found');

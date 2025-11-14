@@ -12,6 +12,10 @@ async function startServer() {
       console.log('Database connected');
       await connectRedis();
       console.log('Redis connected');
+      
+      // Start gRPC server
+      const grpcServer = require('@src/lib/grpc/server');
+      grpcServer.initialize();
     } catch (err) {
       console.error('Connection error:', err.message);
       process.exit(1);
@@ -25,6 +29,10 @@ const gracefulShutdown = async (signal) => {
   console.log(`\n${signal} received. Starting graceful shutdown...`);
   
   try {
+    // Shutdown gRPC server
+    const grpcServer = require('@src/lib/grpc/server');
+    await grpcServer.shutdown();
+    
     // Close Redis connection
     await disconnectRedis();
     console.log('✅ Redis disconnected');

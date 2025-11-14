@@ -35,6 +35,10 @@ const SECRET = {
     stripeSecret: process.env.STRIPE_SECRET,
     cashfreeAppId: process.env.CF_APP_ID,
     cashfreeSecret: process.env.CF_SECRET_KEY,
+  },
+  grpc: {
+    port: process.env.GRPC_PORT || 50052,
+    host: process.env.GRPC_HOST || '0.0.0.0'
   }
 };
 
