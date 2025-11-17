@@ -2,7 +2,7 @@ const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
 const Response = require("@src/utils/responseHandler/standardized");
 
 const accessMiddleware = async (req, res, next) => {
-    console.log("access Middleware : ", req.method, req.path);
+    console.log("access Middleware : ", req.method, req.originalUrl || req.url);
     try {
         const authHeader = req.headers["authorization"];
         const token = extractBearerToken(authHeader);
@@ -18,7 +18,9 @@ const accessMiddleware = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
-        console.log("err", err);
+        if (err.code !== "ERR_JWT_EXPIRED") {
+            console.error("[accessMiddleware] Unexpected error:", err.message || err);
+        }
         return Response.handleError(res, err, "accessMiddleware");
     }
 };

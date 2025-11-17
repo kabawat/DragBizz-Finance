@@ -64,13 +64,17 @@ async function verifyAccessToken(token) {
 
         return result;
     } catch (err) {
-        console.log("err", err);
-        // Handle expired tokens
+        // Handle expired tokens (expected error - don't log)
         if (err.code === "ERR_JWT_EXPIRED") {
-            return { valid: false, expired: true, decoded: null, cached: false };
+            // Cache expired tokens for a short time to avoid repeated verification attempts
+            const expiredResult = { valid: false, expired: true, decoded: null, cached: false };
+            await setCache(cacheKey, expiredResult, 60); // Cache for 1 minute
+            return expiredResult;
         }
-            
-        // Cache invalid tokens
+        
+        // Log unexpected errors only
+        console.error("Token verification error:", err.message || err);
+        // Don't cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }
 }

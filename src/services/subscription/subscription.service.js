@@ -30,6 +30,7 @@ class SubscriptionService {
                 throw new Error('Payment does not belong to user');
             }
 
+            // Check if subscription already exists for this payment
             const existingSubscription = await SubscriptionModel.findOne({ paymentId });
             if (existingSubscription) {
                 const populatedSubscription = await SubscriptionModel.findById(existingSubscription._id)
@@ -37,6 +38,34 @@ class SubscriptionService {
                     .populate('paymentId', 'amount currency status')
                     .lean();
                 return populatedSubscription;
+            }
+
+            // Check if user already has an active subscription
+            const now = new Date();
+            const existingActiveSubscription = await SubscriptionModel.findOne({
+                userId,
+                status: { $in: ['ACTIVE', 'TRIAL'] },
+                startDate: { $lte: now },
+                endDate: { $gte: now }
+            });
+
+            // Cancel existing active subscription if found
+            if (existingActiveSubscription) {
+                existingActiveSubscription.status = 'CANCELLED';
+                existingActiveSubscription.cancelledAt = new Date();
+                existingActiveSubscription.cancellationReason = 'Replaced by new subscription';
+                existingActiveSubscription.autoRenew = false;
+                await existingActiveSubscription.save();
+
+                // Log cancellation event
+                await logSubscriptionEvent('SUBSCRIPTION_CANCELLED', {
+                    subscriptionId: existingActiveSubscription._id,
+                    userId,
+                    packageId: existingActiveSubscription.packageId,
+                    reason: 'Replaced by new subscription',
+                    ipAddress,
+                    userAgent
+                });
             }
 
             const packageDoc = await PackageModel.findById(payment.packageId).lean();
