@@ -39,7 +39,7 @@ async function verifyPaymentController(req, res) {
                     userAgent: req.userAgent
                 });
             } catch (subError) {
-                console.error('Error creating subscription:', subError);
+                console.log('Error creating subscription:', subError);
             }
         }
 

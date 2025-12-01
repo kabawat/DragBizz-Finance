@@ -19,7 +19,7 @@ const connectDB = async () => {
     await mongoose.connect(SECRET.mongo.uri, options);
     console.log("✅ MongoDB connected successfully (subscription)");
   } catch (err) {
-    console.error("❌ MongoDB connection error (subscription):", err.message);
+    console.log("❌ MongoDB connection error (subscription):", err.message);
     process.exit(1);
   }
 };

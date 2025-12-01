@@ -73,7 +73,7 @@ class UsageService {
             
             return count;
         } catch (error) {
-            console.error('Error getting usage for date:', error);
+            console.log('Error getting usage for date:', error);
             throw error;
         }
     }
@@ -116,7 +116,7 @@ class UsageService {
             
             return total;
         } catch (error) {
-            console.error('Error getting usage for month:', error);
+            console.log('Error getting usage for month:', error);
             throw error;
         }
     }
@@ -227,7 +227,7 @@ class UsageService {
             
             return result;
         } catch (error) {
-            console.error('Error getting remaining quota:', error);
+            console.log('Error getting remaining quota:', error);
             throw error;
         }
     }
@@ -274,7 +274,7 @@ class UsageService {
                 quota
             };
         } catch (error) {
-            console.error('Error checking feature usage:', error);
+            console.log('Error checking feature usage:', error);
             throw error;
         }
     }
@@ -323,7 +323,7 @@ class UsageService {
 
             return usage;
         } catch (error) {
-            console.error('Error incrementing usage:', error);
+            console.log('Error incrementing usage:', error);
             throw error;
         }
     }
@@ -365,7 +365,7 @@ class UsageService {
 
             return summary;
         } catch (error) {
-            console.error('Error getting usage summary:', error);
+            console.log('Error getting usage summary:', error);
             throw error;
         }
     }

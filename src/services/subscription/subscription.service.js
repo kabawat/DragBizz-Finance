@@ -147,7 +147,7 @@ class SubscriptionService {
 
             return populatedSubscription;
         } catch (error) {
-            console.error('Error creating subscription:', error);
+            console.log('Error creating subscription:', error);
             throw error;
         }
     }
@@ -201,7 +201,7 @@ class SubscriptionService {
             return subscription;
         } catch (error) {
             // If cache fails, still try database
-            console.error('Error in getActiveSubscription (cache failed, trying DB):', error);
+            console.log('Error in getActiveSubscription (cache failed, trying DB):', error);
             try {
                 const now = new Date();
                 const subscription = await SubscriptionModel.findOne({

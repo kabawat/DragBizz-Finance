@@ -17,7 +17,7 @@ async function startServer() {
       const grpcServer = require('@src/lib/grpc/server');
       grpcServer.initialize();
     } catch (err) {
-      console.error('Connection error:', err.message);
+      console.log('Connection error:', err.message);
       process.exit(1);
     }
     console.log(`Subscription service running at http://localhost:${SECRET.server.port}/health`);
@@ -49,11 +49,11 @@ const gracefulShutdown = async (signal) => {
     
     // Force close after 10 seconds
     setTimeout(() => {
-      console.error('⚠️ Forcing shutdown after timeout');
+      console.log('⚠️ Forcing shutdown after timeout');
       process.exit(1);
     }, 10000);
   } catch (error) {
-    console.error('❌ Error during graceful shutdown:', error);
+    console.log('❌ Error during graceful shutdown:', error);
     process.exit(1);
   }
 };
@@ -64,18 +64,18 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
+  console.log('❌ Uncaught Exception:', error);
   gracefulShutdown('uncaughtException');
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  console.log('❌ Unhandled Rejection at:', promise, 'reason:', reason);
   gracefulShutdown('unhandledRejection');
 });
 
 startServer().catch((e) => {
-  console.error('Error starting subscription service:', e);
+  console.log('Error starting subscription service:', e);
   process.exit(1);
 });
 

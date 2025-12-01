@@ -12,7 +12,7 @@ function verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySign
         
         return expectedSignature === razorpaySignature;
     } catch (error) {
-        console.error('Error verifying Razorpay signature:', error);
+        console.log('Error verifying Razorpay signature:', error);
         return false;
     }
 }
@@ -27,7 +27,7 @@ function verifyWebhookSignature(payload, signature) {
         
         return expectedSignature === signature;
     } catch (error) {
-        console.error('Error verifying Razorpay webhook signature:', error);
+        console.log('Error verifying Razorpay webhook signature:', error);
         return false;
     }
 }

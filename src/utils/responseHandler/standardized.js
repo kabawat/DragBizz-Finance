@@ -104,7 +104,7 @@ class Response {
 
     // Generic Error Handler for Controllers
     static handleError(res, error, context = "Unknown") {
-        console.error(`❌ ${context} Error:`, error);
+        console.log(`❌ ${context} Error:`, error);
         
         // Handle Mongoose validation errors
         if (error.name === 'ValidationError') {

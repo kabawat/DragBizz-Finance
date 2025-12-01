@@ -179,7 +179,7 @@ class PaymentService {
                         userAgent
                     });
                 } catch (subError) {
-                    console.error('Error creating subscription for free package:', subError);
+                    console.log('Error creating subscription for free package:', subError);
                 }
 
                 return this._buildOrderResponse(payment);
@@ -294,7 +294,7 @@ class PaymentService {
 
             return this._buildOrderResponse(savedPayment);
         } catch (error) {
-            console.error('Error creating payment order:', error);
+            console.log('Error creating payment order:', error);
             throw error;
         }
     }
@@ -385,7 +385,7 @@ class PaymentService {
 
             return payment;
         } catch (error) {
-            console.error('Error verifying payment:', error);
+            console.log('Error verifying payment:', error);
             throw error;
         }
     }

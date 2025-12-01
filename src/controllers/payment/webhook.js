@@ -13,7 +13,7 @@ async function razorpayWebhookController(req, res) {
         const rawBody = JSON.stringify(req.body);
         const isValidSignature = verifyWebhookSignature(rawBody, signature);
         if (!isValidSignature) {
-            console.error('Invalid webhook signature');
+            console.log('Invalid webhook signature');
             return Response.validationError(res, 'Invalid webhook signature');
         }
 
@@ -47,7 +47,7 @@ async function razorpayWebhookController(req, res) {
 
         return res.status(200).json({ received: true });
     } catch (error) {
-        console.error('Webhook error:', error);
+        console.log('Webhook error:', error);
         return res.status(200).json({ received: true, error: error.message });
     }
 }
@@ -84,12 +84,12 @@ async function handlePaymentCaptured(payload) {
                         paymentId: payment._id
                     });
                 } catch (subError) {
-                    console.error('Error creating subscription from webhook:', subError);
+                    console.log('Error creating subscription from webhook:', subError);
                 }
             }
         }
     } catch (error) {
-        console.error('Error handling payment.captured:', error);
+        console.log('Error handling payment.captured:', error);
         throw error;
     }
 }
@@ -115,7 +115,7 @@ async function handlePaymentFailed(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.error('Error handling payment.failed:', error);
+        console.log('Error handling payment.failed:', error);
         throw error;
     }
 }
@@ -140,11 +140,11 @@ async function handleOrderPaid(payload) {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching payment details:', error);
+                console.log('Error fetching payment details:', error);
             }
         }
     } catch (error) {
-        console.error('Error handling order.paid:', error);
+        console.log('Error handling order.paid:', error);
         throw error;
     }
 }
@@ -173,7 +173,7 @@ async function handleRefundCreated(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.error('Error handling refund.created:', error);
+        console.log('Error handling refund.created:', error);
         throw error;
     }
 }
@@ -191,7 +191,7 @@ async function handleRefundProcessed(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.error('Error handling refund.processed:', error);
+        console.log('Error handling refund.processed:', error);
         throw error;
     }
 }

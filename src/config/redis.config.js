@@ -36,7 +36,7 @@ redisClient.on("ready", () => console.log("✅ Redis client ready"));
 redisClient.on("reconnecting", () => console.warn("🔄 Redis reconnecting..."));
 redisClient.on("end", () => console.warn("⚠️ Redis connection closed"));
 redisClient.on("error", (err) => {
-    console.error("🔴 Redis connection error:", err.message);
+    console.log("🔴 Redis connection error:", err.message);
 });
 
 // Connect Redis
@@ -47,7 +47,7 @@ const connectRedis = async () => {
             console.log("🚀 Redis connection established");
         }
     } catch (error) {
-        console.error("❌ Redis connection failed:", error.message);
+        console.log("❌ Redis connection failed:", error.message);
         setTimeout(() => {
             console.log("🔄 Retrying Redis connection...");
             connectRedis();
@@ -63,7 +63,7 @@ const disconnectRedis = async () => {
             console.log("👋 Redis disconnected gracefully");
         }
     } catch (error) {
-        console.error("⚠️ Redis disconnect error:", error.message);
+        console.log("⚠️ Redis disconnect error:", error.message);
     }
 };
 

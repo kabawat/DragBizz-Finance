@@ -59,7 +59,7 @@ class GrpcServer {
                 grpc.ServerCredentials.createInsecure(),
                 (error, port) => {
                     if (error) {
-                        console.error('❌ gRPC Server failed to start:', error);
+                        console.log('❌ gRPC Server failed to start:', error);
                         process.exit(1);
                     }
 
@@ -70,7 +70,7 @@ class GrpcServer {
 
             return this.server;
         } catch (error) {
-            console.error('❌ Error initializing gRPC server:', error);
+            console.log('❌ Error initializing gRPC server:', error);
             throw error;
         }
     }
@@ -148,7 +148,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.error('Error in CheckUsage:', error);
+            console.log('Error in CheckUsage:', error);
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -235,7 +235,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.error('Error in IncrementUsage:', error);
+            console.log('Error in IncrementUsage:', error);
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -293,7 +293,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.error('Error in GetQuota:', error);
+            console.log('Error in GetQuota:', error);
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -400,7 +400,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.error('Error in GetActiveSubscription:', error);
+            console.log('Error in GetActiveSubscription:', error);
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'

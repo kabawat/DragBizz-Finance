@@ -19,7 +19,7 @@ const accessMiddleware = async (req, res, next) => {
         next();
     } catch (err) {
         if (err.code !== "ERR_JWT_EXPIRED") {
-            console.error("[accessMiddleware] Unexpected error:", err.message || err);
+            console.log("[accessMiddleware] Unexpected error:", err.message || err);
         }
         return Response.handleError(res, err, "accessMiddleware");
     }

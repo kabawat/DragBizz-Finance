@@ -73,7 +73,7 @@ async function verifyAccessToken(token) {
         }
         
         // Log unexpected errors only
-        console.error("Token verification error:", err.message || err);
+        console.log("Token verification error:", err.message || err);
         // Don't cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }

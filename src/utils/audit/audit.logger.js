@@ -21,7 +21,7 @@ async function logPaymentEvent(eventType, data) {
 
         await AuditLogModel.create(auditLog);
     } catch (error) {
-        console.error('Error logging audit event:', error);
+        console.log('Error logging audit event:', error);
     }
 }
 
@@ -46,7 +46,7 @@ async function logSubscriptionEvent(eventType, data) {
 
         await AuditLogModel.create(auditLog);
     } catch (error) {
-        console.error('Error logging audit event:', error);
+        console.log('Error logging audit event:', error);
     }
 }
 

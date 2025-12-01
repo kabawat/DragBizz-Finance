@@ -44,26 +44,26 @@ const SECRET = {
 
 // Validate critical environment variables
 if (!SECRET.mongo.uri) {
-    console.error("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
+    console.log("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
     process.exit(1);
 }
 
 if (!SECRET.redis.host) {
-    console.error("❌ REDIS_HOST must be set. Refusing to start.");
+    console.log("❌ REDIS_HOST must be set. Refusing to start.");
     process.exit(1);
 }
 
 // Validate Razorpay credentials if mode is live
 if (SECRET.razorpay.mode === 'live') {
     if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
-        console.error("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
+        console.log("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
         process.exit(1);
     }
 }
 
 // Validate JWT issuer
 if (!SECRET.jwt.issuer) {
-    console.error("❌ JWT_ISSUER must be set. Refusing to start.");
+    console.log("❌ JWT_ISSUER must be set. Refusing to start.");
     process.exit(1);
 }
 

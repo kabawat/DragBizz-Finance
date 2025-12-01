@@ -28,7 +28,7 @@ function createRateLimiter(options = {}) {
 
             next();
         } catch (error) {
-            console.error('Rate limit error:', error);
+            console.log('Rate limit error:', error);
             next();
         }
     };

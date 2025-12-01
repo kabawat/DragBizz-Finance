@@ -17,7 +17,7 @@ async function setCache(key, value, ttl = DEFAULT_TTL) {
         
         return true;
     } catch (error) {
-        console.error('Cache set error:', error);
+        console.log('Cache set error:', error);
         return false;
     }
 }
@@ -33,7 +33,7 @@ async function getCache(key) {
         const data = await redisClient.get(key);
         return data ? JSON.parse(data) : null;
     } catch (error) {
-        console.error('Cache get error:', error);
+        console.log('Cache get error:', error);
         return null;
     }
 }
@@ -49,7 +49,7 @@ async function deleteCache(key) {
         await redisClient.del(key);
         return true;
     } catch (error) {
-        console.error('Cache delete error:', error);
+        console.log('Cache delete error:', error);
         return false;
     }
 }
@@ -82,7 +82,7 @@ async function getBatchCache(keys) {
         
         return data;
     } catch (error) {
-        console.error('Batch cache get error:', error);
+        console.log('Batch cache get error:', error);
         return {};
     }
 }
@@ -107,7 +107,7 @@ async function setBatchCache(keyValuePairs, ttl = DEFAULT_TTL) {
         await pipeline.exec();
         return true;
     } catch (error) {
-        console.error('Batch cache set error:', error);
+        console.log('Batch cache set error:', error);
         return false;
     }
 }
@@ -128,7 +128,7 @@ async function deleteBatchCache(keys) {
         await pipeline.exec();
         return true;
     } catch (error) {
-        console.error('Batch cache delete error:', error);
+        console.log('Batch cache delete error:', error);
         return false;
     }
 }
@@ -143,7 +143,7 @@ async function expireCache(key, ttl) {
         
         return await redisClient.expire(key, ttl); // returns 0 or 1
     } catch (error) {
-        console.error('Cache expire error:', error);
+        console.log('Cache expire error:', error);
         return 0;
     }
 }
@@ -162,7 +162,7 @@ async function incrCache(key, step = 1) {
             return await redisClient.incrBy(key, step);
         }
     } catch (error) {
-        console.error('Cache increment error:', error);
+        console.log('Cache increment error:', error);
         return 0;
     }
 }
@@ -181,7 +181,7 @@ async function decrCache(key, step = 1) {
             return await redisClient.decrBy(key, step);
         }
     } catch (error) {
-        console.error('Cache decrement error:', error);
+        console.log('Cache decrement error:', error);
         return 0;
     }
 }
