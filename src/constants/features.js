@@ -5,6 +5,9 @@
  */
 
 const FEATURES = {
+    // Store Management
+    STORE_MANAGEMENT: 'store_management',
+    
     // Product & Inventory Management
     PRODUCT_MANAGEMENT: 'product_management',
     INVENTORY_MANAGEMENT: 'inventory_management',
@@ -26,6 +29,7 @@ const FEATURES = {
 
 // Feature display names (for UI)
 const FEATURE_DISPLAY_NAMES = {
+    store_management: 'Store Management',
     product_management: 'Product Management',
     inventory_management: 'Inventory Management',
     stock_management: 'Stock Management',
@@ -40,6 +44,7 @@ const FEATURE_DISPLAY_NAMES = {
 
 // Feature to route mapping (for access control)
 const FEATURE_ROUTES = {
+    store_management: ['/store'],
     product_management: ['/product', '/category', '/price'],
     inventory_management: ['/stock', '/inventory'],
     stock_management: ['/stock'],
