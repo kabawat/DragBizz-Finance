@@ -57,6 +57,7 @@ const USAGE_TYPES = {
     DAILY_FIXED: 'DAILY_FIXED',           // Fixed limit per day (resets daily)
     DAILY_ROLLING: 'DAILY_ROLLING',      // Daily limit with monthly total, unused quota rolls over
     MONTHLY_TOTAL: 'MONTHLY_TOTAL',      // Total limit per month
+    TOTAL: 'TOTAL',                       // Overall limit for subscription period (does not reset)
     UNLIMITED: 'UNLIMITED'                // No limit
 };
 

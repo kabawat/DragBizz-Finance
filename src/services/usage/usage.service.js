@@ -122,6 +122,56 @@ class UsageService {
     }
 
     /**
+     * Get total usage for subscription period (for TOTAL usage type)
+     * Counts all usage from subscription start date to now
+     */
+    static async getUsageForSubscription(subscriptionId, featureKey) {
+        try {
+            // Check cache first
+            const cacheKey = `usage:subscription:${subscriptionId}:${featureKey}`;
+            const cached = await getCache(cacheKey);
+            if (cached !== null) {
+                return cached;
+            }
+            
+            // Get subscription to know start date
+            const subscription = await SubscriptionModel.findById(subscriptionId)
+                .select('startDate')
+                .lean();
+            
+            if (!subscription) {
+                return 0;
+            }
+            
+            // Use aggregation pipeline to sum all usage from subscription start
+            const result = await UsageTrackingModel.aggregate([
+                {
+                    $match: {
+                        subscriptionId: new mongoose.Types.ObjectId(subscriptionId),
+                        featureKey: featureKey
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$count' }
+                    }
+                }
+            ]);
+            
+            const total = result[0]?.total || 0;
+            
+            // Cache the result (longer TTL since it's overall usage)
+            await setCache(cacheKey, total, 300); // 5 minutes
+            
+            return total;
+        } catch (error) {
+            console.log('Error getting usage for subscription:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get remaining quota for a feature (with caching)
      */
     static async getRemainingQuota(subscriptionId, featureKey) {
@@ -209,15 +259,20 @@ class UsageService {
                 monthlyLimit = totalLimit;
                 used = await this.getUsageForMonth(subscriptionId, featureKey);
                 remaining = Math.max(0, monthlyLimit - used);
+            } else if (usageType === USAGE_TYPES.TOTAL) {
+                // Overall limit for subscription period (does not reset)
+                const totalLimitValue = totalLimit;
+                used = await this.getUsageForSubscription(subscriptionId, featureKey);
+                remaining = Math.max(0, totalLimitValue - used);
             }
 
             const result = {
                 hasAccess: true,
                 remaining,
-                limit: usageType === USAGE_TYPES.MONTHLY_TOTAL ? monthlyLimit : dailyLimit,
+                limit: usageType === USAGE_TYPES.MONTHLY_TOTAL ? monthlyLimit : (usageType === USAGE_TYPES.TOTAL ? totalLimit : dailyLimit),
                 usageType,
                 used,
-                dailyLimit: usageType !== USAGE_TYPES.MONTHLY_TOTAL ? dailyLimit : null,
+                dailyLimit: usageType !== USAGE_TYPES.MONTHLY_TOTAL && usageType !== USAGE_TYPES.TOTAL ? dailyLimit : null,
                 monthlyLimit: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? monthlyLimit : null,
                 monthlyUsed: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? used : null
             };

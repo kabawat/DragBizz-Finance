@@ -100,7 +100,7 @@ const subscriptionSchema = new mongoose.Schema({
         usageLimits: {
             usageType: {
                 type: String,
-                enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'UNLIMITED'],
+                enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'TOTAL', 'UNLIMITED'],
                 default: 'UNLIMITED'
             },
             totalLimit: {
