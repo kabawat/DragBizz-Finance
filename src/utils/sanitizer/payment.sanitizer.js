@@ -2,7 +2,9 @@ function sanitizeCreateOrderData(data) {
     return {
         packageId: data.packageId?.trim(),
         months: data.months ? parseInt(data.months) : null,
-        couponCode: data.couponCode?.trim() || null
+        couponCode: data.couponCode?.trim() || null,
+        email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null
     };
 }
 

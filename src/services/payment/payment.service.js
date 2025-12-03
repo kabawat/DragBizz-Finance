@@ -12,7 +12,7 @@ const SECRET = require('@config/env.config');
 class PaymentService {
     static async createOrder(orderData) {
         try {
-            const { userId, packageId, months, couponCode, idempotencyKey, ipAddress, userAgent } = orderData;
+            const { userId, packageId, months, couponCode, email, phone, idempotencyKey, ipAddress, userAgent } = orderData;
 
             if (!mongoose.Types.ObjectId.isValid(packageId)) {
                 throw new Error('Invalid package ID format');
@@ -201,7 +201,9 @@ class PaymentService {
                     packageId: packageId.toString(),
                     months: monthsNum,
                     billingCycle,
-                    packageName: packageDoc.name
+                    packageName: packageDoc.name,
+                    ...(email && { email }),
+                    ...(phone && { phone })
                 }
             });
 

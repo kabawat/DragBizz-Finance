@@ -26,6 +26,23 @@ function validateCreateOrder(data) {
         errors.couponCode = 'Coupon code must be a string';
     }
 
+    // Optional email validation
+    if (data.email && typeof data.email === 'string' && data.email.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.email.trim())) {
+            errors.email = 'Invalid email format';
+        }
+    }
+
+    // Optional phone validation
+    if (data.phone && typeof data.phone === 'string' && data.phone.trim()) {
+        const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,}$/;
+        const cleanPhone = data.phone.replace(/\D/g, '');
+        if (!phoneRegex.test(data.phone.trim()) || cleanPhone.length < 10) {
+            errors.phone = 'Invalid phone number format';
+        }
+    }
+
     return {
         isValid: Object.keys(errors).length === 0,
         errors

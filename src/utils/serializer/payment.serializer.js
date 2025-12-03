@@ -1,11 +1,23 @@
-/**
-// Serialize payment order response
- */
 function serializeOrderResponse(orderData) {
+    // Defensive guard – if something went wrong upstream, avoid crashing the controller
+    if (!orderData) {
+        return {
+            orderId: null,
+            razorpayOrderId: null,
+            amount: 0,
+            currency: 'INR',
+            keyId: null,
+            status: 'PENDING',
+            expiresAt: null,
+            requiresPayment: false
+        };
+    }
+
     const paymentStatus = orderData.payment?.status || orderData.status || 'PENDING';
-    const requiresPayment = typeof orderData.requiresPayment === 'boolean'
-        ? orderData.requiresPayment
-        : (orderData.payment?.finalAmount ?? orderData.amount) > 0;
+    const requiresPayment =
+        typeof orderData.requiresPayment === 'boolean'
+            ? orderData.requiresPayment
+            : (orderData.payment?.finalAmount ?? orderData.amount) > 0;
 
     return {
         orderId: orderData.orderId,
