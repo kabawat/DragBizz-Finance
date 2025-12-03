@@ -25,18 +25,35 @@ class Response {
 
     // Error Response Handler
     static error(res, options = {}) {
-        const {
-            message = "An error occurred",
-            error = "Unknown error",
-            statusCode = STATUS_CODES.INTERNAL_SERVER_ERROR || 500,
-            data = null,
-            meta = {}
-        } = options;
+        // Handle case where options might be an Error object
+        let errorMessage = "Unknown error";
+        let errorName = "Unknown error";
+        let statusCode = STATUS_CODES.INTERNAL_SERVER_ERROR || 500;
+        let data = null;
+        let meta = {};
+        let message = "An error occurred";
+
+        if (options && typeof options === 'object') {
+            if (options instanceof Error) {
+                errorMessage = options.message || "Unknown error";
+                errorName = options.name || "Error";
+                message = options.message || "An error occurred";
+            } else {
+                message = options.message || message;
+                errorMessage = options.error || errorName;
+                statusCode = options.statusCode || statusCode;
+                data = options.data || data;
+                meta = options.meta || meta;
+            }
+        } else if (typeof options === 'string') {
+            message = options;
+            errorMessage = options;
+        }
 
         const response = {
             status: false,
             message,
-            error: ENVIRONMENT === "development" ? error : undefined,
+            error: ENVIRONMENT === "development" ? errorMessage : undefined,
             data,
             ...meta
         };

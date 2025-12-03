@@ -1,9 +1,3 @@
-/**
- * Hardcoded Feature Constants
- * These are the fixed feature identifiers used across all services
- * DO NOT CHANGE THESE VALUES - They are used for access control and usage tracking
- */
-
 const FEATURES = {
     // Store Management
     STORE_MANAGEMENT: 'store_management',

@@ -192,20 +192,30 @@ class PaymentService {
 
             const orderId = `order_${nanoid(16)}`;
 
-            const razorpayOrder = await getRazorpayInstance().orders.create({
-                amount: amountInPaise,
-                currency: 'INR', // Default currency
-                receipt: orderId,
-                notes: {
-                    userId,
-                    packageId: packageId.toString(),
-                    months: monthsNum,
-                    billingCycle,
-                    packageName: packageDoc.name,
-                    ...(email && { email }),
-                    ...(phone && { phone })
-                }
-            });
+            let razorpayOrder;
+            try {
+                razorpayOrder = await getRazorpayInstance().orders.create({
+                    amount: amountInPaise,
+                    currency: 'INR', // Default currency
+                    receipt: orderId,
+                    notes: {
+                        userId,
+                        packageId: packageId.toString(),
+                        months: monthsNum,
+                        billingCycle,
+                        packageName: packageDoc.name,
+                        ...(email && { email }),
+                        ...(phone && { phone })
+                    }
+                });
+            } catch (razorpayError) {
+                console.error('Razorpay order creation failed:', razorpayError);
+                throw new Error(`Failed to create Razorpay order: ${razorpayError.message || 'Unknown error'}`);
+            }
+
+            if (!razorpayOrder || !razorpayOrder.id) {
+                throw new Error('Invalid response from Razorpay: Order ID not found');
+            }
 
             const paymentData = {
                 userId,
@@ -487,14 +497,18 @@ class PaymentService {
     }
 
     static _buildOrderResponse(paymentDoc) {
-        const requiresPayment = paymentDoc.finalAmount > 0;
+        if (!paymentDoc) {
+            throw new Error('Payment document is required to build order response');
+        }
+        
+        const requiresPayment = (paymentDoc.finalAmount || 0) > 0;
         return {
-            orderId: paymentDoc.orderId,
-            razorpayOrderId: paymentDoc.razorpayOrderId,
-            amount: paymentDoc.finalAmount,
+            orderId: paymentDoc.orderId || null,
+            razorpayOrderId: paymentDoc.razorpayOrderId || null,
+            amount: paymentDoc.finalAmount || 0,
             currency: paymentDoc.currency || 'INR',
             keyId: requiresPayment ? SECRET.razorpay.keyId : null,
-            status: paymentDoc.status,
+            status: paymentDoc.status || 'PENDING',
             requiresPayment,
             payment: paymentDoc
         };

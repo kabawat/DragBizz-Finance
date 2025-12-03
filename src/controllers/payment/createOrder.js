@@ -25,6 +25,14 @@ async function createOrderController(req, res) {
             userAgent: req.userAgent
         });
 
+        if (!orderData) {
+            return Response.error(res, {
+                message: 'Failed to create payment order',
+                error: 'Order creation returned no data',
+                statusCode: 500
+            });
+        }
+
         const responseData = serializeOrderResponse(orderData);
         return Response.created(res, 'Payment order created successfully', responseData);
     } catch (error) {
