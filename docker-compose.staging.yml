@@ -16,7 +16,6 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      - mongo-staging
       - redis-staging
     stdin_open: true
     tty: true
@@ -30,17 +29,6 @@ services:
           memory: 256M
           cpus: '0.25'
 
-  mongo-staging:
-    image: mongo:7.0
-    container_name: dragbizz_subscription_mongo_staging
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: subs_staging
-      MONGO_INITDB_ROOT_PASSWORD: staging_password_123
-    volumes:
-      - mongo_staging_data:/data/db
-    # No external port exposure in staging
-    restart: "unless-stopped"
-
   redis-staging:
     image: redis:7.2-alpine
     container_name: dragbizz_subscription_redis_staging
@@ -51,8 +39,6 @@ services:
     restart: "unless-stopped"
 
 volumes:
-  mongo_staging_data:
-    driver: local
   redis_staging_data:
     driver: local
 

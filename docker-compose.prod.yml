@@ -16,7 +16,6 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      - mongo-prod
       - redis-prod
     restart: "unless-stopped"
     deploy:
@@ -29,23 +28,6 @@ services:
           cpus: '0.5'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${PORT:-4002}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  mongo-prod:
-    image: mongo:7.0
-    container_name: dragbizz_subscription_mongo_prod
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: subs_prod
-      MONGO_INITDB_ROOT_PASSWORD: prod_password_123
-    volumes:
-      - mongo_prod_data:/data/db
-    # No external port exposure in production
-    restart: "unless-stopped"
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -66,8 +48,6 @@ services:
       retries: 3
 
 volumes:
-  mongo_prod_data:
-    driver: local
   redis_prod_data:
     driver: local
 

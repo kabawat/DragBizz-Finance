@@ -10,7 +10,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=${PORT:-4002}
-      - MONGODB_URI_DEV=mongodb://subs_dev:dev_password_123@mongo-dev:27017/dragbizz_subscription_dev?authSource=admin
       - REDIS_HOST=redis-dev
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -20,8 +19,9 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      - mongo-dev
       - redis-dev
     # Development settings
     stdin_open: true
@@ -35,26 +35,6 @@ services:
         reservations:
           memory: 256M
           cpus: '0.25'
-
-  mongo-dev:
-    image: mongo:7.0
-    container_name: dragbizz_subscription_mongo_dev
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: subs_dev
-      MONGO_INITDB_ROOT_PASSWORD: dev_password_123
-    volumes:
-      - mongo_dev_data:/data/db
-    ports:
-      - "5002:27017"
-    restart: "no"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
 
   redis-dev:
     image: redis:7.2-alpine
@@ -73,8 +53,6 @@ services:
           cpus: '0.05'
 
 volumes:
-  mongo_dev_data:
-    driver: local
   redis_dev_data:
     driver: local
 
