@@ -102,6 +102,14 @@ function validatePackage(data) {
                     errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
                 }
             }
+
+            if (limit.highlight !== undefined && limit.highlight !== null) {
+                if (typeof limit.highlight !== 'string') {
+                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be a string';
+                } else if (limit.highlight.trim().length > 500) {
+                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be less than 500 characters';
+                }
+            }
         });
             }
 
@@ -221,6 +229,14 @@ function validatePackageUpdate(data) {
             if (usageType === USAGE_TYPES.DAILY_ROLLING && limit.customDailyLimit !== undefined && limit.customDailyLimit !== null) {
                 if (Number(limit.customDailyLimit) < 0) {
                     errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
+                }
+            }
+
+            if (limit.highlight !== undefined && limit.highlight !== null) {
+                if (typeof limit.highlight !== 'string') {
+                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be a string';
+                } else if (limit.highlight.trim().length > 500) {
+                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be less than 500 characters';
                 }
             }
         });

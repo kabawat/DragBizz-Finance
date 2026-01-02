@@ -34,7 +34,7 @@ class SubscriptionService {
             const existingSubscription = await SubscriptionModel.findOne({ paymentId });
             if (existingSubscription) {
                 const populatedSubscription = await SubscriptionModel.findById(existingSubscription._id)
-                    .populate('packageId', 'name description pricing featureUsageLimits')
+                    .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                     .populate('paymentId', 'amount currency status')
                     .lean();
                 return populatedSubscription;
@@ -137,13 +137,16 @@ class SubscriptionService {
             });
 
             const populatedSubscription = await SubscriptionModel.findById(subscription._id)
-                .populate('packageId', 'name description pricing featureUsageLimits')
+                .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                 .populate('paymentId', 'amount currency status')
                 .lean();
 
-            // Invalidate cache for this user
             const cacheKey = `${SUBSCRIPTION_CACHE_PREFIX}${userId}`;
             await deleteCache(cacheKey);
+            
+            if (populatedSubscription) {
+                await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
+            }
 
             return populatedSubscription;
         } catch (error) {
@@ -185,7 +188,7 @@ class SubscriptionService {
                 startDate: { $lte: now },
                 endDate: { $gte: now }
             })
-                .populate('packageId', 'name description pricing featureUsageLimits')
+                .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                 .populate('paymentId', 'amount currency status')
                 .sort({ createdAt: -1 })
                 .lean();
@@ -210,7 +213,7 @@ class SubscriptionService {
                     startDate: { $lte: now },
                     endDate: { $gte: now }
                 })
-                    .populate('packageId', 'name description pricing featureUsageLimits')
+                    .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                     .populate('paymentId', 'amount currency status')
                     .sort({ createdAt: -1 })
                     .lean();
@@ -240,7 +243,7 @@ class SubscriptionService {
 
             const total = await SubscriptionModel.countDocuments(query);
             const subscriptions = await SubscriptionModel.find(query)
-                .populate('packageId', 'name description pricing featureUsageLimits')
+                .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                 .populate('paymentId', 'amount currency status')
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -269,7 +272,7 @@ class SubscriptionService {
                 _id: subscriptionId,
                 userId
             })
-                .populate('packageId', 'name description pricing featureUsageLimits')
+                .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
                 .populate('paymentId', 'amount currency status razorpayOrderId')
                 .lean();
 

@@ -3,20 +3,12 @@ const { USAGE_TYPES, FEATURE_DISPLAY_NAMES } = require('@src/constants/features'
 const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
 const mongoose = require('mongoose');
 
-// Cache configuration
-const QUOTA_CACHE_TTL = 60; // 1 minute (short for accuracy)
+const QUOTA_CACHE_TTL = 60;
 const QUOTA_CACHE_PREFIX = 'quota:';
-const USAGE_DATE_CACHE_TTL = 60; // 1 minute
-const USAGE_MONTH_CACHE_TTL = 300; // 5 minutes (monthly data changes less frequently)
+const USAGE_DATE_CACHE_TTL = 60;
+const USAGE_MONTH_CACHE_TTL = 300;
 
-/**
- * Usage Service
- * Handles feature usage tracking and quota management
- */
 class UsageService {
-    /**
-     * Get current date string (YYYY-MM-DD)
-     */
     static getCurrentDate() {
         const now = new Date();
         const year = now.getFullYear();
@@ -25,9 +17,6 @@ class UsageService {
         return `${year}-${month}-${day}`;
     }
 
-    /**
-     * Get current month string (YYYY-MM)
-     */
     static getCurrentMonth() {
         const now = new Date();
         const year = now.getFullYear();
@@ -35,14 +24,10 @@ class UsageService {
         return `${year}-${month}`;
     }
 
-    /**
-     * Calculate daily limit for DAILY_ROLLING type
-     */
     static calculateDailyLimit(totalLimit, customDailyLimit = null) {
         if (customDailyLimit !== null) {
             return customDailyLimit;
         }
-        // Calculate average per day (assuming 30 days in month)
         return Math.floor(totalLimit / 30);
     }
 
@@ -186,13 +171,44 @@ class UsageService {
             }
             
             const subscription = await SubscriptionModel.findById(subscriptionId)
+                .populate('packageId', 'isAIFeature planType')
                 .lean();
 
             if (!subscription) {
                 throw new Error('Subscription not found');
             }
 
-            // Find feature in subscription
+            const isAIFeature = featureKey === 'VOICE_AI';
+            let packageHasAI = subscription.packageId?.isAIFeature === true;
+            
+            if (!packageHasAI && subscription.packageId?.planType) {
+                const planType = subscription.packageId.planType;
+                if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                    packageHasAI = true;
+                }
+            }
+            if (isAIFeature) {
+                if (!packageHasAI) {
+                    const result = {
+                        hasAccess: false,
+                        remaining: 0,
+                        limit: 0,
+                        usageType: 'UNLIMITED'
+                    };
+                    await setCache(cacheKey, result, 30);
+                    return result;
+                }
+                const result = {
+                    hasAccess: true,
+                    remaining: -1,
+                    limit: -1,
+                    usageType: 'UNLIMITED',
+                    used: 0
+                };
+                await setCache(cacheKey, result, 300);
+                return result;
+            }
+
             const feature = subscription.features?.find(f => f.featureKey === featureKey);
 
             if (!feature || !feature.enabled) {
@@ -202,24 +218,21 @@ class UsageService {
                     limit: 0,
                     usageType: 'UNLIMITED'
                 };
-                // Cache negative result for shorter time
-                await setCache(cacheKey, result, 30); // 30 seconds for negative results
+                await setCache(cacheKey, result, 30);
                 return result;
             }
 
             const usageLimits = feature.usageLimits || {};
 
-            // If unlimited, return unlimited
             if (usageLimits.usageType === USAGE_TYPES.UNLIMITED || !usageLimits.totalLimit) {
                 const result = {
                     hasAccess: true,
-                    remaining: -1, // -1 means unlimited
+                    remaining: -1,
                     limit: -1,
                     usageType: USAGE_TYPES.UNLIMITED,
                     used: 0
                 };
-                // Cache unlimited results for longer time
-                await setCache(cacheKey, result, 300); // 5 minutes for unlimited
+                await setCache(cacheKey, result, 300);
                 return result;
             }
 
@@ -233,34 +246,26 @@ class UsageService {
             let monthlyLimit = 0;
 
             if (usageType === USAGE_TYPES.DAILY_FIXED) {
-                // Daily fixed limit
                 dailyLimit = totalLimit;
                 used = await this.getUsageForDate(subscriptionId, featureKey);
                 remaining = Math.max(0, dailyLimit - used);
             } else if (usageType === USAGE_TYPES.DAILY_ROLLING) {
-                // Daily rolling with monthly total
                 monthlyLimit = totalLimit;
                 dailyLimit = this.calculateDailyLimit(totalLimit, customDailyLimit);
                 
                 const monthlyUsed = await this.getUsageForMonth(subscriptionId, featureKey);
                 const dailyUsed = await this.getUsageForDate(subscriptionId, featureKey);
                 
-                // Calculate remaining monthly quota
                 const remainingMonthly = Math.max(0, monthlyLimit - monthlyUsed);
-                
-                // For rolling, daily limit can be adjusted based on remaining monthly quota
-                // If remaining monthly is less than daily limit, use remaining monthly
                 dailyLimit = Math.min(dailyLimit, remainingMonthly);
                 
                 used = dailyUsed;
                 remaining = Math.max(0, dailyLimit - used);
             } else if (usageType === USAGE_TYPES.MONTHLY_TOTAL) {
-                // Monthly total limit
                 monthlyLimit = totalLimit;
                 used = await this.getUsageForMonth(subscriptionId, featureKey);
                 remaining = Math.max(0, monthlyLimit - used);
             } else if (usageType === USAGE_TYPES.TOTAL) {
-                // Overall limit for subscription period (does not reset)
                 const totalLimitValue = totalLimit;
                 used = await this.getUsageForSubscription(subscriptionId, featureKey);
                 remaining = Math.max(0, totalLimitValue - used);
@@ -277,7 +282,6 @@ class UsageService {
                 monthlyUsed: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? used : null
             };
             
-            // Cache the result
             await setCache(cacheKey, result, QUOTA_CACHE_TTL);
             
             return result;
@@ -339,6 +343,14 @@ class UsageService {
      */
     static async incrementUsage(subscriptionId, userId, featureKey, quantity = 1, metadata = {}) {
         try {
+            if (featureKey === 'VOICE_AI') {
+                return {
+                    count: 0,
+                    date: this.getCurrentDate(),
+                    message: 'AI features do not track usage'
+                };
+            }
+
             const date = this.getCurrentDate();
             const month = this.getCurrentMonth();
             const year = new Date().getFullYear();

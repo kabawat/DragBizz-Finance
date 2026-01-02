@@ -4,78 +4,67 @@ const mongoose = require('mongoose');
 const { connectDB } = require('@config/database.config');
 const { connectRedis, disconnectRedis } = require('@config/redis.config');
 const SECRET = require('@config/env.config');
+const logger = require('@src/utils/logger');
 
 async function startServer() {
   server?.listen(SECRET.server.port, async () => {
     try {
       await connectDB();
-      console.log('Database connected');
+      logger.info('Database connected');
       await connectRedis();
-      console.log('Redis connected');
+      logger.info('Redis connected');
       
-      // Start gRPC server
       const grpcServer = require('@src/lib/grpc/server');
       grpcServer.initialize();
     } catch (err) {
-      console.log('Connection error:', err.message);
+      logger.error('Connection error', { error: err.message, stack: err.stack });
       process.exit(1);
     }
-    console.log(`Subscription service running at http://localhost:${SECRET.server.port}/health`);
+    logger.info(`Subscription service running at http://localhost:${SECRET.server.port}/health`);
   });
 }
 
-// Graceful shutdown handlers
 const gracefulShutdown = async (signal) => {
-  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  logger.info(`${signal} received. Starting graceful shutdown...`);
   
   try {
-    // Shutdown gRPC server
     const grpcServer = require('@src/lib/grpc/server');
     await grpcServer.shutdown();
-    
-    // Close Redis connection
     await disconnectRedis();
-    console.log('✅ Redis disconnected');
-    
-    // Close database connection
+    logger.info('Redis disconnected');
     await mongoose.connection.close();
-    console.log('✅ Database disconnected');
+    logger.info('Database disconnected');
     
-    // Close server
     server?.close(() => {
-      console.log('✅ Server closed');
+      logger.info('Server closed');
       process.exit(0);
     });
     
-    // Force close after 10 seconds
     setTimeout(() => {
-      console.log('⚠️ Forcing shutdown after timeout');
+      logger.warn('Forcing shutdown after timeout');
       process.exit(1);
     }, 10000);
   } catch (error) {
-    console.log('❌ Error during graceful shutdown:', error);
+    logger.error('Error during graceful shutdown', { error: error.message, stack: error.stack });
     process.exit(1);
   }
 };
 
-// Handle termination signals
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.log('❌ Uncaught Exception:', error);
+  logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
   gracefulShutdown('uncaughtException');
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.log('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled Rejection', { reason, promise });
   gracefulShutdown('unhandledRejection');
 });
 
 startServer().catch((e) => {
-  console.log('Error starting subscription service:', e);
+  logger.error('Error starting subscription service', { error: e.message, stack: e.stack });
   process.exit(1);
 });
 

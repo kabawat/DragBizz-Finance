@@ -56,6 +56,7 @@ function sanitizePackageData(data) {
                     customDailyLimit: limit.customDailyLimit !== undefined && limit.customDailyLimit !== null && limit.customDailyLimit !== ''
                         ? Number(limit.customDailyLimit)
                         : null,
+                    highlight: limit.highlight && typeof limit.highlight === 'string' ? limit.highlight.trim() : null,
                     metadata: limit.metadata || {}
                 };
             })
@@ -77,6 +78,15 @@ function sanitizePackageData(data) {
 
     if (data.isRecommended !== undefined) {
         sanitized.isRecommended = data.isRecommended;
+    }
+
+    if (data.isAIFeature !== undefined) {
+        sanitized.isAIFeature = data.isAIFeature === true || data.isAIFeature === 'true';
+    } else {
+        const planType = data.planType || sanitized.planType;
+        if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+            sanitized.isAIFeature = true;
+        }
     }
 
     // Status and Visibility

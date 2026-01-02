@@ -13,7 +13,8 @@ function packageCreationSerializer(package) {
             usageType: limit.usageType || 'UNLIMITED',
             totalLimit: limit.totalLimit ?? null,
             customDailyLimit: limit.customDailyLimit ?? null,
-            enabled: limit.enabled !== false
+            enabled: limit.enabled !== false,
+            highlight: limit.highlight ?? null
         }))
         : [];
 
@@ -50,6 +51,7 @@ function packageCreationSerializer(package) {
         isRecommended: package.isRecommended,
         status: package.status,
         isVisible: package.isVisible,
+        isAIFeature: package.isAIFeature || false,
         maxSubscribers: package.maxSubscribers,
         trialPeriod: package.trialPeriod,
         tags: package.tags || [],

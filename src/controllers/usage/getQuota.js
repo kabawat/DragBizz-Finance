@@ -2,10 +2,6 @@ const UsageService = require('@src/services/usage/usage.service');
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
 
-/**
- * Get remaining quota for a feature or all features
- * GET /plans/usage/quota?featureKey=invoice_management
- */
 async function getQuotaController(req, res) {
     try {
         const userId = req.user?.sub || req.query?.userId || req.body?.userId;
@@ -15,7 +11,6 @@ async function getQuotaController(req, res) {
             return Response.validationError(res, 'User ID is required');
         }
 
-        // Get active subscription (using cached service method)
         const subscription = await SubscriptionService.getActiveSubscription(userId);
 
         if (!subscription) {
@@ -23,7 +18,33 @@ async function getQuotaController(req, res) {
         }
 
         if (featureKey) {
-            // Get quota for specific feature
+            if (featureKey === 'VOICE_AI') {
+                let packageHasAI = subscription.packageId?.isAIFeature === true;
+                
+                if (!packageHasAI && subscription.packageId?.planType) {
+                    const planType = subscription.packageId.planType;
+                    if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                        packageHasAI = true;
+                    }
+                }
+                
+                const quota = {
+                    hasAccess: packageHasAI,
+                    remaining: packageHasAI ? -1 : 0,
+                    limit: packageHasAI ? -1 : 0,
+                    usageType: 'UNLIMITED',
+                    used: 0
+                };
+                
+                return Response.success(res, {
+                    message: 'Quota retrieved successfully',
+                    data: {
+                        featureKey,
+                        quota
+                    }
+                });
+            }
+            
             const quota = await UsageService.getRemainingQuota(
                 subscription._id,
                 featureKey
@@ -37,7 +58,6 @@ async function getQuotaController(req, res) {
                 }
             });
         } else {
-            // Get quota for all features
             const summary = await UsageService.getUsageSummary(subscription._id);
 
             return Response.success(res, {

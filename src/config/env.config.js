@@ -28,10 +28,9 @@ const SECRET = {
     keyId: process.env.RAZORPAY_KEY_ID,
     keySecret: process.env.RAZORPAY_KEY_SECRET,
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
-    mode: process.env.RAZORPAY_MODE || 'test' // test or live
+    mode: process.env.RAZORPAY_MODE || 'test'
   },
   provider: {
-    // placeholders for integration
     stripeSecret: process.env.STRIPE_SECRET,
     cashfreeAppId: process.env.CF_APP_ID,
     cashfreeSecret: process.env.CF_SECRET_KEY,
@@ -42,28 +41,25 @@ const SECRET = {
   }
 };
 
-// Validate critical environment variables
 if (!SECRET.mongo.uri) {
-    console.log("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
+    console.error("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
     process.exit(1);
 }
 
 if (!SECRET.redis.host) {
-    console.log("❌ REDIS_HOST must be set. Refusing to start.");
+    console.error("❌ REDIS_HOST must be set. Refusing to start.");
     process.exit(1);
 }
 
-// Validate Razorpay credentials if mode is live
 if (SECRET.razorpay.mode === 'live') {
     if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
-        console.log("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
+        console.error("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
         process.exit(1);
     }
 }
 
-// Validate JWT issuer
 if (!SECRET.jwt.issuer) {
-    console.log("❌ JWT_ISSUER must be set. Refusing to start.");
+    console.error("❌ JWT_ISSUER must be set. Refusing to start.");
     process.exit(1);
 }
 

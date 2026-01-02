@@ -87,6 +87,12 @@ const packageSchema = new mongoose.Schema({
             default: null,
             min: 0
         },
+        highlight: {
+            type: String,
+            trim: true,
+            maxlength: 500,
+            default: null
+        },
         metadata: {
             type: mongoose.Schema.Types.Mixed,
             default: {}
@@ -119,6 +125,13 @@ const packageSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
         index: true
+    },
+
+    // AI Feature Support (Package Level)
+    isAIFeature: {
+        type: Boolean,
+        default: false,
+        index: true,
     },
 
     // Status and Visibility

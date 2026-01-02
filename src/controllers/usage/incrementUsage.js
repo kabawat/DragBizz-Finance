@@ -2,10 +2,6 @@ const UsageService = require('@src/services/usage/usage.service');
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
 
-/**
- * Increment usage for a feature
- * POST /plans/usage/increment
- */
 async function incrementUsageController(req, res) {
     try {
         const userId = req.user?.sub || req.body?.userId;
@@ -23,14 +19,53 @@ async function incrementUsageController(req, res) {
             return Response.validationError(res, 'Quantity must be at least 1');
         }
 
-        // Get active subscription (using cached service method)
         const subscription = await SubscriptionService.getActiveSubscription(userId);
 
         if (!subscription) {
             return Response.forbidden(res, 'No active subscription found');
         }
 
-        // Check if usage is allowed before incrementing
+        if (featureKey === 'VOICE_AI') {
+            let packageHasAI = subscription.packageId?.isAIFeature === true;
+            
+            if (!packageHasAI && subscription.packageId?.planType) {
+                const planType = subscription.packageId.planType;
+                if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                    packageHasAI = true;
+                }
+            }
+            
+            if (!packageHasAI) {
+                return Response.forbidden(res, {
+                    message: 'Voice AI feature is not available in your subscription plan',
+                    data: {
+                        allowed: false,
+                        quota: {
+                            hasAccess: false,
+                            remaining: 0,
+                            limit: 0,
+                            usageType: 'UNLIMITED'
+                        },
+                        reason: 'Feature not available in subscription'
+                    }
+                });
+            }
+            return Response.success(res, {
+                message: 'AI feature usage allowed (unlimited)',
+                data: {
+                    usage: {
+                        count: 0,
+                        date: new Date().toISOString().split('T')[0]
+                    },
+                    quota: {
+                        hasAccess: true,
+                        remaining: -1,
+                        limit: -1,
+                        usageType: 'UNLIMITED'
+                    }
+                }
+            });
+        }
         const canUse = await UsageService.canUseFeature(
             subscription._id,
             featureKey,
@@ -48,7 +83,6 @@ async function incrementUsageController(req, res) {
             });
         }
 
-        // Increment usage
         const usage = await UsageService.incrementUsage(
             subscription._id,
             userId,
@@ -57,7 +91,6 @@ async function incrementUsageController(req, res) {
             metadata
         );
 
-        // Get updated quota
         const updatedQuota = await UsageService.getRemainingQuota(
             subscription._id,
             featureKey

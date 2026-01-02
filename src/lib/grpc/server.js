@@ -111,7 +111,6 @@ class GrpcServer {
                 });
             }
 
-            // Get active subscription (using cached service method)
             const SubscriptionService = require('@src/services/subscription/subscription.service');
             const subscription = await SubscriptionService.getActiveSubscription(user_id);
 
@@ -122,12 +121,35 @@ class GrpcServer {
                 });
             }
 
-            // Check usage
-            const result = await UsageService.canUseFeature(
-                subscription._id.toString(),
-                feature_key,
-                quantity || 1
-            );
+            let result;
+            if (feature_key === 'VOICE_AI') {
+                let packageHasAI = subscription.packageId?.isAIFeature === true;
+                
+                if (!packageHasAI && subscription.packageId?.planType) {
+                    const planType = subscription.packageId.planType;
+                    if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                        packageHasAI = true;
+                    }
+                }
+                
+                result = {
+                    allowed: packageHasAI,
+                    reason: packageHasAI ? '' : 'Feature not available in subscription',
+                    quota: {
+                        hasAccess: packageHasAI,
+                        remaining: packageHasAI ? -1 : 0,
+                        limit: packageHasAI ? -1 : 0,
+                        usageType: 'UNLIMITED',
+                        used: 0
+                    }
+                };
+            } else {
+                result = await UsageService.canUseFeature(
+                    subscription._id.toString(),
+                    feature_key,
+                    quantity || 1
+                );
+            }
 
             const quota = result.quota || {};
 
@@ -173,7 +195,6 @@ class GrpcServer {
                 });
             }
 
-            // Get active subscription (using cached service method)
             const SubscriptionService = require('@src/services/subscription/subscription.service');
             const subscription = await SubscriptionService.getActiveSubscription(user_id);
 
@@ -184,7 +205,41 @@ class GrpcServer {
                 });
             }
 
-            // Check if usage is allowed before incrementing
+            if (feature_key === 'VOICE_AI') {
+                let packageHasAI = subscription.packageId?.isAIFeature === true;
+                
+                if (!packageHasAI && subscription.packageId?.planType) {
+                    const planType = subscription.packageId.planType;
+                    if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                        packageHasAI = true;
+                    }
+                }
+                
+                if (!packageHasAI) {
+                    return callback({
+                        code: grpc.status.PERMISSION_DENIED,
+                        message: 'Voice AI feature is not available in your subscription plan'
+                    });
+                }
+                const response = {
+                    success: true,
+                    usage: {
+                        count: 0,
+                        date: new Date().toISOString().split('T')[0],
+                        month: new Date().toISOString().substring(0, 7),
+                        year: new Date().getFullYear()
+                    },
+                    quota: {
+                        has_access: true,
+                        remaining: -1,
+                        limit: -1,
+                        usage_type: 'UNLIMITED',
+                        used: 0
+                    }
+                };
+                return callback(null, response);
+            }
+
             const canUse = await UsageService.canUseFeature(
                 subscription._id.toString(),
                 feature_key,
@@ -198,7 +253,6 @@ class GrpcServer {
                 });
             }
 
-            // Increment usage
             const usage = await UsageService.incrementUsage(
                 subscription._id.toString(),
                 user_id,
@@ -207,7 +261,6 @@ class GrpcServer {
                 metadata || {}
             );
 
-            // Get updated quota
             const updatedQuota = await UsageService.getRemainingQuota(
                 subscription._id.toString(),
                 feature_key
@@ -260,7 +313,6 @@ class GrpcServer {
                 });
             }
 
-            // Get active subscription (using cached service method)
             const SubscriptionService = require('@src/services/subscription/subscription.service');
             const subscription = await SubscriptionService.getActiveSubscription(user_id);
 
@@ -271,11 +323,30 @@ class GrpcServer {
                 });
             }
 
-            // Get quota
-            const quota = await UsageService.getRemainingQuota(
-                subscription._id.toString(),
-                feature_key
-            );
+            let quota;
+            if (feature_key === 'VOICE_AI') {
+                let packageHasAI = subscription.packageId?.isAIFeature === true;
+                
+                if (!packageHasAI && subscription.packageId?.planType) {
+                    const planType = subscription.packageId.planType;
+                    if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
+                        packageHasAI = true;
+                    }
+                }
+                
+                quota = {
+                    hasAccess: packageHasAI,
+                    remaining: packageHasAI ? -1 : 0,
+                    limit: packageHasAI ? -1 : 0,
+                    usageType: 'UNLIMITED',
+                    used: 0
+                };
+            } else {
+                quota = await UsageService.getRemainingQuota(
+                    subscription._id.toString(),
+                    feature_key
+                );
+            }
 
             const response = {
                 success: true,
@@ -330,7 +401,6 @@ class GrpcServer {
                 });
             }
 
-            // Transform subscription to proto format
             const features = (subscription.features || []).map(feature => ({
                 feature_key: feature.featureKey || '',
                 feature_name: feature.featureName || '',
@@ -354,7 +424,6 @@ class GrpcServer {
                 metadata: limit.metadata || {}
             }));
 
-            // Helper function to safely convert date to ISO string
             const toISOString = (date) => {
                 if (!date) return '';
                 if (date instanceof Date) return date.toISOString();

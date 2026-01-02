@@ -19,6 +19,9 @@ const FEATURES = {
     SUPPLIER_MANAGEMENT: 'supplier_management',
     BILL_MANAGEMENT: 'bill_management',
     PAYMENT_MANAGEMENT: 'payment_management',
+    
+    // AI Features
+    VOICE_AI: 'VOICE_AI',
 };
 
 // Feature display names (for UI)
@@ -34,6 +37,7 @@ const FEATURE_DISPLAY_NAMES = {
     supplier_management: 'Supplier Management',
     bill_management: 'Bill Management',
     payment_management: 'Payment Management',
+    VOICE_AI: 'Voice AI',
 };
 
 // Feature to route mapping (for access control)
