@@ -1,5 +1,3 @@
-// Standardized Response Handler - All APIs use consistent response format: {status, message, error, data}
-
 const STATUS_CODES = require("@src/constants/statusCode");
 const { ENVIRONMENT } = require("@config/env.config");
 
@@ -119,9 +117,9 @@ class Response {
         });
     }
 
-    // Generic Error Handler for Controllers
     static handleError(res, error, context = "Unknown") {
-        console.log(`❌ ${context} Error:`, error);
+        const logger = require("@src/utils/logger");
+        logger.error(`${context} Error:`, { error: error.message, stack: error.stack, context });
         
         // Handle Mongoose validation errors
         if (error.name === 'ValidationError') {

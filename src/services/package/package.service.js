@@ -199,12 +199,7 @@ class PackageService {
             sort[sortField] = sortOrder === 'desc' ? -1 : 1;
             sort._id = -1; // Secondary sort for consistency
 
-            // Get total count for pagination
             const total = await PackageModel.countDocuments(query);
-
-            // Debug logging (remove in production)
-            console.log('Package query:', JSON.stringify(query, null, 2));
-            console.log('Total packages found:', total);
 
             // Get paginated packages
             const packages = await PackageModel.find(query)

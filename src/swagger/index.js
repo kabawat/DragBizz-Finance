@@ -6,8 +6,16 @@ const options = {
         openapi: '3.0.0',
         info: {
             title: 'DragBizz Subscription Service API',
-            version: '0.1.0',
-            description: 'Subscription and package management service',
+            version: '1.0.0',
+            description: 'Subscription and package management service. Handles subscription plans, feature-based access control, payment processing, and usage tracking.',
+            contact: {
+                name: 'DragBizz Support',
+                email: 'support@dragbizz.com'
+            },
+            license: {
+                name: 'MIT',
+                url: 'https://opensource.org/licenses/MIT'
+            }
         },
         servers: [
             {
@@ -15,8 +23,12 @@ const options = {
                 description: 'Current server',
             },
             {
-                description: 'Dev server',
-                url: 'http://localhost/plans'
+                url: 'http://localhost:4002',
+                description: 'Development server',
+            },
+            {
+                url: 'https://api.dragbizz.com/plans',
+                description: 'Production server',
             },
         ],
         components: {
