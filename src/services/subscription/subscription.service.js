@@ -2,6 +2,8 @@ const { SubscriptionModel, PaymentModel, PackageModel } = require('@src/models')
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
+const sendEmailService = require('@src/services/email.service');
+const SECRET = require('@config/env.config');
 const mongoose = require('mongoose');
 
 // Cache configuration
@@ -138,7 +140,7 @@ class SubscriptionService {
 
             const populatedSubscription = await SubscriptionModel.findById(subscription._id)
                 .populate('packageId', 'name description pricing featureUsageLimits isAIFeature')
-                .populate('paymentId', 'amount currency status')
+                .populate('paymentId', 'amount currency status notes metadata razorpayResponse')
                 .lean();
 
             const cacheKey = `${SUBSCRIPTION_CACHE_PREFIX}${userId}`;
@@ -146,6 +148,54 @@ class SubscriptionService {
             
             if (populatedSubscription) {
                 await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
+            }
+
+            // Send subscription success email (async, don't block response)
+            if (populatedSubscription) {
+                const payment = populatedSubscription.paymentId;
+                const packageData = populatedSubscription.packageId;
+                
+                // Try to get email from payment razorpayResponse notes or metadata
+                let userEmail = null;
+                if (payment?.razorpayResponse?.notes?.email) {
+                    userEmail = payment.razorpayResponse.notes.email;
+                } else if (payment?.metadata?.email) {
+                    userEmail = payment.metadata.email;
+                } else if (payment?.notes) {
+                    try {
+                        const notesObj = typeof payment.notes === 'string' ? JSON.parse(payment.notes) : payment.notes;
+                        userEmail = notesObj?.email || null;
+                    } catch {
+                        // If notes is not JSON, skip
+                    }
+                }
+                
+                if (userEmail) {
+                    // Extract features list
+                    const features = (packageData?.featureUsageLimits || [])
+                        .filter(limit => limit && limit.featureKey && limit.enabled !== false)
+                        .map(limit => FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey);
+
+                    sendEmailService(
+                        userEmail,
+                        "SUBSCRIPTION_SUCCESS",
+                        {
+                            userName: "User", // We don't have user name in subscription service
+                            name: "User",
+                            planName: packageData?.name || "Subscription Plan",
+                            planDuration: populatedSubscription.billingCycle || "Monthly",
+                            amount: payment?.amount || 0,
+                            currency: payment?.currency || "INR",
+                            startDate: populatedSubscription.startDate,
+                            endDate: populatedSubscription.endDate,
+                            features: features,
+                            transactionId: payment?._id?.toString(),
+                            paymentMethod: payment?.paymentMethod || "Online"
+                        }
+                    ).catch((error) => {
+                        console.log("Failed to send subscription success email:", error.message);
+                    });
+                }
             }
 
             return populatedSubscription;
