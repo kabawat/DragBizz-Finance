@@ -1,4 +1,4 @@
-onst API_CONFIG = {
+const API_CONFIG = {
     NOTIFICATION: {
         EMAIL: {
             SEND: "/notification/api/v1/email/send",

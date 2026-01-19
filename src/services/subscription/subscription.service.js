@@ -150,17 +150,15 @@ class SubscriptionService {
                 await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
             }
 
-            // Send subscription success email (async, don't block response)
             if (populatedSubscription) {
                 const payment = populatedSubscription.paymentId;
                 const packageData = populatedSubscription.packageId;
                 
-                // Try to get email from payment razorpayResponse notes or metadata
                 let userEmail = null;
-                if (payment?.razorpayResponse?.notes?.email) {
-                    userEmail = payment.razorpayResponse.notes.email;
-                } else if (payment?.metadata?.email) {
+                if (payment?.metadata?.email) {
                     userEmail = payment.metadata.email;
+                } else if (payment?.razorpayResponse?.notes?.email) {
+                    userEmail = payment.razorpayResponse.notes.email;
                 } else if (payment?.notes) {
                     try {
                         const notesObj = typeof payment.notes === 'string' ? JSON.parse(payment.notes) : payment.notes;
@@ -171,7 +169,6 @@ class SubscriptionService {
                 }
                 
                 if (userEmail) {
-                    // Extract features list
                     const features = (packageData?.featureUsageLimits || [])
                         .filter(limit => limit && limit.featureKey && limit.enabled !== false)
                         .map(limit => FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey);
@@ -180,7 +177,7 @@ class SubscriptionService {
                         userEmail,
                         "SUBSCRIPTION_SUCCESS",
                         {
-                            userName: "User", // We don't have user name in subscription service
+                            userName: "User",
                             name: "User",
                             planName: packageData?.name || "Subscription Plan",
                             planDuration: populatedSubscription.billingCycle || "Monthly",
@@ -193,14 +190,13 @@ class SubscriptionService {
                             paymentMethod: payment?.paymentMethod || "Online"
                         }
                     ).catch((error) => {
-                        console.log("Failed to send subscription success email:", error.message);
+                        // Email send failed, but don't block subscription creation
                     });
                 }
             }
 
             return populatedSubscription;
         } catch (error) {
-            console.log('Error creating subscription:', error);
             throw error;
         }
     }
@@ -253,8 +249,6 @@ class SubscriptionService {
 
             return subscription;
         } catch (error) {
-            // If cache fails, still try database
-            console.log('Error in getActiveSubscription (cache failed, trying DB):', error);
             try {
                 const now = new Date();
                 const subscription = await SubscriptionModel.findOne({

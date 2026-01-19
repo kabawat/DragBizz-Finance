@@ -17,7 +17,6 @@ async function setCache(key, value, ttl = DEFAULT_TTL) {
         
         return true;
     } catch (error) {
-        console.log('Cache set error:', error);
         return false;
     }
 }
@@ -33,7 +32,6 @@ async function getCache(key) {
         const data = await redisClient.get(key);
         return data ? JSON.parse(data) : null;
     } catch (error) {
-        console.log('Cache get error:', error);
         return null;
     }
 }
@@ -49,7 +47,6 @@ async function deleteCache(key) {
         await redisClient.del(key);
         return true;
     } catch (error) {
-        console.log('Cache delete error:', error);
         return false;
     }
 }
@@ -82,7 +79,6 @@ async function getBatchCache(keys) {
         
         return data;
     } catch (error) {
-        console.log('Batch cache get error:', error);
         return {};
     }
 }
@@ -107,7 +103,6 @@ async function setBatchCache(keyValuePairs, ttl = DEFAULT_TTL) {
         await pipeline.exec();
         return true;
     } catch (error) {
-        console.log('Batch cache set error:', error);
         return false;
     }
 }
@@ -128,7 +123,6 @@ async function deleteBatchCache(keys) {
         await pipeline.exec();
         return true;
     } catch (error) {
-        console.log('Batch cache delete error:', error);
         return false;
     }
 }

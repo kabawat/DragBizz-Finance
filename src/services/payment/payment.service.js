@@ -179,7 +179,7 @@ class PaymentService {
                         userAgent
                     });
                 } catch (subError) {
-                    console.log('Error creating subscription for free package:', subError);
+                    // Subscription creation failed, but don't block payment response
                 }
 
                 return this._buildOrderResponse(payment);
@@ -224,10 +224,10 @@ class PaymentService {
                 orderId,
                 razorpayOrderId: razorpayOrder.id,
                 amount: finalAmount,
-                currency: 'INR', // Default currency
+                currency: 'INR',
                 baseAmount,
                 discountAmount,
-                taxAmount: 0, // No tax in new structure
+                taxAmount: 0,
                 finalAmount,
                 billingCycle,
                 months: monthsNum,
@@ -235,13 +235,15 @@ class PaymentService {
                 gateway: 'RAZORPAY',
                 couponCode: couponCode || null,
                 discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
-                gstPercentage: 0, // No GST in new structure
+                gstPercentage: 0,
                 razorpayResponse: razorpayOrder,
                 expiresAt: new Date(Date.now() + 30 * 60 * 1000),
                 metadata: {
                     idempotencyKey: finalIdempotencyKey,
                     ipAddress,
-                    userAgent
+                    userAgent,
+                    ...(email && { email }),
+                    ...(phone && { phone })
                 }
             };
 
@@ -306,7 +308,6 @@ class PaymentService {
 
             return this._buildOrderResponse(savedPayment);
         } catch (error) {
-            console.log('Error creating payment order:', error);
             throw error;
         }
     }
@@ -397,7 +398,6 @@ class PaymentService {
 
             return payment;
         } catch (error) {
-            console.log('Error verifying payment:', error);
             throw error;
         }
     }
