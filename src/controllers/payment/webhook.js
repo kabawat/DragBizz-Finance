@@ -3,6 +3,24 @@ const { PaymentModel } = require('@src/models');
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
 
+function extractEntity(payload, entityType) {
+    return payload[entityType]?.entity;
+}
+
+function extractRazorpayIds(paymentEntity) {
+    return {
+        razorpayPaymentId: paymentEntity.id,
+        razorpayOrderId: paymentEntity.order_id
+    };
+}
+
+async function findPaymentByOrderId(razorpayOrderId, additionalQuery = {}) {
+    return PaymentModel.findOne({
+        razorpayOrderId,
+        ...additionalQuery
+    });
+}
+
 async function razorpayWebhookController(req, res) {
     try {
         const signature = req.headers['x-razorpay-signature'];
@@ -52,14 +70,12 @@ async function razorpayWebhookController(req, res) {
 
 async function handlePaymentCaptured(payload) {
     try {
-        const paymentEntity = payload.payment?.entity;
+        const paymentEntity = extractEntity(payload, 'payment');
         if (!paymentEntity) return;
 
-        const razorpayPaymentId = paymentEntity.id;
-        const razorpayOrderId = paymentEntity.order_id;
+        const { razorpayPaymentId, razorpayOrderId } = extractRazorpayIds(paymentEntity);
 
-        const payment = await PaymentModel.findOne({
-            razorpayOrderId,
+        const payment = await findPaymentByOrderId(razorpayOrderId, {
             razorpayPaymentId: { $ne: null }
         });
 
@@ -92,14 +108,12 @@ async function handlePaymentCaptured(payload) {
 
 async function handlePaymentFailed(payload) {
     try {
-        const paymentEntity = payload.payment?.entity;
+        const paymentEntity = extractEntity(payload, 'payment');
         if (!paymentEntity) return;
 
-        const razorpayPaymentId = paymentEntity.id;
-        const razorpayOrderId = paymentEntity.order_id;
+        const { razorpayPaymentId, razorpayOrderId } = extractRazorpayIds(paymentEntity);
 
-        const payment = await PaymentModel.findOne({
-            razorpayOrderId,
+        const payment = await findPaymentByOrderId(razorpayOrderId, {
             razorpayPaymentId
         });
 
@@ -118,11 +132,11 @@ async function handlePaymentFailed(payload) {
 
 async function handleOrderPaid(payload) {
     try {
-        const orderEntity = payload.order?.entity;
+        const orderEntity = extractEntity(payload, 'order');
         if (!orderEntity) return;
 
         const razorpayOrderId = orderEntity.id;
-        const payment = await PaymentModel.findOne({ razorpayOrderId });
+        const payment = await findPaymentByOrderId(razorpayOrderId);
 
         if (payment && payment.status === 'PENDING') {
             try {
@@ -147,7 +161,7 @@ async function handleOrderPaid(payload) {
 
 async function handleRefundCreated(payload) {
     try {
-        const refundEntity = payload.refund?.entity;
+        const refundEntity = extractEntity(payload, 'refund');
         if (!refundEntity) return;
 
         const razorpayPaymentId = refundEntity.payment_id;
@@ -175,7 +189,7 @@ async function handleRefundCreated(payload) {
 
 async function handleRefundProcessed(payload) {
     try {
-        const refundEntity = payload.refund?.entity;
+        const refundEntity = extractEntity(payload, 'refund');
         if (!refundEntity) return;
 
         const razorpayPaymentId = refundEntity.payment_id;

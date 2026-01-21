@@ -9,7 +9,68 @@ const DISPLAY_NAME_TO_KEY = Object.entries(FEATURE_DISPLAY_NAMES).reduce((acc, [
     return acc;
 }, {});
 
-async function getActiveSubscriptionController(req, res) {
+function normalizeFeature(feature) {
+    if (!feature) return null;
+    
+    let featureKey = feature.featureKey || null;
+    
+    if (!featureKey) {
+        if (typeof feature.feature === 'string') {
+            featureKey = feature.feature;
+        } else if (feature.feature?.name) {
+            const lookup = DISPLAY_NAME_TO_KEY[feature.feature.name.toLowerCase()];
+            featureKey = lookup || feature.feature.name.toLowerCase().replace(/\s+/g, '_');
+        } else if (feature.featureName) {
+            const lookup = DISPLAY_NAME_TO_KEY[feature.featureName.toLowerCase()];
+            featureKey = lookup || feature.featureName.toLowerCase().replace(/\s+/g, '_');
+        }
+    }
+
+    if (!featureKey) return null;
+
+    return {
+        featureKey,
+        featureName: feature.featureName || FEATURE_DISPLAY_NAMES[featureKey] || featureKey,
+        enabled: feature.enabled !== false,
+        usageLimits: feature.usageLimits || {
+            usageType: 'UNLIMITED',
+            totalLimit: null,
+            customDailyLimit: null
+        },
+        metadata: feature.metadata || {}
+    };
+}
+
+function filterFields(subscription, requestedFields, populatePackage) {
+    if (!requestedFields || requestedFields.length === 0) {
+        if (!populatePackage && subscription.packageId?._id) {
+            const result = { ...subscription };
+            result.packageId = subscription.packageId._id;
+            return result;
+        }
+        return subscription;
+    }
+
+    const responseData = {};
+    
+    for (const field of requestedFields) {
+        if (field === '_id' && subscription._id) {
+            responseData._id = subscription._id;
+        } else if (field === 'id' && subscription._id) {
+            responseData.id = subscription._id.toString();
+        } else if (field === 'packageId' && subscription.packageId) {
+            responseData.packageId = populatePackage 
+                ? subscription.packageId 
+                : (subscription.packageId._id || subscription.packageId);
+        } else if (subscription[field] !== undefined) {
+            responseData[field] = subscription[field];
+        }
+    }
+
+    return responseData;
+}
+
+async function getActiveSubscription(req, res) {
     try {
         const userId = req.user?.sub || req.query?.userId || req.body?.userId;
         
@@ -17,7 +78,12 @@ async function getActiveSubscriptionController(req, res) {
             return Response.validationError(res, 'User ID is required');
         }
 
-        const subscription = await SubscriptionService.getActiveSubscription(userId);
+        const populatePackage = req.query.populatePackage !== 'false';
+        const fieldsParam = req.query.fields;
+        const requestedFields = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : null;
+        const needsFeatures = !requestedFields || requestedFields.includes('features');
+        
+        const subscription = await SubscriptionService.getActiveSubscription(userId, { populatePackage });
         
         if (!subscription) {
             return Response.success(res, {
@@ -26,64 +92,20 @@ async function getActiveSubscriptionController(req, res) {
             });
         }
 
-        if (subscription.features && Array.isArray(subscription.features)) {
-            subscription.features = subscription.features.map(feature => {
-                let featureKey = feature.featureKey || null;
-                let legacyName = null;
+        let responseData = filterFields(subscription, requestedFields, populatePackage);
 
-                if (!featureKey && feature.feature) {
-                    if (typeof feature.feature === 'string') {
-                        featureKey = feature.feature;
-                    } else if (typeof feature.feature === 'object' && feature.feature.name) {
-                        legacyName = feature.feature.name;
-                    }
-                }
-
-                if (!featureKey && legacyName) {
-                    const lookup = DISPLAY_NAME_TO_KEY[legacyName.toLowerCase()];
-                    featureKey = lookup || legacyName.toLowerCase().replace(/\s+/g, '_');
-                }
-
-                if (!featureKey && feature.featureName) {
-                    const lookup = DISPLAY_NAME_TO_KEY[feature.featureName.toLowerCase()];
-                    featureKey = lookup || feature.featureName.toLowerCase().replace(/\s+/g, '_');
-                }
-
-                const normalizedKey = featureKey;
-                const featureName = feature.featureName || legacyName || (normalizedKey ? FEATURE_DISPLAY_NAMES[normalizedKey] : null) || normalizedKey;
-
-                return {
-                    featureKey: normalizedKey,
-                    featureName,
-                    enabled: feature.enabled !== false,
-                    usageLimits: feature.usageLimits || {
-                        usageType: 'UNLIMITED',
-                        totalLimit: null,
-                        customDailyLimit: null
-                    },
-                    metadata: feature.metadata || {}
-                };
-            });
-        }
-
-        if (subscription.packageId && subscription.packageId.featureUsageLimits) {
-            subscription.packageId.featureUsageLimits = subscription.packageId.featureUsageLimits.map(limit => {
-                const featureKey = limit.featureKey;
-                return {
-                    ...limit,
-                    featureName: FEATURE_DISPLAY_NAMES[featureKey] || featureKey
-                };
-            });
+        if (needsFeatures && responseData.features && Array.isArray(responseData.features)) {
+            responseData.features = responseData.features.map(normalizeFeature).filter(Boolean);
         }
 
         return Response.success(res, {
             message: 'Active subscription fetched successfully',
-            data: subscription
+            data: responseData
         });
     } catch (error) {
-        return Response.handleError(res, error, 'getActiveSubscriptionController');
+        return Response.handleError(res, error, 'getActiveSubscription');
     }
 }
 
-module.exports = getActiveSubscriptionController;
+module.exports = getActiveSubscription;
 

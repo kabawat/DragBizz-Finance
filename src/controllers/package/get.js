@@ -3,14 +3,73 @@ const { packageCreationSerializer, packageListSerializer } = require("@src/utils
 const Response = require("@src/utils/responseHandler/standardized");
 const mongoose = require("mongoose");
 
-// Get packages - single by ID or paginated list
+const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
+
+const VALID_STATUSES = PACKAGE_STATUS;
+const VALID_PLAN_TYPES = ['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'];
+const VALID_SORT_BY = ['name', 'price', 'createdAt', 'updatedAt', 'displayOrder'];
+const VALID_SORT_ORDER = ['asc', 'desc', '1', '-1'];
+
+function validateQueryParams(queryParams) {
+    const errors = {};
+
+    if (queryParams.page !== undefined) {
+        const page = parseInt(queryParams.page);
+        if (isNaN(page) || page < 1) {
+            errors.page = "Page must be a positive integer";
+        }
+    }
+
+    if (queryParams.limit !== undefined) {
+        const limit = parseInt(queryParams.limit);
+        if (isNaN(limit) || limit < 1) {
+            errors.limit = "Limit must be a positive integer";
+        } else if (limit > 100) {
+            errors.limit = "Limit cannot exceed 100";
+        }
+    }
+
+    if (queryParams.status !== undefined && !VALID_STATUSES.includes(queryParams.status)) {
+        errors.status = `Status must be one of: ${VALID_STATUSES.join(', ')}`;
+    }
+
+    if (queryParams.planType !== undefined && !VALID_PLAN_TYPES.includes(queryParams.planType)) {
+        errors.planType = `Plan type must be one of: ${VALID_PLAN_TYPES.join(', ')}`;
+    }
+
+    if (queryParams.isVisible !== undefined) {
+        const isVisible = queryParams.isVisible.toLowerCase();
+        if (isVisible !== 'true' && isVisible !== 'false') {
+            errors.isVisible = "isVisible must be 'true' or 'false'";
+        }
+    }
+
+    if (queryParams.search !== undefined) {
+        const search = queryParams.search.trim();
+        if (search.length > 100) {
+            errors.search = "Search query cannot exceed 100 characters";
+        }
+    }
+
+    if (queryParams.sortBy !== undefined && !VALID_SORT_BY.includes(queryParams.sortBy)) {
+        errors.sortBy = `Sort by must be one of: ${VALID_SORT_BY.join(', ')}`;
+    }
+
+    if (queryParams.sortOrder !== undefined && !VALID_SORT_ORDER.includes(queryParams.sortOrder)) {
+        errors.sortOrder = `Sort order must be one of: ${VALID_SORT_ORDER.join(', ')}`;
+    }
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors
+    };
+}
+
 async function getPackageController(req, res) {
     try {
         const queryParams = req.query;
 
-        // If ID is provided, return single package
         if (queryParams?.id) {
-            // Validate MongoDB ObjectId
             if (!mongoose.Types.ObjectId.isValid(queryParams?.id)) {
                 return Response.validationError(res, "Invalid package ID format", {
                     id: "Package ID must be a valid MongoDB ObjectId"
@@ -26,14 +85,18 @@ async function getPackageController(req, res) {
             });
         }
 
-        // Otherwise, return paginated list
+        const validation = validateQueryParams(queryParams);
+        if (!validation.isValid) {
+            return Response.validationError(res, "Invalid query parameters", validation.errors);
+        }
+
         const paginationOptions = {
-            page: queryParams.page,
-            limit: queryParams.limit,
+            page: queryParams.page ? parseInt(queryParams.page) : undefined,
+            limit: queryParams.limit ? parseInt(queryParams.limit) : undefined,
             status: queryParams.status,
             planType: queryParams.planType,
-            isVisible: queryParams.isVisible,
-            search: queryParams.search,
+            isVisible: queryParams.isVisible ? queryParams.isVisible.toLowerCase() === 'true' : undefined,
+            search: queryParams.search?.trim(),
             sortBy: queryParams.sortBy,
             sortOrder: queryParams.sortOrder
         };

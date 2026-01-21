@@ -30,19 +30,41 @@ async function verifyPaymentController(req, res) {
         }
 
         let subscription = null;
+        let subscriptionType = null;
         if (payment.status === 'SUCCESS') {
             try {
+                const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
                 subscription = await SubscriptionService.createSubscription({
                     userId,
                     paymentId: payment._id,
                     ipAddress: req.clientIp,
                     userAgent: req.userAgent
                 });
+                
+                if (subscription) {
+                    if (subscription.status === 'PENDING') {
+                        subscriptionType = 'DOWNGRADE';
+                    } else if (existingSubscription) {
+                        const existingPackageId = existingSubscription.packageId?._id?.toString() || existingSubscription.packageId?.toString();
+                        const newPackageId = subscription.packageId?._id?.toString() || subscription.packageId?.toString();
+                        
+                        if (existingPackageId === newPackageId) {
+                            subscriptionType = 'RENEWAL';
+                        } else {
+                            subscriptionType = 'UPGRADE';
+                        }
+                    } else {
+                        subscriptionType = 'NEW';
+                    }
+                }
             } catch (subError) {
                 console.log('Error creating subscription:', subError);
             }
         }
 
+        const paymentDoc = payment._id ? await require('@src/models').PaymentModel.findById(payment._id).lean() : null;
+        const proratedCredit = paymentDoc?.metadata?.proratedCredit || 0;
+        
         const responseData = {
             payment: serializePayment(payment),
             subscription: subscription ? {
@@ -53,7 +75,9 @@ async function verifyPaymentController(req, res) {
                 package: subscription.packageId ? {
                     id: subscription.packageId._id,
                     name: subscription.packageId.name
-                } : null
+                } : null,
+                type: subscriptionType,
+                proratedCredit: proratedCredit > 0 ? proratedCredit : null
             } : null
         };
 

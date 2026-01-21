@@ -1,7 +1,10 @@
 const PaymentService = require('@src/services/payment/payment.service');
+const SubscriptionService = require('@src/services/subscription/subscription.service');
+const { PackageModel } = require('@src/models');
 const { validateCreateOrder } = require('@src/utils/validations/payment.validation');
 const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
+const { comparePackages } = require('@src/services/subscription/subscription.helpers');
 const Response = require('@src/utils/responseHandler/standardized');
 
 async function createOrderController(req, res) {
@@ -15,6 +18,35 @@ async function createOrderController(req, res) {
         const validation = validateCreateOrder(sanitizedData);
         if (!validation.isValid) {
             return Response.validationError(res, 'Validation failed', validation.errors);
+        }
+
+        const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
+        if (existingSubscription) {
+            const newPackage = await PackageModel.findById(sanitizedData.packageId).lean();
+            if (!newPackage) {
+                return Response.notFound(res, 'Package not found');
+            }
+
+            const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
+            if (existingPackage) {
+                const comparison = comparePackages(existingPackage, newPackage);
+                
+                if (comparison === 'SAME') {
+                    const now = new Date();
+                    const endDate = new Date(existingSubscription.endDate);
+                    const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysRemaining > 30) {
+                        return Response.validationError(res, 
+                            'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
+                            {
+                                daysRemaining: daysRemaining.toString(),
+                                suggestion: 'You can renew this subscription closer to the expiry date'
+                            }
+                        );
+                    }
+                }
+            }
         }
 
         const orderData = await PaymentService.createOrder({
