@@ -173,22 +173,24 @@ class SubscriptionService {
                         .filter(limit => limit && limit.featureKey && limit.enabled !== false)
                         .map(limit => FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey);
 
+                    const emailPayload = {
+                        userName: "User",
+                        name: "User",
+                        planName: packageData?.name || "Subscription Plan",
+                        planDuration: populatedSubscription.billingCycle || "Monthly",
+                        amount: payment?.amount || 0,
+                        currency: payment?.currency || "INR",
+                        startDate: populatedSubscription.startDate,
+                        endDate: populatedSubscription.endDate,
+                        features: features,
+                        transactionId: payment?._id?.toString(),
+                        paymentMethod: payment?.paymentMethod || "Online"
+                    };
+
                     sendEmailService(
                         userEmail,
                         "SUBSCRIPTION_SUCCESS",
-                        {
-                            userName: "User",
-                            name: "User",
-                            planName: packageData?.name || "Subscription Plan",
-                            planDuration: populatedSubscription.billingCycle || "Monthly",
-                            amount: payment?.amount || 0,
-                            currency: payment?.currency || "INR",
-                            startDate: populatedSubscription.startDate,
-                            endDate: populatedSubscription.endDate,
-                            features: features,
-                            transactionId: payment?._id?.toString(),
-                            paymentMethod: payment?.paymentMethod || "Online"
-                        }
+                        emailPayload
                     ).catch((error) => {
                         // Email send failed, but don't block subscription creation
                     });

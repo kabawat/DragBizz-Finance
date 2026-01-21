@@ -13,7 +13,6 @@ async function razorpayWebhookController(req, res) {
         const rawBody = JSON.stringify(req.body);
         const isValidSignature = verifyWebhookSignature(rawBody, signature);
         if (!isValidSignature) {
-            console.log('Invalid webhook signature');
             return Response.validationError(res, 'Invalid webhook signature');
         }
 
@@ -47,7 +46,6 @@ async function razorpayWebhookController(req, res) {
 
         return res.status(200).json({ received: true });
     } catch (error) {
-        console.log('Webhook error:', error);
         return res.status(200).json({ received: true, error: error.message });
     }
 }
@@ -66,7 +64,6 @@ async function handlePaymentCaptured(payload) {
         });
 
         if (!payment) {
-            console.log(`Payment not found for order: ${razorpayOrderId}`);
             return;
         }
 
@@ -89,7 +86,6 @@ async function handlePaymentCaptured(payload) {
             }
         }
     } catch (error) {
-        console.log('Error handling payment.captured:', error);
         throw error;
     }
 }
@@ -173,7 +169,6 @@ async function handleRefundCreated(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.log('Error handling refund.created:', error);
         throw error;
     }
 }
