@@ -1,16 +1,17 @@
 const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
 const Response = require("@src/utils/responseHandler/standardized");
+const SECRET = require("@src/config/env.config");
+const isProd = SECRET.ENVIRONMENT === "production";
 
 const accessMiddleware = async (req, res, next) => {
-    console.log("access Middleware : ", req.method, req.originalUrl || req.url);
     try {
-        const authHeader = req.headers["authorization"];
-        const token = extractBearerToken(authHeader);
+        let token = req.cookies[isProd ? "__Host-at" : "at"];
+
         if (!token) {
             return Response.validationError(res, "Access token missing or invalid.");
         }
 
-        const { valid, expired, decoded } = await verifyAccessToken(token);    
+        const { valid, expired, decoded } = await verifyAccessToken(token);
         if (!valid) {
             return Response.validationError(res, expired ? "Access token expired." : "Invalid access token.");
         }
@@ -18,9 +19,6 @@ const accessMiddleware = async (req, res, next) => {
         req.user = decoded;
         next();
     } catch (err) {
-        if (err.code !== "ERR_JWT_EXPIRED") {
-            console.log("[accessMiddleware] Unexpected error:", err.message || err);
-        }
         return Response.handleError(res, err, "accessMiddleware");
     }
 };
