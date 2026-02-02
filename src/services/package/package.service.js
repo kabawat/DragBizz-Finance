@@ -1,5 +1,6 @@
 const { PackageModel } = require("@src/models");
 const mongoose = require("mongoose");
+const { escapeRegex } = require("@src/utils/helpers/escapeRegex.helper");
 
 class PackageService {
     // Create a new package
@@ -48,7 +49,7 @@ class PackageService {
     // Check if package name already exists
     static async nameExists(name, excludeId = null) {
         const query = {
-            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+            name: { $regex: new RegExp(`^${escapeRegex(String(name || '').trim())}$`, 'i') },
             deletedAt: null
         };
 
@@ -139,12 +140,13 @@ class PackageService {
 
             // Search functionality
             if (search) {
+                const safeSearch = escapeRegex(String(search).trim());
                 const searchConditions = {
                     $or: [
-                        { name: { $regex: search, $options: 'i' } },
-                        { description: { $regex: search, $options: 'i' } },
-                        { shortDescription: { $regex: search, $options: 'i' } },
-                        { tags: { $in: [new RegExp(search, 'i')] } }
+                        { name: { $regex: safeSearch, $options: 'i' } },
+                        { description: { $regex: safeSearch, $options: 'i' } },
+                        { shortDescription: { $regex: safeSearch, $options: 'i' } },
+                        { tags: { $in: [new RegExp(safeSearch, 'i')] } }
                     ]
                 };
 

@@ -11,7 +11,7 @@ const app = express();
 app.use(cookieParser());
 
 const isProduction = SECRET.ENVIRONMENT === "production";
-const allowedOrigins = SECRET.server.allowedOrigins.split(",").map(o => o.trim());
+const isDevelopment = SECRET.ENVIRONMENT === "development";
 
 const { applySecurityMiddleware } = require("@config/security.config");
 applySecurityMiddleware(app);
@@ -20,22 +20,19 @@ app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
+      if (!origin) return callback(null, true);
+
+      // Development: allow all origins
+      if (isDevelopment) {
         return callback(null, true);
       }
 
-      const selfUrl = SECRET?.server?.url;
-      const isSelf = selfUrl && origin === selfUrl;
-
-      const isLocalhostWildcard = !isProduction && (
-        /^http:\/\/localhost(:\d+)?\/?$/.test(origin) ||
-        origin.startsWith('http://localhost') ||
-        origin.startsWith('http://127.0.0.1')
-      );
-
-      const allowAllInDev = !isProduction;
-
-      const isAllowed = isSelf || isLocalhostWildcard || allowAllInDev || allowedOrigins.includes(origin);
+      // Staging & Production: only origins from .env ALLOWED_ORIGINS
+      const allowedList = (SECRET.server.allowedOrigins || "")
+        .split(",")
+        .map((o) => o.trim())
+        .filter(Boolean);
+      const isAllowed = allowedList.includes(origin);
 
       return callback(isAllowed ? null : new Error("Not allowed by CORS"), isAllowed);
     },
