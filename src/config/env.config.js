@@ -22,7 +22,7 @@ const SECRET = {
   jwt: {
     issuer: process.env.JWT_ISSUER || "DragBizz-auth",
     algorithm: process.env.ALGORITHM || "RS256",
-    audience: process.env.AUDIENCE || "SUBSCRIPTION",
+    audience: process.env.AUDIENCE || "DRAGBIZZ",
   },
   razorpay: {
     keyId: process.env.RAZORPAY_KEY_ID,
@@ -38,7 +38,11 @@ const SECRET = {
   grpc: {
     port: process.env.GRPC_PORT || 50052,
     host: process.env.GRPC_HOST || '0.0.0.0'
-  }
+  },
+
+  // Internal service auth (Voice-AI → Subscription)
+  voiceAiWhitelistIPs: process.env.ALLOWED_IPS || "127.0.0.1,::1",
+  internalServiceSecret: process.env.INTERNAL_SERVICE_SECRET || null,
 };
 
 if (!SECRET.mongo.uri) {
