@@ -1,37 +1,12 @@
+const SECRET = require("@src/config/env.config");
 const crypto = require("crypto");
-
-
+//Parse comma-separated IP whitelist from env
 function getWhitelistedIPs() {
-    const raw = process.env.ALLOWED_IPS || "127.0.0.1,::1";
+    const raw = SECRET.ALLOWED_IPS || "127.0.0.1,::1";
     return raw.split(",").map((ip) => ip.trim()).filter(Boolean);
 }
 
 let _cachedWhitelist = null;
-
-/**
- * Check if an IPv4 address is within a CIDR range.
- * @param {string} ip - IPv4 address (e.g. "172.18.0.3")
- * @param {string} cidr - CIDR notation (e.g. "172.16.0.0/12")
- * @returns {boolean}
- */
-function isIPInCIDR(ip, cidr) {
-    const parts = cidr.split("/");
-    if (parts.length !== 2) return false;
-    const [range, bitsStr] = parts;
-    const bits = parseInt(bitsStr, 10);
-    if (isNaN(bits) || bits < 0 || bits > 32) return false;
-
-    const ipParts = ip.split(".");
-    if (ipParts.length !== 4) return false;
-    const ipInt = ipParts.reduce((acc, p) => (acc << 8) + (parseInt(p, 10) || 0), 0) >>> 0;
-
-    const rangeParts = range.split(".");
-    if (rangeParts.length !== 4) return false;
-    const rangeInt = rangeParts.reduce((acc, p) => (acc << 8) + (parseInt(p, 10) || 0), 0) >>> 0;
-
-    const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
-    return (ipInt & mask) === (rangeInt & mask);
-}
 
 function isIPWhitelisted(ip) {
     if (!ip || typeof ip !== "string") return false;
@@ -42,15 +17,10 @@ function isIPWhitelisted(ip) {
         _cachedWhitelist = getWhitelistedIPs();
     }
 
-    if (_cachedWhitelist.includes(trimmed)) return true;
-
-    for (const entry of _cachedWhitelist) {
-        if (entry.includes("/") && isIPInCIDR(trimmed, entry)) return true;
-    }
-
-    return false;
+    return _cachedWhitelist.includes(trimmed);
 }
 
+// Constant-time comparison to prevent timing attacks.
 function timingSafeEqual(a, b) {
     if (typeof a !== "string" || typeof b !== "string") return false;
     const bufA = Buffer.from(a, "utf8");
@@ -60,14 +30,9 @@ function timingSafeEqual(a, b) {
     return crypto.timingSafeEqual(bufA, bufB);
 }
 
-/**
- * Validate X-Internal-Secret header against configured INTERNAL_SERVICE_SECRET.
- * Uses constant-time comparison to prevent timing attacks.
- * @param {import("express").Request} req
- * @returns {boolean}
- */
+// Validate X-Internal-Secret header against configured INTERNAL_SERVICE_SECRET.
 function hasValidInternalSecret(req) {
-    const secret = process.env.INTERNAL_SERVICE_SECRET;
+    const secret = SECRET.INTERNAL_SERVICE_SECRET;
     if (!secret || secret.length < 16) return false;
 
     const headerSecret = req.headers["x-internal-secret"];
@@ -76,6 +41,7 @@ function hasValidInternalSecret(req) {
     return timingSafeEqual(headerSecret.trim(), secret);
 }
 
+// Get client IP from request (X-Real-IP, X-Forwarded-For, or socket).
 function getClientIP(req) {
     const xRealIP = req.headers["x-real-ip"];
     if (xRealIP && typeof xRealIP === "string") {
@@ -96,6 +62,7 @@ function getClientIP(req) {
     return "";
 }
 
+// Clear cached whitelist (e.g. for tests or hot-reload).
 function clearWhitelistCache() {
     _cachedWhitelist = null;
 }

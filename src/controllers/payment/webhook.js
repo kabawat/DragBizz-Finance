@@ -2,6 +2,7 @@ const { verifyWebhookSignature } = require('@src/utils/payment/razorpay.verify')
 const { PaymentModel } = require('@src/models');
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const Response = require('@src/utils/responseHandler/standardized');
+const logger = require('@src/utils/logger');
 
 function extractEntity(payload, entityType) {
     return payload[entityType]?.entity;
@@ -59,7 +60,7 @@ async function razorpayWebhookController(req, res) {
                 break;
 
             default:
-                console.log(`Unhandled webhook event: ${event}`);
+                logger.warn(`Unhandled webhook event: ${event}`);
         }
 
         return res.status(200).json({ received: true });
@@ -97,7 +98,7 @@ async function handlePaymentCaptured(payload) {
                         paymentId: payment._id
                     });
                 } catch (subError) {
-                    console.log('Error creating subscription from webhook:', subError);
+                    logger.error('Error creating subscription from webhook', { error: subError?.message, stack: subError?.stack });
                 }
             }
         }
@@ -125,7 +126,7 @@ async function handlePaymentFailed(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.log('Error handling payment.failed:', error);
+        logger.error('Error handling payment.failed', { error: error?.message, stack: error?.stack });
         throw error;
     }
 }
@@ -150,11 +151,11 @@ async function handleOrderPaid(payload) {
                     }
                 }
             } catch (error) {
-                console.log('Error fetching payment details:', error);
+                logger.error('Error fetching payment details', { error: error?.message, stack: error?.stack });
             }
         }
     } catch (error) {
-        console.log('Error handling order.paid:', error);
+        logger.error('Error handling order.paid', { error: error?.message, stack: error?.stack });
         throw error;
     }
 }
@@ -200,7 +201,7 @@ async function handleRefundProcessed(payload) {
             await payment.save();
         }
     } catch (error) {
-        console.log('Error handling refund.processed:', error);
+        logger.error('Error handling refund.processed', { error: error?.message, stack: error?.stack });
         throw error;
     }
 }

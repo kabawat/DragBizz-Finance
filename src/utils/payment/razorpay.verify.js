@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const SECRET = require('@config/env.config');
+const logger = require('@src/utils/logger');
 
 function verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature) {
     try {
@@ -12,7 +13,7 @@ function verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySign
         
         return expectedSignature === razorpaySignature;
     } catch (error) {
-        console.log('Error verifying Razorpay signature:', error);
+        logger.error('Error verifying Razorpay signature', { error: error?.message, stack: error?.stack });
         return false;
     }
 }
@@ -27,7 +28,7 @@ function verifyWebhookSignature(payload, signature) {
         
         return expectedSignature === signature;
     } catch (error) {
-        console.log('Error verifying Razorpay webhook signature:', error);
+        logger.error('Error verifying Razorpay webhook signature', { error: error?.message, stack: error?.stack });
         return false;
     }
 }

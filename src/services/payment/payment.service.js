@@ -8,6 +8,7 @@ const SubscriptionService = require('@src/services/subscription/subscription.ser
 const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
 const SECRET = require('@config/env.config');
+const logger = require('@src/utils/logger');
 
 class PaymentService {
     static async createOrder(orderData) {
@@ -209,7 +210,7 @@ class PaymentService {
                     }
                 });
             } catch (razorpayError) {
-                console.error('Razorpay order creation failed:', razorpayError);
+                logger.error('Razorpay order creation failed', { error: razorpayError?.message, stack: razorpayError?.stack });
                 throw new Error(`Failed to create Razorpay order: ${razorpayError.message || 'Unknown error'}`);
             }
 

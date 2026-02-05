@@ -12,7 +12,6 @@ async function getQuotaController(req, res) {
         }
 
         const subscription = await SubscriptionService.getActiveSubscription(userId);
-
         if (!subscription) {
             return Response.forbidden(res, 'No active subscription found');
         }

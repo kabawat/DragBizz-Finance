@@ -2,6 +2,7 @@ const SECRET = require("@config/env.config");
 const { jwtVerify, createRemoteJWKSet } = require("jose");
 const crypto = require("crypto");
 const { getCache, setCache } = require("@src/services/cache.service");
+const logger = require("@src/utils/logger");
 
 // 🔑 Remote JWKS config (Auth micro-service)
 const jwksUrl = new URL(`${SECRET?.server?.url}/auth/.well-known/jwks.json`);
@@ -73,7 +74,7 @@ async function verifyAccessToken(token) {
         }
         
         // Log unexpected errors only
-        console.log("Token verification error:", err.message || err);
+        logger.warn("Token verification error", { error: err?.message || String(err) });
         // Don't cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }

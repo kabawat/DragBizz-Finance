@@ -1,14 +1,13 @@
 const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
 const Response = require("@src/utils/responseHandler/standardized");
 const STATUS_CODES = require("@src/constants/statusCode");
-const { isIPWhitelisted, hasValidInternalSecret, getClientIP } = require("@src/utils/internalAuth");
+const { isIPWhitelisted, hasValidInternalSecret, getClientIP, getWhitelistedIPs } = require("@src/utils/internalAuth");
 const SECRET = require("@src/config/env.config");
 const isProd = SECRET.ENVIRONMENT === "production";
 
 const accessMiddleware = async (req, res, next) => {
     try {
         let token = req.cookies[isProd ? "__Host-at" : "at"];
-
         if (token) {
             const { valid, expired, decoded } = await verifyAccessToken(token);
             if (!valid) {
@@ -24,6 +23,7 @@ const accessMiddleware = async (req, res, next) => {
         }
 
         const clientIP = getClientIP(req);
+        const allowedIPs = getWhitelistedIPs();
         if (!isIPWhitelisted(clientIP)) {
             return Response.validationError(res, "Access token missing or invalid.", {}, STATUS_CODES.UNAUTHORIZED);
         }

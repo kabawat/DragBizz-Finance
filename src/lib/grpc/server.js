@@ -2,6 +2,7 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 const SECRET = require('@src/config/env.config');
+const logger = require('@src/utils/logger');
 
 /**
  * gRPC Server Setup
@@ -59,18 +60,18 @@ class GrpcServer {
                 grpc.ServerCredentials.createInsecure(),
                 (error, port) => {
                     if (error) {
-                        console.log('❌ gRPC Server failed to start:', error);
+                        logger.error('gRPC Server failed to start', { error: error?.message, stack: error?.stack });
                         process.exit(1);
                     }
 
-                    console.log(`✅ gRPC Server listening on ${grpcHost}:${port}`);
+                    logger.info(`gRPC Server listening on ${grpcHost}:${port}`);
                     this.server.start();
                 }
             );
 
             return this.server;
         } catch (error) {
-            console.log('❌ Error initializing gRPC server:', error);
+            logger.error('Error initializing gRPC server', { error: error?.message, stack: error?.stack });
             throw error;
         }
     }
@@ -91,7 +92,7 @@ class GrpcServer {
             GetActiveSubscription: this.handleGetActiveSubscription.bind(this)
         });
 
-        console.log('✅ gRPC Services registered successfully');
+        logger.info('gRPC Services registered successfully');
     }
 
     /**
@@ -170,7 +171,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.log('Error in CheckUsage:', error);
+            logger.error('Error in CheckUsage', { error: error?.message, stack: error?.stack });
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -288,7 +289,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.log('Error in IncrementUsage:', error);
+            logger.error('Error in IncrementUsage', { error: error?.message, stack: error?.stack });
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -364,7 +365,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.log('Error in GetQuota:', error);
+            logger.error('Error in GetQuota', { error: error?.message, stack: error?.stack });
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -469,7 +470,7 @@ class GrpcServer {
 
             callback(null, response);
         } catch (error) {
-            console.log('Error in GetActiveSubscription:', error);
+            logger.error('Error in GetActiveSubscription', { error: error?.message, stack: error?.stack });
             callback({
                 code: grpc.status.INTERNAL,
                 message: error.message || 'Internal server error'
@@ -484,7 +485,7 @@ class GrpcServer {
         return new Promise((resolve) => {
             if (this.server) {
                 this.server.tryShutdown(() => {
-                    console.log('✅ gRPC Server shut down gracefully');
+                    logger.info('gRPC Server shut down gracefully');
                     resolve();
                 });
             } else {

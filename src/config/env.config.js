@@ -1,4 +1,5 @@
 require("dotenv").config();
+const logger = require("@src/utils/logger");
 
 const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 
@@ -41,29 +42,29 @@ const SECRET = {
   },
 
   // Internal service auth (Voice-AI → Subscription)
-  voiceAiWhitelistIPs: process.env.ALLOWED_IPS || "127.0.0.1,::1",
+  ALLOWED_IPS: process.env.ALLOWED_IPS || "127.0.0.1,::1",
   internalServiceSecret: process.env.INTERNAL_SERVICE_SECRET || null,
 };
 
 if (!SECRET.mongo.uri) {
-    console.error("❌ MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
+    logger.error("MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
     process.exit(1);
 }
 
 if (!SECRET.redis.host) {
-    console.error("❌ REDIS_HOST must be set. Refusing to start.");
+    logger.error("REDIS_HOST must be set. Refusing to start.");
     process.exit(1);
 }
 
 if (SECRET.razorpay.mode === 'live') {
     if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
-        console.error("❌ Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
+        logger.error("Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
         process.exit(1);
     }
 }
 
 if (!SECRET.jwt.issuer) {
-    console.error("❌ JWT_ISSUER must be set. Refusing to start.");
+    logger.error("JWT_ISSUER must be set. Refusing to start.");
     process.exit(1);
 }
 

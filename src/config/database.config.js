@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const SECRET = require("./env.config");
+const logger = require("@src/utils/logger");
 
 const connectDB = async () => {
   try {
@@ -17,9 +18,9 @@ const connectDB = async () => {
     };
 
     await mongoose.connect(SECRET.mongo.uri, options);
-    console.log("✅ MongoDB connected successfully (subscription)");
+    logger.info("MongoDB connected successfully (subscription)");
   } catch (err) {
-    console.log("❌ MongoDB connection error (subscription):", err.message);
+    logger.error("MongoDB connection error (subscription)", { error: err?.message, stack: err?.stack });
     process.exit(1);
   }
 };

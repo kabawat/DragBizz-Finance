@@ -4,6 +4,7 @@ const { validateVerifyPayment } = require('@src/utils/validations/payment.valida
 const { sanitizeVerifyPaymentData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializePayment } = require('@src/utils/serializer/payment.serializer');
 const Response = require('@src/utils/responseHandler/standardized');
+const logger = require('@src/utils/logger');
 
 async function verifyPaymentController(req, res) {
     try {
@@ -58,7 +59,7 @@ async function verifyPaymentController(req, res) {
                     }
                 }
             } catch (subError) {
-                console.log('Error creating subscription:', subError);
+                logger.error('Error creating subscription', { error: subError?.message, stack: subError?.stack });
             }
         }
 

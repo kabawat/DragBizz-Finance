@@ -1,4 +1,5 @@
 const { AuditLogModel } = require('@src/models');
+const logger = require('@src/utils/logger');
 
 async function logPaymentEvent(eventType, data) {
     try {
@@ -21,7 +22,7 @@ async function logPaymentEvent(eventType, data) {
 
         await AuditLogModel.create(auditLog);
     } catch (error) {
-        console.log('Error logging audit event:', error);
+        logger.error('Error logging audit event', { error: error?.message, stack: error?.stack });
     }
 }
 
@@ -46,7 +47,7 @@ async function logSubscriptionEvent(eventType, data) {
 
         await AuditLogModel.create(auditLog);
     } catch (error) {
-        console.log('Error logging audit event:', error);
+        logger.error('Error logging audit event', { error: error?.message, stack: error?.stack });
     }
 }
 

@@ -1,5 +1,6 @@
 const { redisClient } = require('@src/config/redis.config');
 const Response = require('@src/utils/responseHandler/standardized');
+const logger = require('@src/utils/logger');
 
 function createRateLimiter(options = {}) {
     const { limit = 10, windowSec = 60, prefix = 'rl' } = options;
@@ -57,7 +58,7 @@ function createRateLimiter(options = {}) {
             next();
         } catch (error) {
             // Log error but don't block requests if rate limiting fails
-            console.error('[RateLimit] Error:', error.message);
+            logger.warn('[RateLimit] Error', { error: error?.message });
             // In production, still allow request but log the error
             // In development, allow request
             next();

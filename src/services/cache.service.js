@@ -1,4 +1,5 @@
 const { redisClient } = require("@config/redis.config");
+const logger = require("@src/utils/logger");
 
 // Cache Service for Subscription Service - Simplified version for token verification and general caching
 
@@ -8,7 +9,7 @@ const DEFAULT_TTL = 600; // 10 minutes (max allowed)
 async function setCache(key, value, ttl = DEFAULT_TTL) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache set');
+            logger.warn('Redis client not connected, skipping cache set');
             return false;
         }
         
@@ -25,7 +26,7 @@ async function setCache(key, value, ttl = DEFAULT_TTL) {
 async function getCache(key) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache get');
+            logger.warn('Redis client not connected, skipping cache get');
             return null;
         }
         
@@ -40,7 +41,7 @@ async function getCache(key) {
 async function deleteCache(key) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache delete');
+            logger.warn('Redis client not connected, skipping cache delete');
             return false;
         }
         
@@ -55,7 +56,7 @@ async function deleteCache(key) {
 async function getBatchCache(keys) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping batch cache get');
+            logger.warn('Redis client not connected, skipping batch cache get');
             return {};
         }
         
@@ -87,7 +88,7 @@ async function getBatchCache(keys) {
 async function setBatchCache(keyValuePairs, ttl = DEFAULT_TTL) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping batch cache set');
+            logger.warn('Redis client not connected, skipping batch cache set');
             return false;
         }
         
@@ -111,7 +112,7 @@ async function setBatchCache(keyValuePairs, ttl = DEFAULT_TTL) {
 async function deleteBatchCache(keys) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping batch cache delete');
+            logger.warn('Redis client not connected, skipping batch cache delete');
             return false;
         }
         
@@ -131,13 +132,13 @@ async function deleteBatchCache(keys) {
 async function expireCache(key, ttl) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache expire');
+            logger.warn('Redis client not connected, skipping cache expire');
             return 0;
         }
         
         return await redisClient.expire(key, ttl); // returns 0 or 1
     } catch (error) {
-        console.log('Cache expire error:', error);
+        logger.error('Cache expire error', { error: error?.message, stack: error?.stack });
         return 0;
     }
 }
@@ -146,7 +147,7 @@ async function expireCache(key, ttl) {
 async function incrCache(key, step = 1) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache increment');
+            logger.warn('Redis client not connected, skipping cache increment');
             return 0;
         }
         
@@ -156,7 +157,7 @@ async function incrCache(key, step = 1) {
             return await redisClient.incrBy(key, step);
         }
     } catch (error) {
-        console.log('Cache increment error:', error);
+        logger.error('Cache increment error', { error: error?.message, stack: error?.stack });
         return 0;
     }
 }
@@ -165,7 +166,7 @@ async function incrCache(key, step = 1) {
 async function decrCache(key, step = 1) {
     try {
         if (!redisClient || !redisClient.isOpen) {
-            console.warn('Redis client not connected, skipping cache decrement');
+            logger.warn('Redis client not connected, skipping cache decrement');
             return 0;
         }
         
@@ -175,7 +176,7 @@ async function decrCache(key, step = 1) {
             return await redisClient.decrBy(key, step);
         }
     } catch (error) {
-        console.log('Cache decrement error:', error);
+        logger.error('Cache decrement error', { error: error?.message, stack: error?.stack });
         return 0;
     }
 }
