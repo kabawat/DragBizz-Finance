@@ -36,7 +36,7 @@ async function createSevenDayPackage() {
             pricing: [
                 {
                     months: 1, // System default, but we'll use trialPeriod for 7 days
-                    price: 0,
+                    price: 99,
                     discount: 0,
                     discountedPrice: 0
                 }
