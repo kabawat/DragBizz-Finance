@@ -13,7 +13,8 @@ function packageCreationSerializer(package) {
             usageType: limit.usageType || 'UNLIMITED',
             totalLimit: limit.totalLimit ?? null,
             customDailyLimit: limit.customDailyLimit ?? null,
-            enabled: limit.enabled !== false
+            enabled: limit.enabled !== false,
+            highlight: limit.highlight || (limit.metadata && limit.metadata.highlight) || null
         }))
         : [];
 

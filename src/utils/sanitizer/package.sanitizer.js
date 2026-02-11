@@ -56,7 +56,10 @@ function sanitizePackageData(data) {
                     customDailyLimit: limit.customDailyLimit !== undefined && limit.customDailyLimit !== null && limit.customDailyLimit !== ''
                         ? Number(limit.customDailyLimit)
                         : null,
-                    metadata: limit.metadata || {}
+                    metadata: {
+                        ...(limit.metadata || {}),
+                        highlight: limit.highlight || (limit.metadata && limit.metadata.highlight) || null
+                    }
                 };
             })
             .filter(Boolean);
@@ -71,6 +74,10 @@ function sanitizePackageData(data) {
     // Plan Metadata
     if (data.planType) {
         sanitized.planType = data.planType;
+    }
+
+    if (data.label) {
+        sanitized.label = data.label.trim();
     }
 
     if (data.displayOrder !== undefined) {
