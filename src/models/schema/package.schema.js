@@ -54,7 +54,7 @@ const packageSchema = new mongoose.Schema({
         type: [PricingSchema],
         required: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return Array.isArray(v) && v.length > 0;
             },
             message: 'At least one pricing option is required'
@@ -87,17 +87,17 @@ const packageSchema = new mongoose.Schema({
             default: null,
             min: 0
         },
-        highlight: {
-            type: String,
-            trim: true,
-            maxlength: 500,
-            default: null
-        },
+
         metadata: {
             type: mongoose.Schema.Types.Mixed,
             default: {}
         }
     }],
+
+    highlights: {
+        type: [String],
+        default: []
+    },
 
     // Plan Metadata
     planType: {
@@ -177,7 +177,7 @@ const packageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         select: false
     },
-    
+
 }, {
     timestamps: true,
     strict: 'throw'

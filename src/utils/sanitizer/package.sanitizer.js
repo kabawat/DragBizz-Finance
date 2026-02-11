@@ -31,7 +31,7 @@ function sanitizePackageData(data) {
                 price: pricingOption.price,
                 discount: pricingOption.discount || 0
             }));
-            
+
             // Store currency, gstPercentage, and setupFee in metadata
             sanitized.metadata = {
                 ...(sanitized.metadata || {}),
@@ -56,11 +56,16 @@ function sanitizePackageData(data) {
                     customDailyLimit: limit.customDailyLimit !== undefined && limit.customDailyLimit !== null && limit.customDailyLimit !== ''
                         ? Number(limit.customDailyLimit)
                         : null,
-                    highlight: limit.highlight && typeof limit.highlight === 'string' ? limit.highlight.trim() : null,
                     metadata: limit.metadata || {}
                 };
             })
             .filter(Boolean);
+    }
+
+    if (data.highlights && Array.isArray(data.highlights)) {
+        sanitized.highlights = data.highlights
+            .filter(h => typeof h === 'string' && h.trim().length > 0)
+            .map(h => h.trim());
     }
 
     // Plan Metadata

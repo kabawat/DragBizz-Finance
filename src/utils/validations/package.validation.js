@@ -24,31 +24,31 @@ function validatePackage(data) {
                 : [];
 
         if (pricingArray.length === 0) {
-        errors.pricing = 'At least one pricing option is required';
-    } else {
-        const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
-        const seenMonths = new Set();
-        
+            errors.pricing = 'At least one pricing option is required';
+        } else {
+            const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
+            const seenMonths = new Set();
+
             pricingArray.forEach((pricingOption, index) => {
-            if (!pricingOption.months || !validMonths.includes(pricingOption.months)) {
-                errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
-            }
-            
-            if (seenMonths.has(pricingOption.months)) {
-                errors[`pricing[${index}].months`] = `Duplicate months value: ${pricingOption.months}`;
-            }
-            seenMonths.add(pricingOption.months);
+                if (!pricingOption.months || !validMonths.includes(pricingOption.months)) {
+                    errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
+                }
+
+                if (seenMonths.has(pricingOption.months)) {
+                    errors[`pricing[${index}].months`] = `Duplicate months value: ${pricingOption.months}`;
+                }
+                seenMonths.add(pricingOption.months);
 
                 if (pricingOption.price === undefined || pricingOption.price === null || isNaN(Number(pricingOption.price))) {
                     errors[`pricing[${index}].price`] = 'Price is required and must be zero or greater';
                 } else if (Number(pricingOption.price) < 0) {
                     errors[`pricing[${index}].price`] = 'Price must be zero or greater';
-            }
+                }
 
-            if (pricingOption.discount !== undefined && (pricingOption.discount < 0 || pricingOption.discount > 100)) {
-                errors[`pricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
-            }
-        });
+                if (pricingOption.discount !== undefined && (pricingOption.discount < 0 || pricingOption.discount > 100)) {
+                    errors[`pricing[${index}].discount`] = 'Discount must be a number between 0 and 100';
+                }
+            });
         }
     }
 
@@ -103,15 +103,23 @@ function validatePackage(data) {
                 }
             }
 
-            if (limit.highlight !== undefined && limit.highlight !== null) {
-                if (typeof limit.highlight !== 'string') {
-                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be a string';
-                } else if (limit.highlight.trim().length > 500) {
-                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be less than 500 characters';
-                }
-            }
+
         });
-            }
+    }
+
+    if (data.highlights) {
+        if (!Array.isArray(data.highlights)) {
+            errors.highlights = 'Highlights must be an array';
+        } else {
+            data.highlights.forEach((highlight, index) => {
+                if (typeof highlight !== 'string') {
+                    errors[`highlights[${index}]`] = 'Highlight must be a string';
+                } else if (highlight.trim().length > 500) {
+                    errors[`highlights[${index}]`] = 'Highlight must be less than 500 characters';
+                }
+            });
+        }
+    }
 
     if (data.maxSubscribers !== undefined && data.maxSubscribers !== null) {
         if (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0) {
@@ -157,13 +165,13 @@ function validatePackageUpdate(data) {
         } else {
             const validMonths = [1, 3, 6, 12, 18, 24, 36, 48];
             const seenMonths = new Set();
-            
+
             pricingArray.forEach((pricingOption, index) => {
                 if (pricingOption.months !== undefined) {
                     if (!validMonths.includes(pricingOption.months)) {
                         errors[`pricing[${index}].months`] = `Months must be one of: ${validMonths.join(', ')}`;
                     }
-                    
+
                     if (seenMonths.has(pricingOption.months)) {
                         errors[`pricing[${index}].months`] = `Duplicate months value: ${pricingOption.months}`;
                     }
@@ -201,7 +209,7 @@ function validatePackageUpdate(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-     if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
+    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
         const seenFeatureKeys = new Set();
 
         data.featureUsageLimits.forEach((limit, index) => {
@@ -232,15 +240,23 @@ function validatePackageUpdate(data) {
                 }
             }
 
-            if (limit.highlight !== undefined && limit.highlight !== null) {
-                if (typeof limit.highlight !== 'string') {
-                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be a string';
-                } else if (limit.highlight.trim().length > 500) {
-                    errors[`featureUsageLimits[${index}].highlight`] = 'Highlight must be less than 500 characters';
-                }
-            }
+
         });
-            }
+    }
+
+    if (data.highlights) {
+        if (!Array.isArray(data.highlights)) {
+            errors.highlights = 'Highlights must be an array';
+        } else {
+            data.highlights.forEach((highlight, index) => {
+                if (typeof highlight !== 'string') {
+                    errors[`highlights[${index}]`] = 'Highlight must be a string';
+                } else if (highlight.trim().length > 500) {
+                    errors[`highlights[${index}]`] = 'Highlight must be less than 500 characters';
+                }
+            });
+        }
+    }
 
     if (data.maxSubscribers !== undefined) {
         if (data.maxSubscribers !== null && (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0)) {

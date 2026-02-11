@@ -13,8 +13,7 @@ function packageCreationSerializer(package) {
             usageType: limit.usageType || 'UNLIMITED',
             totalLimit: limit.totalLimit ?? null,
             customDailyLimit: limit.customDailyLimit ?? null,
-            enabled: limit.enabled !== false,
-            highlight: limit.highlight ?? null
+            enabled: limit.enabled !== false
         }))
         : [];
 
@@ -44,6 +43,7 @@ function packageCreationSerializer(package) {
         shortDescription: package.shortDescription,
         pricing: pricing,
         featureUsageLimits,
+        highlights: package.highlights || [],
         planType: package.planType,
         label: package.label,
         displayOrder: package.displayOrder,

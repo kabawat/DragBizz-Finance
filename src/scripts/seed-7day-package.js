@@ -23,9 +23,17 @@ async function createSevenDayPackage() {
         const featureUsageLimits = Object.values(FEATURES).map(featureKey => ({
             featureKey,
             enabled: true,
-            usageType: USAGE_TYPES.UNLIMITED,
-            highlight: `Unlimited ${featureKey.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`
+            usageType: USAGE_TYPES.UNLIMITED
         }));
+
+        const highlights = [
+            "Unlimited Store & Inventory Control",
+            "Professional Billing & Invoices",
+            "Unified Customer & Supplier Tracking",
+            "Advanced Financial & Expense Tracking",
+            "Efficient Purchase & Bill Management",
+            "Full Access to Voice AI Features"
+        ];
 
         const packageData = {
             name: packageName,
@@ -38,10 +46,11 @@ async function createSevenDayPackage() {
                     months: 1, // System default, but we'll use trialPeriod for 7 days
                     price: 99,
                     discount: 0,
-                    discountedPrice: 0
+                    discountedPrice: 99
                 }
             ],
             featureUsageLimits,
+            highlights,
             status: 'ACTIVE',
             isVisible: true,
             isPopular: false,
