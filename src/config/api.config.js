@@ -1,10 +1,10 @@
 const API_CONFIG = {
     NOTIFICATION: {
         EMAIL: {
-            SEND: "/notification/api/v1/email/send",
+            SEND: "/utility/api/v1/email/send",
         },
         SMS: {
-            SEND: "/notification/api/v1/sms/send",
+            SEND: "/utility/api/v1/sms/send",
         },
     },
 };
