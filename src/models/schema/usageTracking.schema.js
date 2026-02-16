@@ -12,14 +12,14 @@ const usageTrackingSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // User Reference (for quick queries)
     userId: {
         type: String,
         required: true,
         index: true
     },
-    
+
     // Feature Key (e.g., 'invoice_management', 'product_management')
     featureKey: {
         type: String,
@@ -27,14 +27,14 @@ const usageTrackingSchema = new mongoose.Schema({
         trim: true,
         index: true
     },
-    
+
     // Date tracking (YYYY-MM-DD format for daily, YYYY-MM for monthly)
     date: {
         type: String,
         required: true,
         index: true
     },
-    
+
     // Usage count for this date
     count: {
         type: Number,
@@ -42,21 +42,21 @@ const usageTrackingSchema = new mongoose.Schema({
         default: 0,
         min: 0
     },
-    
+
     // Month for monthly tracking (YYYY-MM format)
     month: {
         type: String,
         required: true,
         index: true
     },
-    
+
     // Year for yearly tracking
     year: {
         type: Number,
         required: true,
         index: true
     },
-    
+
     // Metadata (can store additional info like storeId, etc.)
     metadata: {
         type: mongoose.Schema.Types.Mixed,
@@ -72,8 +72,6 @@ usageTrackingSchema.index({ subscriptionId: 1, featureKey: 1, date: 1 }, { uniqu
 usageTrackingSchema.index({ subscriptionId: 1, featureKey: 1, month: 1 });
 usageTrackingSchema.index({ userId: 1, featureKey: 1, date: 1 });
 usageTrackingSchema.index({ userId: 1, featureKey: 1, month: 1 });
-usageTrackingSchema.index({ date: 1 });
-usageTrackingSchema.index({ month: 1 });
 
 // Pre-save hook to set month and year from date
 usageTrackingSchema.pre('save', function (next) {

@@ -8,7 +8,7 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Package Information
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +16,7 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Subscription Reference (if payment successful)
     subscriptionId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -24,7 +24,7 @@ const paymentSchema = new mongoose.Schema({
         default: null,
         index: true
     },
-    
+
     // Order Information
     orderId: {
         type: String,
@@ -40,7 +40,7 @@ const paymentSchema = new mongoose.Schema({
         unique: true,
         index: true
     },
-    
+
     // Razorpay Specific Fields
     razorpayOrderId: {
         type: String,
@@ -57,7 +57,7 @@ const paymentSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    
+
     // Payment Details
     amount: {
         type: Number,
@@ -70,7 +70,7 @@ const paymentSchema = new mongoose.Schema({
         enum: ['INR', 'USD', 'EUR'],
         required: true
     },
-    
+
     // Amount Breakdown
     baseAmount: {
         type: Number,
@@ -92,7 +92,7 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    
+
     // Billing Information
     billingCycle: {
         type: String,
@@ -106,7 +106,7 @@ const paymentSchema = new mongoose.Schema({
         min: 1,
         index: true
     },
-    
+
     // Payment Status
     status: {
         type: String,
@@ -115,7 +115,7 @@ const paymentSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Gateway Information
     gateway: {
         type: String,
@@ -123,13 +123,13 @@ const paymentSchema = new mongoose.Schema({
         default: 'RAZORPAY',
         required: true
     },
-    
+
     // Payment Method
     paymentMethod: {
         type: String,
         default: null // card, netbanking, upi, wallet, etc.
     },
-    
+
     // Coupon/Discount
     couponCode: {
         type: String,
@@ -148,13 +148,13 @@ const paymentSchema = new mongoose.Schema({
         min: 0,
         max: 100
     },
-    
+
     // Razorpay Response Data
     razorpayResponse: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
     },
-    
+
     // Failure Information
     failureReason: {
         type: String,
@@ -164,7 +164,7 @@ const paymentSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    
+
     // Refund Information
     refundAmount: {
         type: Number,
@@ -180,26 +180,26 @@ const paymentSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    
+
     // Receipt
     receipt: {
         type: String,
         default: null
     },
-    
+
     // Notes
     notes: {
         type: String,
         maxlength: 500,
         default: null
     },
-    
+
     // Metadata
     metadata: {
         type: mongoose.Schema.Types.Mixed,
         default: {}
     },
-    
+
     // Timestamps
     paidAt: {
         type: Date,
@@ -217,8 +217,7 @@ const paymentSchema = new mongoose.Schema({
 // Indexes for better query performance
 paymentSchema.index({ userId: 1, status: 1 });
 paymentSchema.index({ packageId: 1, status: 1 });
-paymentSchema.index({ razorpayOrderId: 1 });
-paymentSchema.index({ razorpayPaymentId: 1 });
+
 paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });

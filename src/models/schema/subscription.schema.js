@@ -8,7 +8,7 @@ const subscriptionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Package Information
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -16,7 +16,7 @@ const subscriptionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Payment Reference
     paymentId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -24,7 +24,7 @@ const subscriptionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Subscription Status
     status: {
         type: String,
@@ -33,7 +33,7 @@ const subscriptionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    
+
     // Billing Information
     billingCycle: {
         type: String,
@@ -41,7 +41,7 @@ const subscriptionSchema = new mongoose.Schema({
         enum: ['MONTHLY', 'QUARTERLY', 'YEARLY', 'ONE_TIME'],
         index: true
     },
-    
+
     // Subscription Dates
     startDate: {
         type: Date,
@@ -57,7 +57,7 @@ const subscriptionSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    
+
     // Auto-renewal
     autoRenew: {
         type: Boolean,
@@ -69,7 +69,7 @@ const subscriptionSchema = new mongoose.Schema({
         default: null,
         index: true
     },
-    
+
     // Cancellation
     cancelledAt: {
         type: Date,
@@ -80,7 +80,7 @@ const subscriptionSchema = new mongoose.Schema({
         maxlength: 500,
         default: null
     },
-    
+
     // Features (snapshot at subscription time)
     features: [{
         featureKey: {
@@ -108,8 +108,8 @@ const subscriptionSchema = new mongoose.Schema({
                 default: null
             },
             customDailyLimit: {
-            type: Number,
-            default: null
+                type: Number,
+                default: null
             }
         },
         metadata: {
@@ -117,14 +117,14 @@ const subscriptionSchema = new mongoose.Schema({
             default: {}
         }
     }],
-    
+
     // Notes
     notes: {
         type: String,
         maxlength: 500,
         default: null
     },
-    
+
     // Metadata
     metadata: {
         type: mongoose.Schema.Types.Mixed,
@@ -144,7 +144,6 @@ subscriptionSchema.index({ userId: 1, status: 1 });
 subscriptionSchema.index({ packageId: 1, status: 1 });
 subscriptionSchema.index({ userId: 1, endDate: 1 });
 subscriptionSchema.index({ status: 1, endDate: 1 });
-subscriptionSchema.index({ nextBillingDate: 1 });
 subscriptionSchema.index({ createdAt: -1 });
 
 // Compound index for optimized active subscription queries
@@ -154,9 +153,9 @@ subscriptionSchema.index({ userId: 1, status: 1, startDate: 1, endDate: 1 });
 // Virtual for checking if subscription is active
 subscriptionSchema.virtual('isActive').get(function () {
     const now = new Date();
-    return this.status === 'ACTIVE' && 
-           this.startDate <= now && 
-           this.endDate >= now;
+    return this.status === 'ACTIVE' &&
+        this.startDate <= now &&
+        this.endDate >= now;
 });
 
 // Virtual for checking if subscription is expired
@@ -176,7 +175,7 @@ subscriptionSchema.pre('save', function (next) {
     if (this.isNew && this.startDate && this.billingCycle && !this.endDate) {
         const startDate = new Date(this.startDate);
         let endDate = new Date(startDate);
-        
+
         switch (this.billingCycle) {
             case 'MONTHLY':
                 endDate.setMonth(endDate.getMonth() + 1);
@@ -192,10 +191,10 @@ subscriptionSchema.pre('save', function (next) {
                 endDate.setFullYear(endDate.getFullYear() + 100);
                 break;
         }
-        
+
         this.endDate = endDate;
     }
-    
+
     next();
 });
 
