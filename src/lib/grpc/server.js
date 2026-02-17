@@ -3,20 +3,15 @@ const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 const SECRET = require('@src/config/env.config');
 const logger = require('@src/utils/logger');
-
-/**
- * gRPC Server Setup
- * Production-ready gRPC server with proper error handling and logging
- */
+const UsageService = require('@src/services/usage/usage.service');
+// gRPC Server Setup
 class GrpcServer {
     constructor() {
         this.server = null;
         this.services = {};
     }
 
-    /**
-     * Load proto file and create package definition
-     */
+    // Load proto file and create package definition
     loadProto(protoPath, options = {}) {
         const defaultOptions = {
             keepCase: true,
@@ -35,9 +30,7 @@ class GrpcServer {
         return grpc.loadPackageDefinition(packageDefinition);
     }
 
-    /**
-     * Initialize gRPC server
-     */
+    // Initialize gRPC server
     initialize() {
         try {
             this.server = new grpc.Server();
@@ -76,9 +69,7 @@ class GrpcServer {
         }
     }
 
-    /**
-     * Register gRPC services
-     */
+    // Register gRPC services
     registerServices(proto) {
         // Register Usage Service
         this.server.addService(proto.UsageService.service, {
@@ -95,16 +86,10 @@ class GrpcServer {
         logger.info('gRPC Services registered successfully');
     }
 
-    /**
-     * Handle CheckUsage RPC
-     */
+    // Handle CheckUsage RPC
     async handleCheckUsage(call, callback) {
         try {
-            const UsageService = require('@src/services/usage/usage.service');
-            const { SubscriptionModel } = require('@src/models');
-
             const { user_id, feature_key, quantity } = call.request;
-
             if (!user_id || !feature_key) {
                 return callback({
                     code: grpc.status.INVALID_ARGUMENT,
@@ -125,14 +110,14 @@ class GrpcServer {
             let result;
             if (feature_key === 'VOICE_AI') {
                 let packageHasAI = subscription.packageId?.isAIFeature === true;
-                
+
                 if (!packageHasAI && subscription.packageId?.planType) {
                     const planType = subscription.packageId.planType;
                     if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
                         packageHasAI = true;
                     }
                 }
-                
+
                 result = {
                     allowed: packageHasAI,
                     reason: packageHasAI ? '' : 'Feature not available in subscription',
@@ -179,9 +164,7 @@ class GrpcServer {
         }
     }
 
-    /**
-     * Handle IncrementUsage RPC
-     */
+    // Handle IncrementUsage RPC
     async handleIncrementUsage(call, callback) {
         try {
             const UsageService = require('@src/services/usage/usage.service');
@@ -208,14 +191,14 @@ class GrpcServer {
 
             if (feature_key === 'VOICE_AI') {
                 let packageHasAI = subscription.packageId?.isAIFeature === true;
-                
+
                 if (!packageHasAI && subscription.packageId?.planType) {
                     const planType = subscription.packageId.planType;
                     if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
                         packageHasAI = true;
                     }
                 }
-                
+
                 if (!packageHasAI) {
                     return callback({
                         code: grpc.status.PERMISSION_DENIED,
@@ -297,9 +280,7 @@ class GrpcServer {
         }
     }
 
-    /**
-     * Handle GetQuota RPC
-     */
+    // Handle GetQuota RPC
     async handleGetQuota(call, callback) {
         try {
             const UsageService = require('@src/services/usage/usage.service');
@@ -327,14 +308,14 @@ class GrpcServer {
             let quota;
             if (feature_key === 'VOICE_AI') {
                 let packageHasAI = subscription.packageId?.isAIFeature === true;
-                
+
                 if (!packageHasAI && subscription.packageId?.planType) {
                     const planType = subscription.packageId.planType;
                     if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
                         packageHasAI = true;
                     }
                 }
-                
+
                 quota = {
                     hasAccess: packageHasAI,
                     remaining: packageHasAI ? -1 : 0,
@@ -373,9 +354,7 @@ class GrpcServer {
         }
     }
 
-    /**
-     * Handle GetActiveSubscription RPC
-     */
+    // Handle GetActiveSubscription RPC
     async handleGetActiveSubscription(call, callback) {
         try {
             const SubscriptionService = require('@src/services/subscription/subscription.service');
@@ -478,9 +457,7 @@ class GrpcServer {
         }
     }
 
-    /**
-     * Graceful shutdown
-     */
+    // Graceful shutdown
     shutdown() {
         return new Promise((resolve) => {
             if (this.server) {
