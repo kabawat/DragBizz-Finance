@@ -19,7 +19,31 @@ const { downgradeSubscription } = require('./subscription.downgrade.service');
 
 const SUBSCRIPTION_CACHE_TTL = 300;
 
+let _isReplicaSet = null;
+async function checkIsReplicaSet() {
+    if (_isReplicaSet !== null) return _isReplicaSet;
+    try {
+        // In testing environments where mongoose connection isn't fully initialized, default to true
+        if (!mongoose.connection || !mongoose.connection.db) {
+            _isReplicaSet = true;
+            return _isReplicaSet;
+        }
+        const adminDb = mongoose.connection.db.admin();
+        await adminDb.command({ replSetGetStatus: 1 });
+        _isReplicaSet = true;
+    } catch (e) {
+        _isReplicaSet = false;
+    }
+    return _isReplicaSet;
+}
+
 async function createSubscription(subscriptionData) {
+    const isRS = await checkIsReplicaSet();
+    const session = await mongoose.startSession();
+    if (isRS) {
+        session.startTransaction();
+    }
+
     try {
         const { userId, paymentId, ipAddress, userAgent } = subscriptionData;
 
@@ -27,7 +51,7 @@ async function createSubscription(subscriptionData) {
             throw new Error('Invalid payment ID format');
         }
 
-        const payment = await PaymentModel.findById(paymentId);
+        const payment = await PaymentModel.findById(paymentId).session(session);
         if (!payment) {
             throw new Error('Payment not found');
         }
@@ -40,8 +64,13 @@ async function createSubscription(subscriptionData) {
             throw new Error('Payment does not belong to user');
         }
 
-        const existingSubscription = await SubscriptionModel.findOne({ paymentId });
+        const existingSubscription = await SubscriptionModel.findOne({ paymentId }).session(session);
         if (existingSubscription) {
+            if (isRS && session.inTransaction && session.inTransaction()) {
+                await session.commitTransaction();
+            }
+            if (session) session.endSession();
+
             const populatedSubscription = await populateSubscription(
                 SubscriptionModel.findById(existingSubscription._id)
             ).lean();
@@ -51,10 +80,10 @@ async function createSubscription(subscriptionData) {
         const now = new Date();
         const existingActiveSubscription = await SubscriptionModel.findOne(
             getActiveSubscriptionQuery(userId, now)
-        ).populate('packageId').lean();
+        ).session(session).populate('packageId').lean();
 
-        const packageDoc = await PackageModel.findById(payment.packageId).lean();
-        
+        const packageDoc = await PackageModel.findById(payment.packageId).session(session).lean();
+
         if (!packageDoc) {
             throw new Error('Package not found');
         }
@@ -67,30 +96,32 @@ async function createSubscription(subscriptionData) {
         let subscription;
 
         if (existingActiveSubscription) {
-            const existingPackage = await PackageModel.findById(existingActiveSubscription.packageId).lean();
+            const existingPackage = await PackageModel.findById(existingActiveSubscription.packageId).session(session).lean();
             const comparison = comparePackages(existingPackage, packageDoc);
-            
+
             if (comparison === 'SAME') {
-                const populatedExisting = await SubscriptionModel.findById(existingActiveSubscription._id);
-                await renewSubscription(populatedExisting, payment, months);
+                const populatedExisting = await SubscriptionModel.findById(existingActiveSubscription._id).session(session);
+                await renewSubscription(populatedExisting, payment, months, session);
                 subscription = populatedExisting;
             } else if (comparison === 'UPGRADE') {
                 subscription = await upgradeSubscription(
-                    await SubscriptionModel.findById(existingActiveSubscription._id),
+                    await SubscriptionModel.findById(existingActiveSubscription._id).session(session),
                     packageDoc,
                     payment,
                     months,
                     ipAddress,
-                    userAgent
+                    userAgent,
+                    session
                 );
             } else {
                 subscription = await downgradeSubscription(
-                    await SubscriptionModel.findById(existingActiveSubscription._id),
+                    await SubscriptionModel.findById(existingActiveSubscription._id).session(session),
                     packageDoc,
                     payment,
                     months,
                     ipAddress,
-                    userAgent
+                    userAgent,
+                    session
                 );
             }
         } else {
@@ -122,14 +153,19 @@ async function createSubscription(subscriptionData) {
             };
 
             subscription = new SubscriptionModel(newSubscriptionData);
-            await subscription.save();
+            await subscription.save({ session });
 
             payment.subscriptionId = subscription._id;
-            await payment.save();
+            await payment.save({ session });
         }
 
+        if (isRS && session.inTransaction && session.inTransaction()) {
+            await session.commitTransaction();
+        }
+        if (session) session.endSession();
+
         const subscriptionId = subscription._id || subscription.id;
-        
+
         if (subscriptionId) {
             await logSubscriptionEvent('SUBSCRIPTION_CREATED', {
                 subscriptionId: subscriptionId,
@@ -149,7 +185,7 @@ async function createSubscription(subscriptionData) {
 
         const cacheKey = getCacheKey(userId);
         await deleteCache(cacheKey);
-        
+
         if (populatedSubscription) {
             await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
         }
@@ -157,9 +193,9 @@ async function createSubscription(subscriptionData) {
         if (populatedSubscription) {
             const payment = populatedSubscription.paymentId;
             const packageData = populatedSubscription.packageId;
-            
+
             const userEmail = extractUserEmail(payment);
-            
+
             if (userEmail) {
                 const features = (packageData?.featureUsageLimits || [])
                     .filter(limit => limit && limit.featureKey && limit.enabled !== false)
@@ -183,12 +219,16 @@ async function createSubscription(subscriptionData) {
                     userEmail,
                     "SUBSCRIPTION_SUCCESS",
                     emailPayload
-                ).catch(() => {});
+                ).catch(() => { });
             }
         }
 
         return populatedSubscription;
     } catch (error) {
+        if (isRS && session && session.inTransaction && session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        if (session) session.endSession();
         throw error;
     }
 }

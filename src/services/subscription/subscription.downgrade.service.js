@@ -2,29 +2,29 @@ const { SubscriptionModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 const { processFeatures } = require('./subscription.helpers');
 
-async function downgradeSubscription(existingSubscription, newPackage, payment, months, ipAddress, userAgent) {
+async function downgradeSubscription(existingSubscription, newPackage, payment, months, ipAddress, userAgent, session) {
     const currentEndDate = new Date(existingSubscription.endDate);
     const now = new Date();
-    
+
     if (currentEndDate <= now) {
         existingSubscription.status = 'CANCELLED';
         existingSubscription.cancelledAt = new Date();
         existingSubscription.cancellationReason = 'Downgraded to lower package';
         existingSubscription.autoRenew = false;
-        await existingSubscription.save();
-        
+        await existingSubscription.save({ session });
+
         const startDate = new Date();
         const endDate = new Date(startDate);
         endDate.setMonth(endDate.getMonth() + months);
-        
+
         let trialEndDate = null;
         if (newPackage.trialPeriod && newPackage.trialPeriod.enabled) {
             trialEndDate = new Date(startDate);
             trialEndDate.setDate(trialEndDate.getDate() + newPackage.trialPeriod.days);
         }
-        
+
         const processedFeatures = processFeatures(newPackage.featureUsageLimits);
-        
+
         const newSubscriptionData = {
             userId: existingSubscription.userId,
             packageId: newPackage._id,
@@ -39,13 +39,13 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
             maxSubscribersSnapshot: newPackage.maxSubscribers ?? null,
             features: processedFeatures
         };
-        
+
         const subscription = new SubscriptionModel(newSubscriptionData);
-        await subscription.save();
-        
+        await subscription.save({ session });
+
         payment.subscriptionId = subscription._id;
-        await payment.save();
-        
+        await payment.save({ session });
+
         await logSubscriptionEvent('SUBSCRIPTION_DOWNGRADED', {
             subscriptionId: subscription._id,
             userId: existingSubscription.userId,
@@ -55,28 +55,28 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
             ipAddress,
             userAgent
         });
-        
+
         return subscription;
     }
-    
+
     existingSubscription.status = 'CANCELLED';
     existingSubscription.cancelledAt = currentEndDate;
     existingSubscription.cancellationReason = 'Scheduled downgrade to lower package';
     existingSubscription.autoRenew = false;
-    await existingSubscription.save();
-    
+    await existingSubscription.save({ session });
+
     const startDate = new Date(currentEndDate);
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + months);
-    
+
     let trialEndDate = null;
     if (newPackage.trialPeriod && newPackage.trialPeriod.enabled) {
         trialEndDate = new Date(startDate);
         trialEndDate.setDate(trialEndDate.getDate() + newPackage.trialPeriod.days);
     }
-    
+
     const processedFeatures = processFeatures(newPackage.featureUsageLimits);
-    
+
     const newSubscriptionData = {
         userId: existingSubscription.userId,
         packageId: newPackage._id,
@@ -91,13 +91,13 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
         maxSubscribersSnapshot: newPackage.maxSubscribers ?? null,
         features: processedFeatures
     };
-    
+
     const subscription = new SubscriptionModel(newSubscriptionData);
-    await subscription.save();
-    
+    await subscription.save({ session });
+
     payment.subscriptionId = subscription._id;
-    await payment.save();
-    
+    await payment.save({ session });
+
     await logSubscriptionEvent('SUBSCRIPTION_DOWNGRADE_SCHEDULED', {
         subscriptionId: subscription._id,
         userId: existingSubscription.userId,
@@ -108,7 +108,7 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
         ipAddress,
         userAgent
     });
-    
+
     return subscription;
 }
 
