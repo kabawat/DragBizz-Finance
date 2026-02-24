@@ -2,9 +2,15 @@ const mongoose = require('mongoose');
 const { SUBSCRIPTION_STATUS } = require('@src/constants/enum/payment.enum');
 
 const subscriptionSchema = new mongoose.Schema({
-    // User Information
+    // User Information (Owner jo payment karta hai)
     userId: {
         type: String,
+        required: true,
+        index: true
+    },
+
+    agencyId: {
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
         index: true
     },
@@ -146,9 +152,13 @@ subscriptionSchema.index({ userId: 1, endDate: 1 });
 subscriptionSchema.index({ status: 1, endDate: 1 });
 subscriptionSchema.index({ createdAt: -1 });
 
-// Compound index for optimized active subscription queries
+// Compound index for optimized active subscription queries (Owner ke liye)
 // This index optimizes the query: findOne({ userId, status: { $in: ['ACTIVE', 'TRIAL'] }, startDate: { $lte: now }, endDate: { $gte: now } })
 subscriptionSchema.index({ userId: 1, status: 1, startDate: 1, endDate: 1 });
+
+// Agency-based compound index (Staff/Manager ke liye)
+// Jab bhi koi staff/manager request kare, agencyId se active subscription dhundha jayega
+subscriptionSchema.index({ agencyId: 1, status: 1, startDate: 1, endDate: 1 });
 
 // Virtual for checking if subscription is active
 subscriptionSchema.virtual('isActive').get(function () {

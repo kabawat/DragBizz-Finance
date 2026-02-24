@@ -9,7 +9,8 @@ const logger = require('@src/utils/logger');
 async function verifyPaymentController(req, res) {
     try {
         const userId = req.user?.sub;
-        
+        const agencyId = req.user?.agencyId;
+
         if (!userId) {
             return Response.validationError(res, 'User ID not found in token');
         }
@@ -37,18 +38,19 @@ async function verifyPaymentController(req, res) {
                 const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
                 subscription = await SubscriptionService.createSubscription({
                     userId,
+                    agencyId,
                     paymentId: payment._id,
                     ipAddress: req.clientIp,
                     userAgent: req.userAgent
                 });
-                
+
                 if (subscription) {
                     if (subscription.status === 'PENDING') {
                         subscriptionType = 'DOWNGRADE';
                     } else if (existingSubscription) {
                         const existingPackageId = existingSubscription.packageId?._id?.toString() || existingSubscription.packageId?.toString();
                         const newPackageId = subscription.packageId?._id?.toString() || subscription.packageId?.toString();
-                        
+
                         if (existingPackageId === newPackageId) {
                             subscriptionType = 'RENEWAL';
                         } else {
@@ -65,7 +67,7 @@ async function verifyPaymentController(req, res) {
 
         const paymentDoc = payment._id ? await require('@src/models').PaymentModel.findById(payment._id).lean() : null;
         const proratedCredit = paymentDoc?.metadata?.proratedCredit || 0;
-        
+
         const responseData = {
             payment: serializePayment(payment),
             subscription: subscription ? {
@@ -83,8 +85,8 @@ async function verifyPaymentController(req, res) {
         };
 
         return Response.success(res, {
-            message: payment.status === 'SUCCESS' 
-                ? 'Payment verified successfully and subscription activated' 
+            message: payment.status === 'SUCCESS'
+                ? 'Payment verified successfully and subscription activated'
                 : 'Payment verification completed',
             data: responseData
         });

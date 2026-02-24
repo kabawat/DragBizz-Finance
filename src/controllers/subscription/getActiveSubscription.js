@@ -11,9 +11,9 @@ const DISPLAY_NAME_TO_KEY = Object.entries(FEATURE_DISPLAY_NAMES).reduce((acc, [
 
 function normalizeFeature(feature) {
     if (!feature) return null;
-    
+
     let featureKey = feature.featureKey || null;
-    
+
     if (!featureKey) {
         if (typeof feature.feature === 'string') {
             featureKey = feature.feature;
@@ -52,15 +52,15 @@ function filterFields(subscription, requestedFields, populatePackage) {
     }
 
     const responseData = {};
-    
+
     for (const field of requestedFields) {
         if (field === '_id' && subscription._id) {
             responseData._id = subscription._id;
         } else if (field === 'id' && subscription._id) {
             responseData.id = subscription._id.toString();
         } else if (field === 'packageId' && subscription.packageId) {
-            responseData.packageId = populatePackage 
-                ? subscription.packageId 
+            responseData.packageId = populatePackage
+                ? subscription.packageId
                 : (subscription.packageId._id || subscription.packageId);
         } else if (subscription[field] !== undefined) {
             responseData[field] = subscription[field];
@@ -73,7 +73,7 @@ function filterFields(subscription, requestedFields, populatePackage) {
 async function getActiveSubscription(req, res) {
     try {
         const userId = req.user?.sub || req.query?.userId || req.body?.userId;
-        
+
         if (!userId) {
             return Response.validationError(res, 'User ID is required');
         }
@@ -82,9 +82,9 @@ async function getActiveSubscription(req, res) {
         const fieldsParam = req.query.fields;
         const requestedFields = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : null;
         const needsFeatures = !requestedFields || requestedFields.includes('features');
-        
+
         const subscription = await SubscriptionService.getActiveSubscription(userId, { populatePackage });
-        
+
         if (!subscription) {
             return Response.success(res, {
                 message: 'No active subscription found',
@@ -97,6 +97,39 @@ async function getActiveSubscription(req, res) {
         if (needsFeatures && responseData.features && Array.isArray(responseData.features)) {
             responseData.features = responseData.features.map(normalizeFeature).filter(Boolean);
         }
+
+        // Add explicit expiration check for response data
+        const now = new Date();
+        const endDate = new Date(subscription.endDate);
+
+        // 1. If expired, update status in DB and return response
+        if (endDate < now) {
+            // Proactively update status to EXPIRED in database
+            await SubscriptionService.updateSubscriptionStatus(subscription._id, 'EXPIRED').catch(() => { });
+
+            responseData.status = 'EXPIRED';
+            responseData.isExpired = true;
+            return Response.success(res, {
+                message: 'Subscription has expired',
+                data: responseData
+            });
+        }
+
+        responseData.isExpired = false;
+
+        // 2. Check for alerts (3 days = 3 * 24 * 60 * 60 * 1000 ms)
+        const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+        const timeRemaining = endDate.getTime() - now.getTime();
+
+        if (timeRemaining > 0 && timeRemaining <= THREE_DAYS_MS) {
+            const daysRemaining = Math.ceil(timeRemaining / (24 * 60 * 60 * 1000));
+            responseData.alert = {
+                type: 'SUBSCRIPTION_EXPIRING_SOON',
+                message: `Your subscription will expire in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}. Please renew to avoid service interruption.`,
+                daysRemaining
+            };
+        }
+
 
         return Response.success(res, {
             message: 'Active subscription fetched successfully',

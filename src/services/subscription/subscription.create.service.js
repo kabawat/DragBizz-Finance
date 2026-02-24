@@ -45,7 +45,7 @@ async function createSubscription(subscriptionData) {
     }
 
     try {
-        const { userId, paymentId, ipAddress, userAgent } = subscriptionData;
+        const { userId, agencyId, paymentId, ipAddress, userAgent } = subscriptionData;
 
         if (!mongoose.Types.ObjectId.isValid(paymentId)) {
             throw new Error('Invalid payment ID format');
@@ -139,6 +139,7 @@ async function createSubscription(subscriptionData) {
 
             const newSubscriptionData = {
                 userId,
+                agencyId,
                 packageId: payment.packageId,
                 paymentId: payment._id,
                 status: trialEndDate ? 'TRIAL' : 'ACTIVE',

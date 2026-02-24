@@ -10,6 +10,7 @@ const Response = require('@src/utils/responseHandler/standardized');
 async function createOrderController(req, res) {
     try {
         const userId = req.user?.sub;
+
         if (!userId) {
             return Response.validationError(res, 'User ID not found in token');
         }
@@ -21,6 +22,7 @@ async function createOrderController(req, res) {
         }
 
         const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
+
         if (existingSubscription) {
             const newPackage = await PackageModel.findById(sanitizedData.packageId).lean();
             if (!newPackage) {
@@ -30,14 +32,14 @@ async function createOrderController(req, res) {
             const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
             if (existingPackage) {
                 const comparison = comparePackages(existingPackage, newPackage);
-                
+
                 if (comparison === 'SAME') {
                     const now = new Date();
                     const endDate = new Date(existingSubscription.endDate);
                     const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-                    
+
                     if (daysRemaining > 30) {
-                        return Response.validationError(res, 
+                        return Response.validationError(res,
                             'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
                             {
                                 daysRemaining: daysRemaining.toString(),
@@ -79,4 +81,3 @@ async function createOrderController(req, res) {
 }
 
 module.exports = createOrderController;
-

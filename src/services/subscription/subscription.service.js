@@ -22,6 +22,11 @@ class SubscriptionService {
     static async cancelSubscription(subscriptionId, userId, reason = null) {
         return cancelSubscriptionService.cancelSubscription(subscriptionId, userId, reason);
     }
+
+    static async updateSubscriptionStatus(subscriptionId, status) {
+        const { SubscriptionModel } = require('@src/models');
+        return SubscriptionModel.findByIdAndUpdate(subscriptionId, { status }, { new: true });
+    }
 }
 
 module.exports = SubscriptionService;
