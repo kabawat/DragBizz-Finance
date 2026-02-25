@@ -12,30 +12,30 @@ const SUBSCRIPTION_CACHE_TTL = 300;
 
 async function getActiveSubscription(userId, options = {}) {
     try {
-        const { populatePackage = true } = options;
-        const cacheKey = getCacheKey(userId);
+        const { populatePackage = true, agencyId } = options;
+        const cacheKey = agencyId ? `sub:active:agency:${agencyId}` : getCacheKey(userId);
         const cachedSubscription = await getCache(cacheKey);
-        
+
         if (cachedSubscription && isSubscriptionActive(cachedSubscription)) {
             if (!populatePackage && cachedSubscription.packageId && cachedSubscription.packageId._id) {
                 cachedSubscription.packageId = cachedSubscription.packageId._id;
             }
             return cachedSubscription;
         }
-        
+
         if (cachedSubscription) {
             await deleteCache(cacheKey);
         }
 
         const now = new Date();
-        let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now));
-        
+        let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
+
         if (populatePackage) {
             query = populateSubscription(query);
         } else {
             query = query.populate('paymentId', 'amount currency status');
         }
-        
+
         const subscription = await query
             .sort({ createdAt: -1 })
             .lean();
@@ -52,24 +52,24 @@ async function getActiveSubscription(userId, options = {}) {
         return subscription;
     } catch (error) {
         try {
-            const { populatePackage = true } = options;
+            const { populatePackage = true, agencyId } = options;
             const now = new Date();
-            let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now));
-            
+            let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
+
             if (populatePackage) {
                 query = populateSubscription(query);
             } else {
                 query = query.populate('paymentId', 'amount currency status');
             }
-            
+
             const subscription = await query
                 .sort({ createdAt: -1 })
                 .lean();
-            
+
             if (subscription && !populatePackage && subscription.packageId) {
                 subscription.packageId = subscription.packageId._id || subscription.packageId;
             }
-            
+
             return subscription;
         } catch (dbError) {
             throw dbError;

@@ -7,8 +7,8 @@ class SubscriptionService {
         return createSubscriptionService.createSubscription(subscriptionData);
     }
 
-    static async getActiveSubscription(userId) {
-        return getSubscriptionService.getActiveSubscription(userId);
+    static async getActiveSubscription(userId, options = {}) {
+        return getSubscriptionService.getActiveSubscription(userId, options);
     }
 
     static async getUserSubscriptions(userId, options = {}) {

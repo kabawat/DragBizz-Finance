@@ -73,6 +73,7 @@ function filterFields(subscription, requestedFields, populatePackage) {
 async function getActiveSubscription(req, res) {
     try {
         const userId = req.user?.sub || req.query?.userId || req.body?.userId;
+        const agencyId = req.user?.agencyId;
 
         if (!userId) {
             return Response.validationError(res, 'User ID is required');
@@ -83,7 +84,7 @@ async function getActiveSubscription(req, res) {
         const requestedFields = fieldsParam ? fieldsParam.split(',').map(f => f.trim()) : null;
         const needsFeatures = !requestedFields || requestedFields.includes('features');
 
-        const subscription = await SubscriptionService.getActiveSubscription(userId, { populatePackage });
+        const subscription = await SubscriptionService.getActiveSubscription(userId, { populatePackage, agencyId });
 
         if (!subscription) {
             return Response.success(res, {

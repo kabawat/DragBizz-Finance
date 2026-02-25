@@ -89,7 +89,7 @@ class GrpcServer {
     // Handle CheckUsage RPC
     async handleCheckUsage(call, callback) {
         try {
-            const { user_id, feature_key, quantity } = call.request;
+            const { user_id, feature_key, quantity, agency_id } = call.request;
             if (!user_id || !feature_key) {
                 return callback({
                     code: grpc.status.INVALID_ARGUMENT,
@@ -98,7 +98,7 @@ class GrpcServer {
             }
 
             const SubscriptionService = require('@src/services/subscription/subscription.service');
-            const subscription = await SubscriptionService.getActiveSubscription(user_id);
+            const subscription = await SubscriptionService.getActiveSubscription(user_id, { agencyId: agency_id });
 
             if (!subscription) {
                 return callback({
@@ -170,7 +170,7 @@ class GrpcServer {
             const UsageService = require('@src/services/usage/usage.service');
             const { SubscriptionModel } = require('@src/models');
 
-            const { user_id, feature_key, quantity, metadata } = call.request;
+            const { user_id, feature_key, quantity, metadata, agency_id } = call.request;
 
             if (!user_id || !feature_key) {
                 return callback({
@@ -180,7 +180,7 @@ class GrpcServer {
             }
 
             const SubscriptionService = require('@src/services/subscription/subscription.service');
-            const subscription = await SubscriptionService.getActiveSubscription(user_id);
+            const subscription = await SubscriptionService.getActiveSubscription(user_id, { agencyId: agency_id });
 
             if (!subscription) {
                 return callback({
@@ -286,7 +286,7 @@ class GrpcServer {
             const UsageService = require('@src/services/usage/usage.service');
             const { SubscriptionModel } = require('@src/models');
 
-            const { user_id, feature_key } = call.request;
+            const { user_id, feature_key, agency_id } = call.request;
 
             if (!user_id || !feature_key) {
                 return callback({
@@ -296,7 +296,7 @@ class GrpcServer {
             }
 
             const SubscriptionService = require('@src/services/subscription/subscription.service');
-            const subscription = await SubscriptionService.getActiveSubscription(user_id);
+            const subscription = await SubscriptionService.getActiveSubscription(user_id, { agencyId: agency_id });
 
             if (!subscription) {
                 return callback({
@@ -360,7 +360,7 @@ class GrpcServer {
             const SubscriptionService = require('@src/services/subscription/subscription.service');
             const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 
-            const { user_id } = call.request;
+            const { user_id, agency_id } = call.request;
 
             if (!user_id) {
                 return callback({
@@ -369,7 +369,7 @@ class GrpcServer {
                 });
             }
 
-            const subscription = await SubscriptionService.getActiveSubscription(user_id);
+            const subscription = await SubscriptionService.getActiveSubscription(user_id, { agencyId: agency_id });
 
             if (!subscription) {
                 return callback(null, {
@@ -473,4 +473,3 @@ class GrpcServer {
 }
 
 module.exports = new GrpcServer();
-

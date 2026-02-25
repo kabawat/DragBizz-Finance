@@ -16,13 +16,20 @@ function populateSubscription(query, paymentFields = PAYMENT_POPULATE_FIELDS_BAS
         .populate('paymentId', paymentFields);
 }
 
-function getActiveSubscriptionQuery(userId, now = new Date()) {
-    return {
-        userId,
+function getActiveSubscriptionQuery(userId, now = new Date(), agencyId = null) {
+    const query = {
         status: { $in: ACTIVE_STATUSES },
         startDate: { $lte: now },
         endDate: { $gte: now }
     };
+
+    if (agencyId) {
+        query.agencyId = agencyId;
+    } else {
+        query.userId = userId;
+    }
+
+    return query;
 }
 
 function isSubscriptionActive(subscription, now = new Date()) {
@@ -76,16 +83,16 @@ function comparePackages(oldPackage, newPackage) {
     const planTypeOrder = { 'BASIC': 1, 'PROFESSIONAL': 2, 'ENTERPRISE': 3, 'CUSTOM': 4 };
     const oldOrder = planTypeOrder[oldPackage.planType] || 0;
     const newOrder = planTypeOrder[newPackage.planType] || 0;
-    
+
     if (newOrder > oldOrder) return 'UPGRADE';
     if (newOrder < oldOrder) return 'DOWNGRADE';
-    
+
     const oldPrice = oldPackage.pricing?.[0]?.price || 0;
     const newPrice = newPackage.pricing?.[0]?.price || 0;
-    
+
     if (newPrice > oldPrice) return 'UPGRADE';
     if (newPrice < oldPrice) return 'DOWNGRADE';
-    
+
     return 'SAME';
 }
 
@@ -93,18 +100,18 @@ function calculateProratedCredit(subscription, months) {
     const now = new Date();
     const endDate = new Date(subscription.endDate);
     const startDate = new Date(subscription.startDate);
-    
+
     if (endDate <= now) return 0;
-    
+
     const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     const remainingDays = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-    
+
     if (totalDays <= 0 || remainingDays <= 0) return 0;
-    
+
     const subscriptionPayment = subscription.paymentId;
     const totalAmount = subscriptionPayment?.amount || 0;
     const proratedAmount = (totalAmount / totalDays) * remainingDays;
-    
+
     return Math.max(0, Math.round(proratedAmount * 100) / 100);
 }
 

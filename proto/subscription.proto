@@ -24,6 +24,7 @@ message CheckUsageRequest {
   string user_id = 1;
   string feature_key = 2;
   int32 quantity = 3;
+  string agency_id = 4;
 }
 
 message UsageQuota {
@@ -49,6 +50,7 @@ message IncrementUsageRequest {
   string feature_key = 2;
   int32 quantity = 3;
   map<string, string> metadata = 4;
+  string agency_id = 5;
 }
 
 message UsageRecord {
@@ -68,6 +70,7 @@ message IncrementUsageResponse {
 message GetQuotaRequest {
   string user_id = 1;
   string feature_key = 2;
+  string agency_id = 3;
 }
 
 message GetQuotaResponse {
@@ -128,6 +131,7 @@ message Payment {
 
 message GetActiveSubscriptionRequest {
   string user_id = 1;
+  string agency_id = 2;
 }
 
 message GetActiveSubscriptionResponse {
