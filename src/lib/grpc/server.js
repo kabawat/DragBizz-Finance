@@ -71,13 +71,6 @@ class GrpcServer {
     // Register gRPC services
     registerServices(proto) {
         const services = require('./services');
-        // Register Usage Service
-        this.server.addService(proto.UsageService.service, {
-            CheckUsage: services.handleCheckUsage,
-            IncrementUsage: services.handleIncrementUsage,
-            GetQuota: services.handleGetQuota
-        });
-
         // Register Subscription Service
         this.server.addService(proto.SubscriptionService.service, {
             GetActiveSubscription: services.handleGetActiveSubscription
