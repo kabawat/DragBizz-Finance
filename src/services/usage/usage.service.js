@@ -31,57 +31,53 @@ class UsageService {
         return Math.floor(totalLimit / 30);
     }
 
-    /**
-     * Get usage for a specific date
-     */
-    static async getUsageForDate(subscriptionId, featureKey, date = null) {
+    // Get usage for a specific date
+    static async getUsageForDate(subscriptionId, module, date = null) {
         try {
             const targetDate = date || this.getCurrentDate();
-            
+
             // Check cache first
-            const cacheKey = `usage:date:${subscriptionId}:${featureKey}:${targetDate}`;
+            const cacheKey = `usage:date:${subscriptionId}:${module}:${targetDate}`;
             const cached = await getCache(cacheKey);
             if (cached !== null) {
                 return cached;
             }
-            
+
             const usage = await UsageTrackingModel.findOne({
                 subscriptionId,
-                featureKey,
+                module,
                 date: targetDate
             }).lean();
 
             const count = usage ? usage.count : 0;
-            
+
             // Cache the result
             await setCache(cacheKey, count, USAGE_DATE_CACHE_TTL);
-            
+
             return count;
         } catch (error) {
             throw error;
         }
     }
 
-    /**
-     * Get usage for current month (Optimized with aggregation pipeline)
-     */
-    static async getUsageForMonth(subscriptionId, featureKey, month = null) {
+    // Get usage for current month (Optimized with aggregation pipeline)
+    static async getUsageForMonth(subscriptionId, module, month = null) {
         try {
             const targetMonth = month || this.getCurrentMonth();
-            
+
             // Check cache first
-            const cacheKey = `usage:month:${subscriptionId}:${featureKey}:${targetMonth}`;
+            const cacheKey = `usage:month:${subscriptionId}:${module}:${targetMonth}`;
             const cached = await getCache(cacheKey);
             if (cached !== null) {
                 return cached;
             }
-            
+
             // Use aggregation pipeline for better performance
             const result = await UsageTrackingModel.aggregate([
                 {
                     $match: {
                         subscriptionId: new mongoose.Types.ObjectId(subscriptionId),
-                        featureKey: featureKey,
+                        module: module,
                         month: targetMonth
                     }
                 },
@@ -92,46 +88,43 @@ class UsageService {
                     }
                 }
             ]);
-            
+
             const total = result[0]?.total || 0;
-            
+
             // Cache the result
             await setCache(cacheKey, total, USAGE_MONTH_CACHE_TTL);
-            
+
             return total;
         } catch (error) {
             throw error;
         }
     }
 
-    /**
-     * Get total usage for subscription period (for TOTAL usage type)
-     * Counts all usage from subscription start date to now
-     */
-    static async getUsageForSubscription(subscriptionId, featureKey) {
+    // Get total usage for subscription period (for TOTAL usage type)
+    static async getUsageForSubscription(subscriptionId, module) {
         try {
             // Check cache first
-            const cacheKey = `usage:subscription:${subscriptionId}:${featureKey}`;
+            const cacheKey = `usage:subscription:${subscriptionId}:${module}`;
             const cached = await getCache(cacheKey);
             if (cached !== null) {
                 return cached;
             }
-            
+
             // Get subscription to know start date
             const subscription = await SubscriptionModel.findById(subscriptionId)
                 .select('startDate')
                 .lean();
-            
+
             if (!subscription) {
                 return 0;
             }
-            
+
             // Use aggregation pipeline to sum all usage from subscription start
             const result = await UsageTrackingModel.aggregate([
                 {
                     $match: {
                         subscriptionId: new mongoose.Types.ObjectId(subscriptionId),
-                        featureKey: featureKey
+                        module: module
                     }
                 },
                 {
@@ -141,12 +134,12 @@ class UsageService {
                     }
                 }
             ]);
-            
+
             const total = result[0]?.total || 0;
-            
+
             // Cache the result (longer TTL since it's overall usage)
             await setCache(cacheKey, total, 300); // 5 minutes
-            
+
             return total;
         } catch (error) {
             throw error;
@@ -154,59 +147,27 @@ class UsageService {
     }
 
     // Get remaining quota for a feature
-    static async getRemainingQuota(subscriptionId, featureKey) {
+    static async getRemainingQuota(subscriptionId, module) {
         try {
             const date = this.getCurrentDate();
-            
+
             // Check cache first
-            const cacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${featureKey}:${date}`;
+            const cacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${module}:${date}`;
             const cached = await getCache(cacheKey);
             if (cached) {
                 return cached;
             }
-            
+
             const subscription = await SubscriptionModel.findById(subscriptionId)
-                .populate('packageId', 'isAIFeature planType')
                 .lean();
 
             if (!subscription) {
                 throw new Error('Subscription not found');
             }
 
-            const isAIFeature = featureKey === 'VOICE_AI';
-            let packageHasAI = subscription.packageId?.isAIFeature === true;
-            
-            if (!packageHasAI && subscription.packageId?.planType) {
-                const planType = subscription.packageId.planType;
-                if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
-                    packageHasAI = true;
-                }
-            }
-            if (isAIFeature) {
-                if (!packageHasAI) {
-                    const result = {
-                        hasAccess: false,
-                        remaining: 0,
-                        limit: 0,
-                        usageType: 'UNLIMITED'
-                    };
-                    await setCache(cacheKey, result, 30);
-                    return result;
-                }
-                const result = {
-                    hasAccess: true,
-                    remaining: -1,
-                    limit: -1,
-                    usageType: 'UNLIMITED',
-                    used: 0
-                };
-                await setCache(cacheKey, result, 300);
-                return result;
-            }
+            const feature = subscription.features?.find(f => f.module === module);
 
-            const feature = subscription.features?.find(f => f.featureKey === featureKey);
-
-            if (!feature || !feature.enabled) {
+            if (!feature) {
                 const result = {
                     hasAccess: false,
                     remaining: 0,
@@ -217,9 +178,7 @@ class UsageService {
                 return result;
             }
 
-            const usageLimits = feature.usageLimits || {};
-
-            if (usageLimits.usageType === USAGE_TYPES.UNLIMITED || !usageLimits.totalLimit) {
+            if (feature.usageType === USAGE_TYPES.UNLIMITED || !feature.usageLimit) {
                 const result = {
                     hasAccess: true,
                     remaining: -1,
@@ -231,9 +190,9 @@ class UsageService {
                 return result;
             }
 
-            const usageType = usageLimits.usageType || USAGE_TYPES.UNLIMITED;
-            const totalLimit = usageLimits.totalLimit;
-            const customDailyLimit = usageLimits.customDailyLimit;
+            const usageType = feature.usageType || USAGE_TYPES.UNLIMITED;
+            const totalLimit = feature.usageLimit;
+            const customDailyLimit = feature.customDailyLimit;
 
             let used = 0;
             let remaining = 0;
@@ -242,27 +201,27 @@ class UsageService {
 
             if (usageType === USAGE_TYPES.DAILY_FIXED) {
                 dailyLimit = totalLimit;
-                used = await this.getUsageForDate(subscriptionId, featureKey);
+                used = await this.getUsageForDate(subscriptionId, module);
                 remaining = Math.max(0, dailyLimit - used);
             } else if (usageType === USAGE_TYPES.DAILY_ROLLING) {
                 monthlyLimit = totalLimit;
                 dailyLimit = this.calculateDailyLimit(totalLimit, customDailyLimit);
-                
-                const monthlyUsed = await this.getUsageForMonth(subscriptionId, featureKey);
-                const dailyUsed = await this.getUsageForDate(subscriptionId, featureKey);
-                
+
+                const monthlyUsed = await this.getUsageForMonth(subscriptionId, module);
+                const dailyUsed = await this.getUsageForDate(subscriptionId, module);
+
                 const remainingMonthly = Math.max(0, monthlyLimit - monthlyUsed);
                 dailyLimit = Math.min(dailyLimit, remainingMonthly);
-                
+
                 used = dailyUsed;
                 remaining = Math.max(0, dailyLimit - used);
             } else if (usageType === USAGE_TYPES.MONTHLY_TOTAL) {
                 monthlyLimit = totalLimit;
-                used = await this.getUsageForMonth(subscriptionId, featureKey);
+                used = await this.getUsageForMonth(subscriptionId, module);
                 remaining = Math.max(0, monthlyLimit - used);
             } else if (usageType === USAGE_TYPES.TOTAL) {
                 const totalLimitValue = totalLimit;
-                used = await this.getUsageForSubscription(subscriptionId, featureKey);
+                used = await this.getUsageForSubscription(subscriptionId, module);
                 remaining = Math.max(0, totalLimitValue - used);
             }
 
@@ -276,22 +235,20 @@ class UsageService {
                 monthlyLimit: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? monthlyLimit : null,
                 monthlyUsed: usageType === USAGE_TYPES.MONTHLY_TOTAL || usageType === USAGE_TYPES.DAILY_ROLLING ? used : null
             };
-            
+
             await setCache(cacheKey, result, QUOTA_CACHE_TTL);
-            
+
             return result;
         } catch (error) {
             throw error;
         }
     }
 
-    /**
-     * Check if user can use a feature (has quota available)
-     */
-    static async canUseFeature(subscriptionId, featureKey, quantity = 1) {
+    // Check if user can use a feature (has quota available)
+    static async canUseFeature(subscriptionId, module, quantity = 1) {
         try {
-            const quota = await this.getRemainingQuota(subscriptionId, featureKey);
-            
+            const quota = await this.getRemainingQuota(subscriptionId, module);
+
             if (!quota.hasAccess) {
                 return {
                     allowed: false,
@@ -331,19 +288,9 @@ class UsageService {
         }
     }
 
-    /**
-     * Increment usage for a feature
-     */
-    static async incrementUsage(subscriptionId, userId, featureKey, quantity = 1, metadata = {}) {
+    // Increment usage for a feature
+    static async incrementUsage(subscriptionId, userId, module, quantity = 1, metadata = {}) {
         try {
-            if (featureKey === 'VOICE_AI') {
-                return {
-                    count: 0,
-                    date: this.getCurrentDate(),
-                    message: 'AI features do not track usage'
-                };
-            }
-
             const date = this.getCurrentDate();
             const month = this.getCurrentMonth();
             const year = new Date().getFullYear();
@@ -352,7 +299,7 @@ class UsageService {
             const usage = await UsageTrackingModel.findOneAndUpdate(
                 {
                     subscriptionId,
-                    featureKey,
+                    module,
                     date
                 },
                 {
@@ -371,10 +318,10 @@ class UsageService {
             );
 
             // Invalidate cache for this date and month
-            const dateCacheKey = `usage:date:${subscriptionId}:${featureKey}:${date}`;
-            const monthCacheKey = `usage:month:${subscriptionId}:${featureKey}:${month}`;
-            const quotaCacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${featureKey}:${date}`;
-            
+            const dateCacheKey = `usage:date:${subscriptionId}:${module}:${date}`;
+            const monthCacheKey = `usage:month:${subscriptionId}:${module}:${month}`;
+            const quotaCacheKey = `${QUOTA_CACHE_PREFIX}${subscriptionId}:${module}:${date}`;
+
             await Promise.all([
                 deleteCache(dateCacheKey),
                 deleteCache(monthCacheKey),
@@ -387,10 +334,8 @@ class UsageService {
         }
     }
 
-    /**
-     * Get usage summary for a subscription
-     */
-    static async getUsageSummary(subscriptionId, featureKey = null) {
+    // Get usage summary for a subscription
+    static async getUsageSummary(subscriptionId, module = null) {
         try {
             const subscription = await SubscriptionModel.findById(subscriptionId)
                 .lean();
@@ -403,21 +348,22 @@ class UsageService {
             const summary = [];
 
             for (const feature of features) {
-                const key = feature.featureKey;
+                const key = feature.module;
 
                 if (!key) {
                     continue;
                 }
 
-                if (featureKey && key !== featureKey) {
+                if (module && key !== module) {
                     continue;
                 }
 
                 const quota = await this.getRemainingQuota(subscriptionId, key);
                 summary.push({
-                    featureKey: key,
-                    featureName: feature.featureName || FEATURE_DISPLAY_NAMES[key] || key,
-                    enabled: feature.enabled,
+                    module: key,
+                    moduleName: FEATURE_DISPLAY_NAMES[key] || key,
+                    report: feature.report,
+                    analytics: feature.analytics,
                     quota
                 });
             }

@@ -1,4 +1,4 @@
-const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
+const { PACKAGE_STATUS, PACKAGE_MODULES } = require('@src/constants/enum/package.enum');
 const mongoose = require('mongoose');
 
 const PricingSchema = new mongoose.Schema({
@@ -61,23 +61,28 @@ const packageSchema = new mongoose.Schema({
         }
     },
 
-    featureUsageLimits: [{
-        featureKey: {
+    features: [{
+        module: {
             type: String,
             required: true,
             trim: true,
+            enum: PACKAGE_MODULES,
             index: true
         },
-        enabled: {
+        report: {
             type: Boolean,
-            default: true
+            default: false
+        },
+        analytics: {
+            type: Boolean,
+            default: false
         },
         usageType: {
             type: String,
             enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'TOTAL', 'UNLIMITED'],
             default: 'UNLIMITED'
         },
-        totalLimit: {
+        usageLimit: {
             type: Number,
             default: null,
             min: 0
@@ -87,7 +92,6 @@ const packageSchema = new mongoose.Schema({
             default: null,
             min: 0
         },
-
         metadata: {
             type: mongoose.Schema.Types.Mixed,
             default: {}
@@ -127,13 +131,6 @@ const packageSchema = new mongoose.Schema({
         index: true
     },
 
-    // AI Feature Support (Package Level)
-    isAIFeature: {
-        type: Boolean,
-        default: false,
-        index: true,
-    },
-
     // Status and Visibility
     status: {
         type: String,
@@ -145,26 +142,6 @@ const packageSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         index: true
-    },
-
-    // Trial Information
-    trialPeriod: {
-        enabled: {
-            type: Boolean,
-            default: false
-        },
-        days: {
-            type: Number,
-            default: 0,
-            min: 0
-        }
-    },
-
-    // Purchase Limit
-    maxSubscribers: {
-        type: Number,
-        default: null,
-        min: 0
     },
 
     // Tags and Metadata
@@ -200,7 +177,7 @@ packageSchema.index({ status: 1, isVisible: 1, displayOrder: 1 }, { name: "packa
 packageSchema.index({ planType: 1, status: 1 }, { name: "package_type_status_idx" });
 packageSchema.index({ isPopular: 1, status: 1 }, { name: "package_popular_status_idx" });
 packageSchema.index({ createdAt: -1 }, { name: "package_created_desc_idx" });
-packageSchema.index({ featureUsageLimits: 1 }, { name: "package_features_idx" });
+packageSchema.index({ features: 1 }, { name: "package_features_idx" });
 
 packageSchema.pre('save', function (next) {
     if (this.isModified('name')) {

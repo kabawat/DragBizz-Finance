@@ -5,7 +5,7 @@ const Response = require('@src/utils/responseHandler/standardized');
 async function getQuotaController(req, res) {
     try {
         const userId = req.user?.sub || req.query?.userId || req.body?.userId;
-        const { featureKey } = req.query;
+        const { module } = req.query;
 
         if (!userId) {
             return Response.validationError(res, 'User ID is required');
@@ -16,43 +16,16 @@ async function getQuotaController(req, res) {
             return Response.forbidden(res, 'No active subscription found');
         }
 
-        if (featureKey) {
-            if (featureKey === 'VOICE_AI') {
-                let packageHasAI = subscription.packageId?.isAIFeature === true;
-                
-                if (!packageHasAI && subscription.packageId?.planType) {
-                    const planType = subscription.packageId.planType;
-                    if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
-                        packageHasAI = true;
-                    }
-                }
-                
-                const quota = {
-                    hasAccess: packageHasAI,
-                    remaining: packageHasAI ? -1 : 0,
-                    limit: packageHasAI ? -1 : 0,
-                    usageType: 'UNLIMITED',
-                    used: 0
-                };
-                
-                return Response.success(res, {
-                    message: 'Quota retrieved successfully',
-                    data: {
-                        featureKey,
-                        quota
-                    }
-                });
-            }
-            
+        if (module) {
             const quota = await UsageService.getRemainingQuota(
                 subscription._id,
-                featureKey
+                module
             );
 
             return Response.success(res, {
                 message: 'Quota retrieved successfully',
                 data: {
-                    featureKey,
+                    module,
                     quota
                 }
             });

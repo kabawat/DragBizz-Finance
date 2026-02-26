@@ -11,9 +11,10 @@ const {
 const SUBSCRIPTION_CACHE_TTL = 300;
 
 async function getActiveSubscription(userId, options = {}) {
+    const { populatePackage = true, agencyId } = options;
+    const cacheKey = agencyId ? `sub:active:agency:${agencyId}` : getCacheKey(userId);
+
     try {
-        const { populatePackage = true, agencyId } = options;
-        const cacheKey = agencyId ? `sub:active:agency:${agencyId}` : getCacheKey(userId);
         const cachedSubscription = await getCache(cacheKey);
 
         if (cachedSubscription && isSubscriptionActive(cachedSubscription)) {
@@ -24,119 +25,89 @@ async function getActiveSubscription(userId, options = {}) {
         }
 
         if (cachedSubscription) {
-            await deleteCache(cacheKey);
+            await deleteCache(cacheKey).catch(() => { });
         }
-
-        const now = new Date();
-        let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
-
-        if (populatePackage) {
-            query = populateSubscription(query);
-        } else {
-            query = query.populate('paymentId', 'amount currency status');
-        }
-
-        const subscription = await query
-            .sort({ createdAt: -1 })
-            .lean();
-
-        if (subscription) {
-            if (!populatePackage && subscription.packageId) {
-                subscription.packageId = subscription.packageId._id || subscription.packageId;
-            }
-            await setCache(cacheKey, subscription, SUBSCRIPTION_CACHE_TTL);
-        } else {
-            await setCache(cacheKey, null, 60);
-        }
-
-        return subscription;
-    } catch (error) {
-        try {
-            const { populatePackage = true, agencyId } = options;
-            const now = new Date();
-            let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
-
-            if (populatePackage) {
-                query = populateSubscription(query);
-            } else {
-                query = query.populate('paymentId', 'amount currency status');
-            }
-
-            const subscription = await query
-                .sort({ createdAt: -1 })
-                .lean();
-
-            if (subscription && !populatePackage && subscription.packageId) {
-                subscription.packageId = subscription.packageId._id || subscription.packageId;
-            }
-
-            return subscription;
-        } catch (dbError) {
-            throw dbError;
-        }
+    } catch (cacheError) {
+        // Ignore cache errors and proceed to DB fetch
     }
+
+    const now = new Date();
+    let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
+
+    if (populatePackage) {
+        query = populateSubscription(query);
+    } else {
+        query = query.populate('paymentId', 'amount currency status');
+    }
+
+    const subscription = await query
+        .sort({ createdAt: -1 })
+        .lean();
+
+    if (subscription) {
+        if (!populatePackage && subscription.packageId) {
+            subscription.packageId = subscription.packageId._id || subscription.packageId;
+        }
+        await setCache(cacheKey, subscription, SUBSCRIPTION_CACHE_TTL).catch(() => { });
+    } else {
+        await setCache(cacheKey, null, 60).catch(() => { });
+    }
+
+    return subscription;
 }
 
 async function getUserSubscriptions(userId, options = {}) {
-    try {
-        const {
-            page = 1,
-            limit = 10,
-            status
-        } = options;
+    const {
+        page = 1,
+        limit = 10,
+        status
+    } = options;
 
-        const pageNum = Math.max(1, parseInt(page) || 1);
-        const limitNum = Math.min(Math.max(1, parseInt(limit) || 10), 100);
-        const skip = (pageNum - 1) * limitNum;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(limit) || 10), 100);
+    const skip = (pageNum - 1) * limitNum;
 
-        const query = { userId };
-        if (status) {
-            query.status = status;
-        }
-
-        const total = await SubscriptionModel.countDocuments(query);
-        const subscriptions = await populateSubscription(
-            SubscriptionModel.find(query)
-        )
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limitNum)
-            .lean();
-
-        return {
-            subscriptions,
-            pagination: {
-                currentPage: pageNum,
-                limit: limitNum,
-                total,
-                totalPages: Math.ceil(total / limitNum),
-                hasNextPage: pageNum < Math.ceil(total / limitNum),
-                hasPrevPage: pageNum > 1
-            }
-        };
-    } catch (error) {
-        throw error;
+    const query = { userId };
+    if (status) {
+        query.status = status;
     }
+
+    const total = await SubscriptionModel.countDocuments(query);
+    const subscriptions = await populateSubscription(
+        SubscriptionModel.find(query)
+    )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+    return {
+        subscriptions,
+        pagination: {
+            currentPage: pageNum,
+            limit: limitNum,
+            total,
+            totalPages: Math.ceil(total / limitNum),
+            hasNextPage: pageNum < Math.ceil(total / limitNum),
+            hasPrevPage: pageNum > 1
+        }
+    };
 }
 
 async function getSubscriptionById(subscriptionId, userId) {
-    try {
-        const subscription = await populateSubscription(
-            SubscriptionModel.findOne({
-                _id: subscriptionId,
-                userId
-            }),
-            PAYMENT_POPULATE_FIELDS_WITH_ORDER
-        ).lean();
+    const subscription = await populateSubscription(
+        SubscriptionModel.findOne({
+            _id: subscriptionId,
+            userId
+        }),
+        PAYMENT_POPULATE_FIELDS_WITH_ORDER
+    ).lean();
 
-        if (!subscription) {
-            throw new Error('Subscription not found');
-        }
-
-        return subscription;
-    } catch (error) {
-        throw error;
+    if (!subscription) {
+        throw new Error('Subscription not found');
     }
+
+    return subscription;
 }
 
 module.exports = {
@@ -144,4 +115,3 @@ module.exports = {
     getUserSubscriptions,
     getSubscriptionById
 };
-

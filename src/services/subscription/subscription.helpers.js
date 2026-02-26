@@ -1,7 +1,7 @@
 const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 
 const ACTIVE_STATUSES = ['ACTIVE', 'TRIAL'];
-const PACKAGE_POPULATE_FIELDS = 'name description pricing isAIFeature planType';
+const PACKAGE_POPULATE_FIELDS = 'name description pricing planType';
 const PAYMENT_POPULATE_FIELDS_BASIC = 'amount currency status';
 const PAYMENT_POPULATE_FIELDS_FULL = 'amount currency status notes metadata razorpayResponse';
 const PAYMENT_POPULATE_FIELDS_WITH_ORDER = 'amount currency status razorpayOrderId';
@@ -61,20 +61,18 @@ function extractUserEmail(payment) {
     return null;
 }
 
-function processFeatures(featureUsageLimits) {
-    return Array.isArray(featureUsageLimits)
-        ? featureUsageLimits
-            .filter(limit => limit && limit.featureKey)
-            .map(limit => ({
-                featureKey: limit.featureKey,
-                featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
-                enabled: limit.enabled !== false,
-                usageLimits: {
-                    usageType: limit.usageType || 'UNLIMITED',
-                    totalLimit: limit.totalLimit ?? null,
-                    customDailyLimit: limit.customDailyLimit ?? null
-                },
-                metadata: limit.metadata || {}
+function processFeatures(features) {
+    return Array.isArray(features)
+        ? features
+            .filter(feature => feature && feature.module)
+            .map(feature => ({
+                module: feature.module,
+                report: feature.report === true,
+                analytics: feature.analytics === true,
+                usageType: feature.usageType || 'UNLIMITED',
+                usageLimit: feature.usageLimit ?? null,
+                customDailyLimit: feature.customDailyLimit ?? null,
+                metadata: feature.metadata || {}
             }))
         : [];
 }

@@ -12,31 +12,30 @@ const DISPLAY_NAME_TO_KEY = Object.entries(FEATURE_DISPLAY_NAMES).reduce((acc, [
 function normalizeFeature(feature) {
     if (!feature) return null;
 
-    let featureKey = feature.featureKey || null;
+    let module = feature.module || null;
 
-    if (!featureKey) {
+    if (!module) {
         if (typeof feature.feature === 'string') {
-            featureKey = feature.feature;
+            module = feature.feature;
         } else if (feature.feature?.name) {
             const lookup = DISPLAY_NAME_TO_KEY[feature.feature.name.toLowerCase()];
-            featureKey = lookup || feature.feature.name.toLowerCase().replace(/\s+/g, '_');
-        } else if (feature.featureName) {
-            const lookup = DISPLAY_NAME_TO_KEY[feature.featureName.toLowerCase()];
-            featureKey = lookup || feature.featureName.toLowerCase().replace(/\s+/g, '_');
+            module = lookup || feature.feature.name.toLowerCase().replace(/\s+/g, '_');
+        } else if (feature.moduleName) {
+            const lookup = DISPLAY_NAME_TO_KEY[feature.moduleName.toLowerCase()];
+            module = lookup || feature.moduleName.toLowerCase().replace(/\s+/g, '_');
         }
     }
 
-    if (!featureKey) return null;
+    if (!module) return null;
 
     return {
-        featureKey,
-        featureName: feature.featureName || FEATURE_DISPLAY_NAMES[featureKey] || featureKey,
-        enabled: feature.enabled !== false,
-        usageLimits: feature.usageLimits || {
-            usageType: 'UNLIMITED',
-            totalLimit: null,
-            customDailyLimit: null
-        },
+        module,
+        moduleName: feature.moduleName || FEATURE_DISPLAY_NAMES[module] || module,
+        report: feature.report === true,
+        analytics: feature.analytics === true,
+        usageType: feature.usageType || 'UNLIMITED',
+        usageLimit: feature.usageLimit ?? null,
+        customDailyLimit: feature.customDailyLimit ?? null,
         metadata: feature.metadata || {}
     };
 }

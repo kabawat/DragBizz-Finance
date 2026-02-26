@@ -6,31 +6,27 @@ const {
 } = require('./subscription.helpers');
 
 async function cancelSubscription(subscriptionId, userId, reason = null) {
-    try {
-        const subscription = await SubscriptionModel.findOne({
-            _id: subscriptionId,
-            userId,
-            status: { $in: ACTIVE_STATUSES }
-        });
+    const subscription = await SubscriptionModel.findOne({
+        _id: subscriptionId,
+        userId,
+        status: { $in: ACTIVE_STATUSES }
+    });
 
-        if (!subscription) {
-            throw new Error('Active subscription not found');
-        }
-
-        subscription.status = 'CANCELLED';
-        subscription.cancelledAt = new Date();
-        subscription.cancellationReason = reason;
-        subscription.autoRenew = false;
-
-        await subscription.save();
-
-        const cacheKey = getCacheKey(subscription.userId);
-        await deleteCache(cacheKey);
-
-        return subscription;
-    } catch (error) {
-        throw error;
+    if (!subscription) {
+        throw new Error('Active subscription not found');
     }
+
+    subscription.status = 'CANCELLED';
+    subscription.cancelledAt = new Date();
+    subscription.cancellationReason = reason;
+    subscription.autoRenew = false;
+
+    await subscription.save();
+
+    const cacheKey = getCacheKey(subscription.userId);
+    await deleteCache(cacheKey);
+
+    return subscription;
 }
 
 module.exports = {

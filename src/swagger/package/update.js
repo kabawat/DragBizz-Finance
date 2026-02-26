@@ -74,9 +74,24 @@
  *               features:
  *                 type: array
  *                 items:
- *                   type: string
- *                   example: "64a1b2c3d4e5f6789abcdef0"
- *                 description: Array of feature IDs linked to this package (optional)
+ *                   type: object
+ *                   properties:
+ *                     module:
+ *                       type: string
+ *                       example: "product"
+ *                     report:
+ *                       type: boolean
+ *                       example: true
+ *                     analytics:
+ *                       type: boolean
+ *                       example: false
+ *                     usageType:
+ *                       type: string
+ *                       example: "UNLIMITED"
+ *                     usageLimit:
+ *                       type: number
+ *                       example: null
+ *                 description: Array of features specifying modules and behavior linked to this package
  *               planType:
  *                 type: string
  *                 enum: [BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM]
@@ -103,21 +118,6 @@
  *                 type: boolean
  *                 example: true
  *                 description: Visibility status (optional)
- *               maxSubscribers:
- *                 type: number
- *                 example: 750
- *                 description: Total number of subscriptions that can be sold for this package (null for unlimited)
- *               trialPeriod:
- *                 type: object
- *                 properties:
- *                   enabled:
- *                     type: boolean
- *                     example: true
- *                     description: Enable trial period (optional)
- *                   days:
- *                     type: number
- *                     example: 30
- *                     description: Trial period in days (optional)
  *               tags:
  *                 type: array
  *                 items:
@@ -145,7 +145,6 @@
  *                   amount: 1299
  *                   discount: 15
  *                 isPopular: true
- *                 maxSubscribers: 750
  *     responses:
  *       200:
  *         description: Package updated successfully
