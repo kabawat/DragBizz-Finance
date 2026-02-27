@@ -43,8 +43,8 @@ class GrpcServer {
             this.registerServices(subscriptionProto);
 
             // Get gRPC port from config
-            const grpcPort = process.env.GRPC_PORT || SECRET.grpc?.port || 50052;
-            const grpcHost = process.env.GRPC_HOST || SECRET.grpc?.host || '0.0.0.0';
+            const grpcPort = 50052;
+            const grpcHost = '0.0.0.0';
 
             // Bind server to port
             this.server.bindAsync(

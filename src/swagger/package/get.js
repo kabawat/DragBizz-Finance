@@ -172,6 +172,7 @@
  *                       setupFee: 0
  *                       discount: 10
  *                       discountedAmount: 899.1
+ *                     features:
  *                       - module: "product"
  *                         report: true
  *                         analytics: false

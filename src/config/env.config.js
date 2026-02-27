@@ -38,7 +38,9 @@ const SECRET = {
   },
   grpc: {
     port: process.env.GRPC_PORT || 50052,
-    host: process.env.GRPC_HOST || '0.0.0.0'
+    host: process.env.GRPC_HOST || '0.0.0.0',
+    retailerHost: process.env.RETAILER_GRPC_HOST || '192.168.1.29',
+    retailerPort: process.env.RETAILER_GRPC_PORT || 8001
   },
 
   // Internal service auth (Voice-AI → Subscription)
@@ -47,25 +49,25 @@ const SECRET = {
 };
 
 if (!SECRET.mongo.uri) {
-    logger.error("MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
-    process.exit(1);
+  logger.error("MONGODB_URI or MONGODB_URI_DEV must be set. Refusing to start.");
+  process.exit(1);
 }
 
 if (!SECRET.redis.host) {
-    logger.error("REDIS_HOST must be set. Refusing to start.");
-    process.exit(1);
+  logger.error("REDIS_HOST must be set. Refusing to start.");
+  process.exit(1);
 }
 
 if (SECRET.razorpay.mode === 'live') {
-    if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
-        logger.error("Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
-        process.exit(1);
-    }
+  if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
+    logger.error("Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
+    process.exit(1);
+  }
 }
 
 if (!SECRET.jwt.issuer) {
-    logger.error("JWT_ISSUER must be set. Refusing to start.");
-    process.exit(1);
+  logger.error("JWT_ISSUER must be set. Refusing to start.");
+  process.exit(1);
 }
 
 module.exports = SECRET;

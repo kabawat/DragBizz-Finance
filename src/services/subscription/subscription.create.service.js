@@ -1,9 +1,11 @@
+const createSubscriptionGrpc = require('@src/lib/grpc/clients/retailer/services/createSubscription.service');
 const { SubscriptionModel, PaymentModel, PackageModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
 const sendEmailService = require('@src/services/email.service');
 const mongoose = require('mongoose');
+const logger = require('@src/utils/logger');
 const {
     PAYMENT_POPULATE_FIELDS_FULL,
     getCacheKey,
@@ -129,7 +131,37 @@ async function createSubscription(subscriptionData) {
             const endDate = new Date(startDate);
             endDate.setMonth(endDate.getMonth() + months);
 
-            const processedFeatures = processFeatures(packageDoc.features);
+            let baseFeatures = packageDoc.features;
+
+            // Fallback for older package documents that use featureUsageLimits
+            if ((!baseFeatures || baseFeatures.length === 0) && packageDoc.featureUsageLimits) {
+                const legacyMap = {
+                    'store_management': 'store',
+                    'inventory_management': 'inventory',
+                    'stock_management': 'inventory',
+                    'product_management': 'product',
+                    'invoice_management': 'invoice',
+                    'customer_management': 'customer',
+                    'expense_management': 'expense',
+                    'purchase_management': 'purchase_order',
+                    'bill_management': 'billing',
+                    'supplier_management': 'supplier',
+                    'payment_management': 'billing'
+                };
+                baseFeatures = packageDoc.featureUsageLimits.map(f => {
+                    const rawKey = f.featureKey || f.module;
+                    return {
+                        module: legacyMap[rawKey] || rawKey,
+                        report: f.report || false,
+                        analytics: f.analytics || false,
+                        usageType: f.usageType || 'UNLIMITED',
+                        usageLimit: f.totalLimit || f.usageLimit || null,
+                        customDailyLimit: f.customDailyLimit || null
+                    };
+                });
+            }
+
+            const processedFeatures = processFeatures(baseFeatures);
 
             const newSubscriptionData = {
                 userId,
@@ -181,6 +213,32 @@ async function createSubscription(subscriptionData) {
 
         if (populatedSubscription) {
             await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
+
+            // Sync with Retailer Microservice
+            try {
+                const featuresSync = (populatedSubscription.features || []).map(f => ({
+                    module: f.module,
+                    report: Boolean(f.report),
+                    analytics: Boolean(f.analytics),
+                    usageType: f.usageType || 'UNLIMITED',
+                    maxLimit: f.usageLimit ? Number(f.usageLimit) : 0,
+                    customDailyLimit: f.customDailyLimit ? Number(f.customDailyLimit) : 0
+                }));
+
+                const grpcPayload = {
+                    userId: populatedSubscription.userId.toString(),
+                    agencyId: populatedSubscription.agencyId ? populatedSubscription.agencyId.toString() : "",
+                    subscriptionId: populatedSubscription._id.toString(),
+                    startDate: populatedSubscription.startDate.toISOString(),
+                    endDate: populatedSubscription.endDate.toISOString(),
+                    status: populatedSubscription.status,
+                    features: featuresSync
+                };
+
+                await createSubscriptionGrpc(grpcPayload);
+            } catch (grpcErr) {
+                logger.error('Failed to sync subscription with Retailer service', { error: grpcErr.message, subscriptionId });
+            }
         }
 
         if (populatedSubscription) {

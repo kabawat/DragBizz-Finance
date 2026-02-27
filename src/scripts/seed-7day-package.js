@@ -20,10 +20,14 @@ async function createSevenDayPackage() {
             logger.info('Package already exists, updating it...');
         }
 
-        const featureUsageLimits = Object.values(FEATURES).map(featureKey => ({
-            featureKey,
-            enabled: true,
-            usageType: USAGE_TYPES.UNLIMITED
+        const { PACKAGE_MODULES } = require('../constants/enum/package.enum');
+        const features = PACKAGE_MODULES.map(module => ({
+            module: module,
+            report: true,
+            analytics: true,
+            usageType: 'UNLIMITED',
+            usageLimit: null,
+            customDailyLimit: null
         }));
 
         const highlights = [
@@ -49,18 +53,20 @@ async function createSevenDayPackage() {
                     discountedPrice: 99
                 }
             ],
-            featureUsageLimits,
+            features: features,
             highlights,
             status: 'ACTIVE',
             isVisible: true,
             isPopular: false,
             isRecommended: true,
-            isAIFeature: true,
-            trialPeriod: {
-                enabled: true,
-                days: 7
-            },
-            displayOrder: 0
+            displayOrder: 0,
+            metadata: {
+                trialPeriod: {
+                    enabled: true,
+                    days: 7
+                },
+                isAIFeature: true
+            }
         };
 
         if (existingPackage) {
