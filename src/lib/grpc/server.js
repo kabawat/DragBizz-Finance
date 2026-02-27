@@ -70,13 +70,8 @@ class GrpcServer {
 
     // Register gRPC services
     registerServices(proto) {
-        const services = require('./services');
-        // Register Subscription Service
-        this.server.addService(proto.SubscriptionService.service, {
-            GetActiveSubscription: services.handleGetActiveSubscription
-        });
 
-        logger.info('gRPC Services registered successfully');
+        logger.info('gRPC Server started (no services registered)');
     }
 
     // Graceful shutdown
