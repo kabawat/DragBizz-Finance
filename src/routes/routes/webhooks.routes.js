@@ -2,7 +2,7 @@ const router = require('express').Router();
 const express = require('express');
 const razorpayWebhookController = require('@src/controllers/payment/webhook');
 
-router.post('/razorpay', 
+router.post('/razorpay',
     express.raw({ type: 'application/json' }),
     async (req, res, next) => {
         try {
@@ -15,9 +15,4 @@ router.post('/razorpay',
     razorpayWebhookController
 );
 
-router.post('/provider', async (req, res) => {
-    return res.status(200).json({ received: true });
-});
-
 module.exports = router;
-

@@ -44,23 +44,11 @@ const options = {
         tags: [
             {
                 name: 'Packages',
-                description: 'Package/Plan management APIs (Admin only)'
-            },
-            {
-                name: 'Features',
-                description: 'Feature management APIs (Admin only)'
-            },
-            {
-                name: 'Subscriptions',
-                description: 'Subscription management APIs'
+                description: 'Package/Plan management APIs (Admin: create/update/delete | Public: get)'
             },
             {
                 name: 'Payments',
-                description: 'Payment processing and management APIs'
-            },
-            {
-                name: 'Checkout',
-                description: 'Checkout and payment session APIs'
+                description: 'Payment processing APIs'
             },
             {
                 name: 'Webhooks',

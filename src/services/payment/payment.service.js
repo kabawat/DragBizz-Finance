@@ -13,7 +13,7 @@ const logger = require('@src/utils/logger');
 class PaymentService {
     static async createOrder(orderData) {
         try {
-            const { userId, packageId, months, couponCode, email, phone, idempotencyKey, ipAddress, userAgent } = orderData;
+            const { userId, agencyId = null, packageId, months, couponCode, email, phone, idempotencyKey, ipAddress, userAgent } = orderData;
 
             if (!mongoose.Types.ObjectId.isValid(packageId)) {
                 throw new Error('Invalid package ID format');
@@ -44,9 +44,9 @@ class PaymentService {
             if (!Array.isArray(pricing) || pricing.length === 0) {
                 throw new Error('Package pricing not available');
             }
-            
+
             const pricingOption = pricing.find(p => p.months === monthsNum);
-            
+
             if (!pricingOption) {
                 throw new Error(`Pricing not available for ${monthsNum} month(s)`);
             }
@@ -59,7 +59,7 @@ class PaymentService {
 
             const discountAmount = couponCode ? await this._calculateCouponDiscount(baseAmount, couponCode) : 0;
             const amountAfterDiscount = Math.max(0, baseAmount - discountAmount);
-            
+
             // No GST in new structure, final amount is after discount
             const finalAmount = amountAfterDiscount;
 
@@ -122,6 +122,7 @@ class PaymentService {
 
                 const paymentData = {
                     userId,
+                    agencyId: agencyId ? new mongoose.Types.ObjectId(agencyId) : null,
                     packageId: new mongoose.Types.ObjectId(packageId),
                     paymentId: new mongoose.Types.ObjectId(),
                     orderId,
@@ -220,6 +221,7 @@ class PaymentService {
 
             const paymentData = {
                 userId,
+                agencyId: agencyId ? new mongoose.Types.ObjectId(agencyId) : null,
                 packageId: new mongoose.Types.ObjectId(packageId),
                 paymentId: new mongoose.Types.ObjectId(),
                 orderId,
@@ -501,7 +503,7 @@ class PaymentService {
         if (!paymentDoc) {
             throw new Error('Payment document is required to build order response');
         }
-        
+
         const requiresPayment = (paymentDoc.finalAmount || 0) > 0;
         return {
             orderId: paymentDoc.orderId || null,

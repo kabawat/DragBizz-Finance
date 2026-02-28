@@ -53,6 +53,7 @@ async function createOrderController(req, res) {
 
         const orderData = await PaymentService.createOrder({
             userId,
+            agencyId: req.user?.agencyId || null,
             ...sanitizedData,
             idempotencyKey: req.idempotencyKey,
             ipAddress: req.clientIp,

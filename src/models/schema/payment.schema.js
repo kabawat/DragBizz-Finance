@@ -9,6 +9,12 @@ const paymentSchema = new mongoose.Schema({
         index: true
     },
 
+    agencyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null,
+        index: true
+    },
+
     // Package Information
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -216,11 +222,13 @@ const paymentSchema = new mongoose.Schema({
 
 // Indexes for better query performance
 paymentSchema.index({ userId: 1, status: 1 });
+paymentSchema.index({ agencyId: 1, status: 1 });
 paymentSchema.index({ packageId: 1, status: 1 });
 
 paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
+paymentSchema.index({ agencyId: 1, createdAt: -1 });
 
 // Virtual for checking if payment is successful
 paymentSchema.virtual('isSuccessful').get(function () {
