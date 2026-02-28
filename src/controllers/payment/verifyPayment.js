@@ -1,5 +1,4 @@
-const PaymentService = require('@src/services/payment/payment.service');
-const SubscriptionService = require('@src/services/subscription/subscription.service');
+const PaymentService = require('@src/services/payment');
 const { validateVerifyPayment } = require('@src/utils/validations/payment.validation');
 const { sanitizeVerifyPaymentData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializePayment } = require('@src/utils/serializer/payment.serializer');
@@ -9,7 +8,6 @@ const logger = require('@src/utils/logger');
 async function verifyPaymentController(req, res) {
     try {
         const userId = req.user?.sub;
-        const agencyId = req.user?.agencyId;
 
         if (!userId) {
             return Response.validationError(res, 'User ID not found in token');
@@ -33,40 +31,44 @@ async function verifyPaymentController(req, res) {
 
         let subscription = null;
         let subscriptionType = null;
+        let retries = 0;
+
+        // Wait for webhook (max 2s) to get UI display data
         if (payment.status === 'SUCCESS') {
-            try {
+            const { SubscriptionModel } = require('@src/models');
+            const SubscriptionService = require('@src/services/subscription/subscription.service');
+
+            while (retries < 4) {
+                subscription = await SubscriptionModel.findOne({ paymentId: payment._id })
+                    .populate('packageId', 'name')
+                    .lean();
+
+                if (subscription) break;
+                await new Promise(res => setTimeout(res, 500));
+                retries++;
+            }
+
+            if (subscription) {
                 const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
-                subscription = await SubscriptionService.createSubscription({
-                    userId,
-                    agencyId,
-                    paymentId: payment._id,
-                    ipAddress: req.clientIp,
-                    userAgent: req.userAgent
-                });
 
-                if (subscription) {
-                    if (subscription.status === 'PENDING') {
-                        subscriptionType = 'DOWNGRADE';
-                    } else if (existingSubscription) {
-                        const existingPackageId = existingSubscription.packageId?._id?.toString() || existingSubscription.packageId?.toString();
-                        const newPackageId = subscription.packageId?._id?.toString() || subscription.packageId?.toString();
+                if (subscription.status === 'PENDING') {
+                    subscriptionType = 'DOWNGRADE';
+                } else if (existingSubscription && existingSubscription._id.toString() !== subscription._id.toString()) {
+                    const existingPackageId = existingSubscription.packageId?._id?.toString() || existingSubscription.packageId?.toString();
+                    const newPackageId = subscription.packageId?._id?.toString() || subscription.packageId?.toString();
 
-                        if (existingPackageId === newPackageId) {
-                            subscriptionType = 'RENEWAL';
-                        } else {
-                            subscriptionType = 'UPGRADE';
-                        }
+                    if (existingPackageId === newPackageId) {
+                        subscriptionType = 'RENEWAL';
                     } else {
-                        subscriptionType = 'NEW';
+                        subscriptionType = 'UPGRADE';
                     }
+                } else {
+                    subscriptionType = 'NEW';
                 }
-            } catch (subError) {
-                logger.error('Error creating subscription', { error: subError?.message, stack: subError?.stack });
             }
         }
 
-        const paymentDoc = payment._id ? await require('@src/models').PaymentModel.findById(payment._id).lean() : null;
-        const proratedCredit = paymentDoc?.metadata?.proratedCredit || 0;
+        const proratedCredit = payment.metadata?.proratedCredit || 0;
 
         const responseData = {
             payment: serializePayment(payment),
@@ -86,7 +88,7 @@ async function verifyPaymentController(req, res) {
 
         return Response.success(res, {
             message: payment.status === 'SUCCESS'
-                ? 'Payment verified successfully and subscription activated'
+                ? 'Payment verified successfully.'
                 : 'Payment verification completed',
             data: responseData
         });

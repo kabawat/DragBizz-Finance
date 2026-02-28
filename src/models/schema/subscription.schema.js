@@ -29,7 +29,8 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Payment',
         required: true,
-        index: true
+        index: true,
+        unique: true
     },
 
     // Subscription Status

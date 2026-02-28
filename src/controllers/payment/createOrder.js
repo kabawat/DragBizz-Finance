@@ -1,4 +1,4 @@
-const PaymentService = require('@src/services/payment/payment.service');
+const PaymentService = require('@src/services/payment');
 const SubscriptionService = require('@src/services/subscription/subscription.service');
 const { PackageModel } = require('@src/models');
 const { validateCreateOrder } = require('@src/utils/validations/payment.validation');

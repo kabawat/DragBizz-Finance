@@ -279,6 +279,18 @@ async function createSubscription(subscriptionData) {
             await session.abortTransaction();
         }
         if (session) session.endSession();
+
+        // Handle race condition: If another process successfully inserted this paymentId
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.paymentId) {
+            logger.warn('Concurrent subscription creation prevented by DB constraint', { paymentId: subscriptionData?.paymentId });
+
+            // Try to return the subscription that was created by the concurrent process
+            const existingSub = await SubscriptionModel.findOne({ paymentId: subscriptionData?.paymentId });
+            if (existingSub) {
+                return await populateSubscription(SubscriptionModel.findById(existingSub._id)).lean();
+            }
+        }
+
         throw error;
     }
 }

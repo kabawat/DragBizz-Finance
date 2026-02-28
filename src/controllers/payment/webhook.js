@@ -76,30 +76,32 @@ async function handlePaymentCaptured(payload) {
 
         const { razorpayPaymentId, razorpayOrderId } = extractRazorpayIds(paymentEntity);
 
-        const payment = await findPaymentByOrderId(razorpayOrderId, {
-            razorpayPaymentId: { $ne: null }
-        });
+        const payment = await findPaymentByOrderId(razorpayOrderId);
 
         if (!payment) {
             return;
         }
 
+        let updated = false;
         if (payment.status !== 'SUCCESS') {
             payment.status = 'SUCCESS';
             payment.paidAt = new Date(paymentEntity.created_at * 1000);
             payment.paymentMethod = paymentEntity.method;
             payment.razorpayResponse = paymentEntity;
             await payment.save();
+            updated = true;
+        }
 
-            if (!payment.subscriptionId) {
-                try {
-                    await SubscriptionService.createSubscription({
-                        userId: payment.userId,
-                        paymentId: payment._id
-                    });
-                } catch (subError) {
-                    logger.error('Error creating subscription from webhook', { error: subError?.message, stack: subError?.stack });
-                }
+        // Always ensure subscription is created if payment is now successful
+        // createSubscription internally handles E11000 duplicate idempotency if verify API triggers at same time
+        if ((updated || payment.status === 'SUCCESS') && !payment.subscriptionId) {
+            try {
+                await SubscriptionService.createSubscription({
+                    userId: payment.userId,
+                    paymentId: payment._id
+                });
+            } catch (subError) {
+                logger.error('Error creating subscription from webhook', { error: subError?.message, stack: subError?.stack });
             }
         }
     } catch (error) {
@@ -114,9 +116,7 @@ async function handlePaymentFailed(payload) {
 
         const { razorpayPaymentId, razorpayOrderId } = extractRazorpayIds(paymentEntity);
 
-        const payment = await findPaymentByOrderId(razorpayOrderId, {
-            razorpayPaymentId
-        });
+        const payment = await findPaymentByOrderId(razorpayOrderId);
 
         if (payment && payment.status === 'PENDING') {
             payment.status = 'FAILED';
@@ -143,7 +143,7 @@ async function handleOrderPaid(payload) {
             try {
                 const getRazorpayInstance = require('@src/lib/payment/razorpay.instance');
                 const payments = await getRazorpayInstance().orders.fetchPayments(razorpayOrderId);
-                
+
                 if (payments.items && payments.items.length > 0) {
                     const latestPayment = payments.items[0];
                     if (latestPayment.status === 'captured') {
@@ -174,13 +174,13 @@ async function handleRefundCreated(payload) {
             payment.refundAmount = refundAmount;
             payment.refundStatus = 'PENDING';
             payment.refundedAt = new Date(refundEntity.created_at * 1000);
-            
+
             if (refundAmount >= payment.finalAmount) {
                 payment.status = 'REFUNDED';
             } else {
                 payment.status = 'PARTIALLY_REFUNDED';
             }
-            
+
             await payment.save();
         }
     } catch (error) {

@@ -10,8 +10,15 @@ function verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySign
             .createHmac('sha256', secret)
             .update(payload)
             .digest('hex');
-        
-        return expectedSignature === razorpaySignature;
+
+        if (expectedSignature.length !== razorpaySignature.length) {
+            return false;
+        }
+
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'hex'),
+            Buffer.from(razorpaySignature, 'hex')
+        );
     } catch (error) {
         logger.error('Error verifying Razorpay signature', { error: error?.message, stack: error?.stack });
         return false;
@@ -25,8 +32,15 @@ function verifyWebhookSignature(payload, signature) {
             .createHmac('sha256', secret)
             .update(payload)
             .digest('hex');
-        
-        return expectedSignature === signature;
+
+        if (expectedSignature.length !== signature.length) {
+            return false;
+        }
+
+        return crypto.timingSafeEqual(
+            Buffer.from(expectedSignature, 'hex'),
+            Buffer.from(signature, 'hex')
+        );
     } catch (error) {
         logger.error('Error verifying Razorpay webhook signature', { error: error?.message, stack: error?.stack });
         return false;
