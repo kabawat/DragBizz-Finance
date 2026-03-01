@@ -1,7 +1,7 @@
 const { SubscriptionModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 
-async function renewSubscription(existingSubscription, payment, months, session) {
+async function renewSubscription(existingSubscription, payment, months, ipAddress, userAgent) {
     const currentEndDate = new Date(existingSubscription.endDate);
     const newEndDate = new Date(currentEndDate);
     newEndDate.setMonth(newEndDate.getMonth() + months);
@@ -9,10 +9,10 @@ async function renewSubscription(existingSubscription, payment, months, session)
     existingSubscription.endDate = newEndDate;
     existingSubscription.paymentId = payment._id;
     existingSubscription.nextBillingDate = months === 1 ? newEndDate : null;
-    await existingSubscription.save({ session });
+    await existingSubscription.save();
 
     payment.subscriptionId = existingSubscription._id;
-    await payment.save({ session });
+    await payment.save();
 
     await logSubscriptionEvent('SUBSCRIPTION_RENEWED', {
         subscriptionId: existingSubscription._id,
@@ -20,8 +20,8 @@ async function renewSubscription(existingSubscription, payment, months, session)
         packageId: existingSubscription.packageId,
         paymentId: payment._id,
         newEndDate: newEndDate,
-        ipAddress: null,
-        userAgent: null
+        ipAddress: ipAddress || null,
+        userAgent: userAgent || null
     });
 
     return existingSubscription;

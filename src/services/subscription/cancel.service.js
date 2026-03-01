@@ -3,7 +3,7 @@ const { deleteCache } = require('@src/services/cache.service');
 const {
     ACTIVE_STATUSES,
     getCacheKey
-} = require('./subscription.helpers');
+} = require('./helpers');
 
 async function cancelSubscription(subscriptionId, userId, reason = null) {
     const subscription = await SubscriptionModel.findOne({

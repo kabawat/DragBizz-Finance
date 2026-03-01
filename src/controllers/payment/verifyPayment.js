@@ -36,7 +36,7 @@ async function verifyPaymentController(req, res) {
         // Wait for webhook (max 2s) to get UI display data
         if (payment.status === 'SUCCESS') {
             const { SubscriptionModel } = require('@src/models');
-            const SubscriptionService = require('@src/services/subscription/subscription.service');
+            const SubscriptionService = require('@src/services/subscription');
 
             while (retries < 4) {
                 subscription = await SubscriptionModel.findOne({ paymentId: payment._id })

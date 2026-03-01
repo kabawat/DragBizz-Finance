@@ -44,17 +44,17 @@ function isSubscriptionActive(subscription, now = new Date()) {
 }
 
 function extractUserEmail(payment) {
-    if (payment?.metadata?.email) {
+    if (payment && payment.metadata && payment.metadata.email) {
         return payment.metadata.email;
     }
-    if (payment?.razorpayResponse?.notes?.email) {
+    if (payment && payment.razorpayResponse && payment.razorpayResponse.notes && payment.razorpayResponse.notes.email) {
         return payment.razorpayResponse.notes.email;
     }
-    if (payment?.notes) {
+    if (payment && payment.notes) {
         try {
             const notesObj = typeof payment.notes === 'string' ? JSON.parse(payment.notes) : payment.notes;
-            return notesObj?.email || null;
-        } catch {
+            return (notesObj && notesObj.email) ? notesObj.email : null;
+        } catch (e) {
             return null;
         }
     }
@@ -70,8 +70,8 @@ function processFeatures(features) {
                 report: feature.report === true,
                 analytics: feature.analytics === true,
                 usageType: feature.usageType || 'UNLIMITED',
-                usageLimit: feature.usageLimit ?? null,
-                customDailyLimit: feature.customDailyLimit ?? null,
+                usageLimit: (feature.usageLimit !== undefined && feature.usageLimit !== null) ? feature.usageLimit : null,
+                customDailyLimit: (feature.customDailyLimit !== undefined && feature.customDailyLimit !== null) ? feature.customDailyLimit : null,
                 metadata: feature.metadata || {}
             }))
         : [];
@@ -85,8 +85,8 @@ function comparePackages(oldPackage, newPackage) {
     if (newOrder > oldOrder) return 'UPGRADE';
     if (newOrder < oldOrder) return 'DOWNGRADE';
 
-    const oldPrice = oldPackage.pricing?.[0]?.price || 0;
-    const newPrice = newPackage.pricing?.[0]?.price || 0;
+    const oldPrice = (oldPackage.pricing && oldPackage.pricing[0] && oldPackage.pricing[0].price) ? oldPackage.pricing[0].price : 0;
+    const newPrice = (newPackage.pricing && newPackage.pricing[0] && newPackage.pricing[0].price) ? newPackage.pricing[0].price : 0;
 
     if (newPrice > oldPrice) return 'UPGRADE';
     if (newPrice < oldPrice) return 'DOWNGRADE';
@@ -107,7 +107,7 @@ function calculateProratedCredit(subscription, months) {
     if (totalDays <= 0 || remainingDays <= 0) return 0;
 
     const subscriptionPayment = subscription.paymentId;
-    const totalAmount = subscriptionPayment?.amount || 0;
+    const totalAmount = (subscriptionPayment && subscriptionPayment.amount) ? subscriptionPayment.amount : 0;
     const proratedAmount = (totalAmount / totalDays) * remainingDays;
 
     return Math.max(0, Math.round(proratedAmount * 100) / 100);

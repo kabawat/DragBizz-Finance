@@ -38,7 +38,19 @@ async function verifyPayment(paymentData) {
     }
 
     // Handle Idempotency / Race Condition
-    if (payment.status === 'SUCCESS' && payment.razorpayPaymentId === razorpayPaymentId) {
+    if (payment.status === 'SUCCESS') {
+        let saveNeeded = false;
+        if (!payment.razorpayPaymentId && razorpayPaymentId) {
+            payment.razorpayPaymentId = razorpayPaymentId;
+            saveNeeded = true;
+        }
+        if (!payment.razorpaySignature && razorpaySignature) {
+            payment.razorpaySignature = razorpaySignature;
+            saveNeeded = true;
+        }
+        if (saveNeeded) {
+            await payment.save();
+        }
         return payment;
     }
 

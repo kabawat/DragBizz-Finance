@@ -15,7 +15,15 @@ const isDevelopment = SECRET.ENVIRONMENT === "development";
 
 const { applySecurityMiddleware } = require("@config/security.config");
 applySecurityMiddleware(app);
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({
+  limit: "10mb",
+  verify: (req, res, buf) => {
+    // Save raw body for webhook verification before it gets parsed
+    if (req.originalUrl && req.originalUrl.includes('/webhooks')) {
+      req.rawBody = buf.toString();
+    }
+  }
+}));
 app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(
   cors({

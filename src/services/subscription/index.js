@@ -1,6 +1,6 @@
-const createSubscriptionService = require('./subscription.create.service');
-const getSubscriptionService = require('./subscription.get.service');
-const cancelSubscriptionService = require('./subscription.cancel.service');
+const createSubscriptionService = require('./create.service');
+const getSubscriptionService = require('./get.service');
+const cancelSubscriptionService = require('./cancel.service');
 
 class SubscriptionService {
     static async createSubscription(subscriptionData) {

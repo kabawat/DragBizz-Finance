@@ -6,7 +6,7 @@ const {
     populateSubscription,
     getActiveSubscriptionQuery,
     isSubscriptionActive
-} = require('./subscription.helpers');
+} = require('./helpers');
 
 const SUBSCRIPTION_CACHE_TTL = 300;
 

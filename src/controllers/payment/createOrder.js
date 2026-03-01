@@ -1,10 +1,10 @@
 const PaymentService = require('@src/services/payment');
-const SubscriptionService = require('@src/services/subscription/subscription.service');
+const SubscriptionService = require('@src/services/subscription');
 const { PackageModel } = require('@src/models');
 const { validateCreateOrder } = require('@src/utils/validations/payment.validation');
 const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
-const { comparePackages } = require('@src/services/subscription/subscription.helpers');
+const { comparePackages } = require('@src/services/subscription/helpers');
 const Response = require('@src/utils/responseHandler/standardized');
 
 async function createOrderController(req, res) {

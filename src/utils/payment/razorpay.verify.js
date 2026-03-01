@@ -28,6 +28,11 @@ function verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySign
 function verifyWebhookSignature(payload, signature) {
     try {
         const secret = SECRET.razorpay.webhookSecret;
+        if (!secret) {
+            logger.error('RAZORPAY_WEBHOOK_SECRET is not configured in the environment');
+            return false;
+        }
+
         const expectedSignature = crypto
             .createHmac('sha256', secret)
             .update(payload)
