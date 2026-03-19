@@ -2,6 +2,25 @@
 function sanitizePackageData(data) {
     const sanitized = {};
 
+    // Status and Visibility
+    if (data.status) {
+        sanitized.status = data.status;
+    }
+
+    if (data.isVisible !== undefined) {
+        sanitized.isVisible = data.isVisible;
+    }
+
+    // Tags
+    if (data.tags && Array.isArray(data.tags)) {
+        sanitized.tags = data.tags.map(tag => tag.trim()).filter(tag => tag.length > 0);
+    }
+
+    // Metadata
+    if (data.metadata) {
+        sanitized.metadata = data.metadata;
+    }
+
     // Basic Information
     if (data.name) {
         sanitized.name = data.name.trim();
@@ -42,24 +61,22 @@ function sanitizePackageData(data) {
         }
     }
 
-    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
-        sanitized.featureUsageLimits = data.featureUsageLimits
-            .map(limit => {
-                if (!limit || !limit.featureKey) return null;
+    if (data.features && Array.isArray(data.features)) {
+        sanitized.features = data.features
+            .map(feature => {
+                if (!feature || !feature.module) return null;
                 return {
-                    featureKey: limit.featureKey.trim(),
-                    enabled: limit.enabled !== false,
-                    usageType: limit.usageType || 'UNLIMITED',
-                    totalLimit: limit.totalLimit !== undefined && limit.totalLimit !== null && limit.totalLimit !== ''
-                        ? Number(limit.totalLimit)
+                    module: feature.module.trim(),
+                    report: feature.report === true || feature.report === 'true',
+                    analytics: feature.analytics === true || feature.analytics === 'true',
+                    usageType: feature.usageType || 'UNLIMITED',
+                    usageLimit: feature.usageLimit !== undefined && feature.usageLimit !== null && feature.usageLimit !== ''
+                        ? Number(feature.usageLimit)
                         : null,
-                    customDailyLimit: limit.customDailyLimit !== undefined && limit.customDailyLimit !== null && limit.customDailyLimit !== ''
-                        ? Number(limit.customDailyLimit)
+                    customDailyLimit: feature.customDailyLimit !== undefined && feature.customDailyLimit !== null && feature.customDailyLimit !== ''
+                        ? Number(feature.customDailyLimit)
                         : null,
-                    metadata: {
-                        ...(limit.metadata || {}),
-                        highlight: limit.highlight || (limit.metadata && limit.metadata.highlight) || null
-                    }
+                    metadata: feature.metadata || {}
                 };
             })
             .filter(Boolean);
@@ -92,52 +109,7 @@ function sanitizePackageData(data) {
         sanitized.isRecommended = data.isRecommended;
     }
 
-    if (data.isAIFeature !== undefined) {
-        sanitized.isAIFeature = data.isAIFeature === true || data.isAIFeature === 'true';
-    } else {
-        const planType = data.planType || sanitized.planType;
-        if (planType === 'PROFESSIONAL' || planType === 'ENTERPRISE') {
-            sanitized.isAIFeature = true;
-        }
-    }
-
-    // Status and Visibility
-    if (data.status) {
-        sanitized.status = data.status;
-    }
-
-    if (data.isVisible !== undefined) {
-        sanitized.isVisible = data.isVisible;
-    }
-
-    // Trial Information
-    if (data.trialPeriod) {
-        sanitized.trialPeriod = {
-            enabled: data.trialPeriod.enabled || false,
-            days: data.trialPeriod.days || 0
-        };
-    }
-
-    // Tags
-    if (data.tags && Array.isArray(data.tags)) {
-        sanitized.tags = data.tags.map(tag => tag.trim()).filter(tag => tag.length > 0);
-    }
-
-    // Metadata
-    if (data.metadata) {
-        sanitized.metadata = data.metadata;
-    }
-
-    if (data.maxSubscribers !== undefined) {
-        sanitized.maxSubscribers = data.maxSubscribers === '' || data.maxSubscribers === null
-            ? null
-            : Number(data.maxSubscribers);
-    }
-
     return sanitized;
 }
 
-module.exports = {
-    sanitizePackageData
-};
-
+module.exports = { sanitizePackageData };

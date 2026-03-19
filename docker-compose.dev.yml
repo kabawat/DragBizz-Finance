@@ -3,13 +3,13 @@ services:
     build: .
     container_name: dragbizz_subscription_dev
     ports:
-      - "${PORT:-4002}:${PORT:-4002}"
-      - "${GRPC_PORT:-50052}:50052"
+      - "4002:3000"
+      - "8002:50052"
     env_file:
       - .env
     environment:
       - NODE_ENV=development
-      - PORT=${PORT:-4002}
+      - PORT=3000
       - REDIS_HOST=redis-dev
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}

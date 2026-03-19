@@ -1,20 +1,18 @@
 const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
-
-// Package Serializers
-
 // Serialize package for creation response
 function packageCreationSerializer(package) {
     if (!package) return null;
 
-    const featureUsageLimits = Array.isArray(package.featureUsageLimits)
-        ? package.featureUsageLimits.map(limit => ({
-            featureKey: limit.featureKey,
-            featureName: FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey,
-            usageType: limit.usageType || 'UNLIMITED',
-            totalLimit: limit.totalLimit ?? null,
-            customDailyLimit: limit.customDailyLimit ?? null,
-            enabled: limit.enabled !== false,
-            highlight: limit.highlight || (limit.metadata && limit.metadata.highlight) || null
+    const features = Array.isArray(package.features)
+        ? package.features.map(feature => ({
+            module: feature.module,
+            moduleName: FEATURE_DISPLAY_NAMES[feature.module] || feature.module,
+            report: feature.report === true,
+            analytics: feature.analytics === true,
+            usageType: feature.usageType || 'UNLIMITED',
+            usageLimit: feature.usageLimit ?? null,
+            customDailyLimit: feature.customDailyLimit ?? null,
+            metadata: feature.metadata || {}
         }))
         : [];
 
@@ -43,7 +41,7 @@ function packageCreationSerializer(package) {
         description: package.description,
         shortDescription: package.shortDescription,
         pricing: pricing,
-        featureUsageLimits,
+        features,
         highlights: package.highlights || [],
         planType: package.planType,
         label: package.label,
@@ -52,9 +50,6 @@ function packageCreationSerializer(package) {
         isRecommended: package.isRecommended,
         status: package.status,
         isVisible: package.isVisible,
-        isAIFeature: package.isAIFeature || false,
-        maxSubscribers: package.maxSubscribers,
-        trialPeriod: package.trialPeriod,
         tags: package.tags || [],
         createdAt: package.createdAt,
         updatedAt: package.updatedAt

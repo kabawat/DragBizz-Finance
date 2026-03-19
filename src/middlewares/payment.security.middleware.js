@@ -8,24 +8,21 @@ async function paymentSecurityMiddleware(req, res, next) {
             return Response.validationError(res, 'User ID not found in token');
         }
 
-        const idempotencyKey = req.headers['idempotency-key'] || req.body.idempotencyKey;
+        let idempotencyKey = req.headers['idempotency-key'] || req.body?.idempotencyKey;
 
         if (idempotencyKey) {
-            const idempotencyCheck = await checkIdempotency(idempotencyKey, userId);
-            if (idempotencyCheck.isDuplicate) {
-                return Response.success(res, {
-                    message: 'Duplicate request detected',
-                    data: {
-                        payment: idempotencyCheck.payment,
-                        isDuplicate: true
-                    }
-                });
+            if (typeof idempotencyKey !== 'string') {
+                idempotencyKey = String(idempotencyKey);
             }
-            req.idempotencyKey = idempotencyKey;
+            req.idempotencyKey = idempotencyKey.substring(0, 100);
         }
 
-        req.clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
-        req.userAgent = req.headers['user-agent'];
+        let rawIp = req.ip || req.connection?.remoteAddress || req.headers['x-forwarded-for'];
+        if (Array.isArray(rawIp)) rawIp = rawIp[0];
+        if (typeof rawIp === 'string') rawIp = rawIp.split(',')[0].trim();
+
+        req.clientIp = typeof rawIp === 'string' ? rawIp.substring(0, 45) : 'unknown';
+        req.userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'].substring(0, 300) : 'unknown';
 
         next();
     } catch (error) {
