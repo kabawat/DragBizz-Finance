@@ -11,8 +11,7 @@ RUN yarn install
 # Copy rest of the project
 COPY . .
 
-# Expose app port
-EXPOSE 4002
+# Expose REST app port and gRPC port
+EXPOSE 3000 50052
 
 CMD ["yarn", "dev"]
-

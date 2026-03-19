@@ -1,7 +1,7 @@
-const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
-const { FEATURES, USAGE_TYPES } = require('@src/constants/features');
+const { PACKAGE_STATUS, PACKAGE_MODULES } = require('@src/constants/enum/package.enum');
+const { USAGE_TYPES } = require('@src/constants/features');
 
-const validFeatureKeys = new Set(Object.values(FEATURES));
+const validFeatureKeys = new Set(PACKAGE_MODULES);
 
 // Validate package creation data
 function validatePackage(data) {
@@ -69,41 +69,39 @@ function validatePackage(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
-        const seenFeatureKeys = new Set();
+    if (data.features && Array.isArray(data.features)) {
+        const seenModules = new Set();
 
-        data.featureUsageLimits.forEach((limit, index) => {
-            const key = limit.featureKey;
+        data.features.forEach((feature, index) => {
+            const moduleName = feature.module;
 
-            if (!key || typeof key !== 'string' || !validFeatureKeys.has(key)) {
-                errors[`featureUsageLimits[${index}].featureKey`] = 'Invalid feature key';
+            if (!moduleName || typeof moduleName !== 'string' || !validFeatureKeys.has(moduleName)) {
+                errors[`features[${index}].module`] = 'Invalid module name';
                 return;
             }
 
-            if (seenFeatureKeys.has(key)) {
-                errors[`featureUsageLimits[${index}].featureKey`] = 'Duplicate feature key';
+            if (seenModules.has(moduleName)) {
+                errors[`features[${index}].module`] = 'Duplicate module name';
                 return;
             }
-            seenFeatureKeys.add(key);
+            seenModules.add(moduleName);
 
-            const usageType = limit.usageType || USAGE_TYPES.UNLIMITED;
+            const usageType = feature.usageType || USAGE_TYPES.UNLIMITED;
             if (!Object.values(USAGE_TYPES).includes(usageType)) {
-                errors[`featureUsageLimits[${index}].usageType`] = 'Invalid usage type';
+                errors[`features[${index}].usageType`] = 'Invalid usage type';
             }
 
             if (usageType !== USAGE_TYPES.UNLIMITED) {
-                if (limit.totalLimit === undefined || limit.totalLimit === null || Number(limit.totalLimit) <= 0) {
-                    errors[`featureUsageLimits[${index}].totalLimit`] = 'Total limit must be greater than 0';
+                if (feature.usageLimit === undefined || feature.usageLimit === null || Number(feature.usageLimit) < 0) {
+                    errors[`features[${index}].usageLimit`] = 'Usage limit must be greater than or equal to 0';
                 }
             }
 
-            if (usageType === USAGE_TYPES.DAILY_ROLLING && limit.customDailyLimit !== undefined && limit.customDailyLimit !== null) {
-                if (Number(limit.customDailyLimit) < 0) {
-                    errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
+            if (usageType === USAGE_TYPES.DAILY_ROLLING && feature.customDailyLimit !== undefined && feature.customDailyLimit !== null) {
+                if (Number(feature.customDailyLimit) < 0) {
+                    errors[`features[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
                 }
             }
-
-
         });
     }
 
@@ -118,19 +116,6 @@ function validatePackage(data) {
                     errors[`highlights[${index}]`] = 'Highlight must be less than 500 characters';
                 }
             });
-        }
-    }
-
-    if (data.maxSubscribers !== undefined && data.maxSubscribers !== null) {
-        if (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0) {
-            errors.maxSubscribers = 'Max subscribers must be greater than or equal to 0';
-        }
-    }
-
-    // Validate trial period if provided
-    if (data.trialPeriod) {
-        if (data.trialPeriod.enabled && (!data.trialPeriod.days || typeof data.trialPeriod.days !== 'number' || data.trialPeriod.days < 0)) {
-            errors['trialPeriod.days'] = 'Trial days must be a positive number when trial is enabled';
         }
     }
 
@@ -209,38 +194,36 @@ function validatePackageUpdate(data) {
         errors.status = `Status must be one of: ${PACKAGE_STATUS.join(', ')}`;
     }
 
-    if (data.featureUsageLimits && Array.isArray(data.featureUsageLimits)) {
-        const seenFeatureKeys = new Set();
+    if (data.features && Array.isArray(data.features)) {
+        const seenModules = new Set();
 
-        data.featureUsageLimits.forEach((limit, index) => {
-            if (limit.featureKey !== undefined) {
-                if (typeof limit.featureKey !== 'string' || !validFeatureKeys.has(limit.featureKey)) {
-                    errors[`featureUsageLimits[${index}].featureKey`] = 'Invalid feature key';
-                } else if (seenFeatureKeys.has(limit.featureKey)) {
-                    errors[`featureUsageLimits[${index}].featureKey`] = 'Duplicate feature key';
+        data.features.forEach((feature, index) => {
+            if (feature.module !== undefined) {
+                if (typeof feature.module !== 'string' || !validFeatureKeys.has(feature.module)) {
+                    errors[`features[${index}].module`] = 'Invalid module name';
+                } else if (seenModules.has(feature.module)) {
+                    errors[`features[${index}].module`] = 'Duplicate module name';
                 } else {
-                    seenFeatureKeys.add(limit.featureKey);
+                    seenModules.add(feature.module);
                 }
             }
 
-            if (limit.usageType !== undefined && !Object.values(USAGE_TYPES).includes(limit.usageType)) {
-                errors[`featureUsageLimits[${index}].usageType`] = 'Invalid usage type';
+            if (feature.usageType !== undefined && !Object.values(USAGE_TYPES).includes(feature.usageType)) {
+                errors[`features[${index}].usageType`] = 'Invalid usage type';
             }
 
-            const usageType = limit.usageType || USAGE_TYPES.UNLIMITED;
-            if (usageType !== USAGE_TYPES.UNLIMITED && limit.totalLimit !== undefined) {
-                if (limit.totalLimit === null || Number(limit.totalLimit) <= 0) {
-                    errors[`featureUsageLimits[${index}].totalLimit`] = 'Total limit must be greater than 0';
+            const usageType = feature.usageType || USAGE_TYPES.UNLIMITED;
+            if (usageType !== USAGE_TYPES.UNLIMITED && feature.usageLimit !== undefined) {
+                if (feature.usageLimit === null || Number(feature.usageLimit) < 0) {
+                    errors[`features[${index}].usageLimit`] = 'Usage limit must be greater than or equal to 0';
                 }
             }
 
-            if (usageType === USAGE_TYPES.DAILY_ROLLING && limit.customDailyLimit !== undefined && limit.customDailyLimit !== null) {
-                if (Number(limit.customDailyLimit) < 0) {
-                    errors[`featureUsageLimits[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
+            if (usageType === USAGE_TYPES.DAILY_ROLLING && feature.customDailyLimit !== undefined && feature.customDailyLimit !== null) {
+                if (Number(feature.customDailyLimit) < 0) {
+                    errors[`features[${index}].customDailyLimit`] = 'Daily limit cannot be negative';
                 }
             }
-
-
         });
     }
 
@@ -255,12 +238,6 @@ function validatePackageUpdate(data) {
                     errors[`highlights[${index}]`] = 'Highlight must be less than 500 characters';
                 }
             });
-        }
-    }
-
-    if (data.maxSubscribers !== undefined) {
-        if (data.maxSubscribers !== null && (typeof data.maxSubscribers !== 'number' || data.maxSubscribers < 0)) {
-            errors.maxSubscribers = 'Max subscribers must be greater than or equal to 0';
         }
     }
 

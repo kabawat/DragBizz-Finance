@@ -1,0 +1,707 @@
+[
+    {
+        "name": "Free Starter",
+        "description": "Essential features for individuals and single-person businesses setting up shop.",
+        "shortDescription": "Perfect for trying things out.",
+        "planType": "BASIC",
+        "pricing": [
+            {
+                "months": 1,
+                "price": 0,
+                "discount": 0
+            }
+        ],
+        "highlights": [
+            "Up to 50 Products",
+            "10 Invoices/month",
+            "50 Customers tracking",
+            "Basic Billing"
+        ],
+        "displayOrder": 1,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 10,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "usageType": "TOTAL",
+                "usageLimit": 50,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "customer",
+                "usageType": "TOTAL",
+                "usageLimit": 50,
+                "report": false,
+                "analytics": false
+            }
+        ]
+    },
+    {
+        "name": "Essential Monthly",
+        "description": "Everything the small business needs to streamline their physical store operations.",
+        "shortDescription": "Great for small retailers.",
+        "planType": "BASIC",
+        "pricing": [
+            {
+                "months": 1,
+                "price": 499,
+                "discount": 0
+            }
+        ],
+        "highlights": [
+            "Unlimited Billing & Customers",
+            "500 Products Limit",
+            "Track Suppliers & Expenses",
+            "200 Invoices/month"
+        ],
+        "displayOrder": 2,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 200,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "usageType": "TOTAL",
+                "usageLimit": 500,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 1000,
+                "report": true,
+                "analytics": false
+            }
+        ]
+    },
+    {
+        "name": "Essential Yearly",
+        "description": "Get two months free when paying annually for our essential retail toolkit.",
+        "shortDescription": "Yearly savings for small shops.",
+        "planType": "BASIC",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 4990,
+                "discount": 10
+            }
+        ],
+        "highlights": [
+            "Save 15% vs Monthly",
+            "Unlimited Billing & Customers",
+            "500 Products Limit",
+            "Track Suppliers & Expenses"
+        ],
+        "displayOrder": 3,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 200,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "usageType": "TOTAL",
+                "usageLimit": 500,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 1000,
+                "report": true,
+                "analytics": false
+            }
+        ]
+    },
+    {
+        "name": "Growth Monthly",
+        "description": "Unlock complex operational capabilities like purchase/sales orders, inventory and staff.",
+        "shortDescription": "Ideal for growing businesses.",
+        "planType": "PROFESSIONAL",
+        "pricing": [
+            {
+                "months": 1,
+                "price": 999,
+                "discount": 0
+            }
+        ],
+        "highlights": [
+            "Inventory & Order Management",
+            "Up to 3 Staff Members",
+            "Advanced Reports",
+            "Unlimited Products & Invoices"
+        ],
+        "displayOrder": 4,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "sales_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "staff",
+                "usageType": "TOTAL",
+                "usageLimit": 3,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "reports",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            }
+        ]
+    },
+    {
+        "name": "Growth Yearly",
+        "description": "Commit to a year of accelerating your business while saving drastically.",
+        "shortDescription": "Most popular package.",
+        "planType": "PROFESSIONAL",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 9990,
+                "discount": 15
+            }
+        ],
+        "highlights": [
+            "Inventory & Order Management",
+            "Up to 3 Staff Members",
+            "Advanced Reports",
+            "Best Value - Save Almost 2 Months"
+        ],
+        "displayOrder": 5,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": true,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "sales_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "staff",
+                "usageType": "TOTAL",
+                "usageLimit": 3,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "reports",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            }
+        ]
+    },
+    {
+        "name": "Ultimate Monthly",
+        "description": "Fully unlocked platform including e-commerce storefront and AI suite.",
+        "shortDescription": "Everything you need.",
+        "planType": "ENTERPRISE",
+        "pricing": [
+            {
+                "months": 1,
+                "price": 1999,
+                "discount": 0
+            }
+        ],
+        "highlights": [
+            "Online Storefront Builder",
+            "DragBizz AI Features (500 prompts/mo)",
+            "Deep Analytics Dashboard",
+            "Up to 15 Staff Members"
+        ],
+        "displayOrder": 6,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": true,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "expense",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "sales_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "staff",
+                "usageType": "TOTAL",
+                "usageLimit": 15,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "reports",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "analytics",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "store",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "ai",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 500,
+                "report": true,
+                "analytics": true
+            }
+        ]
+    },
+    {
+        "name": "Ultimate Yearly",
+        "description": "Power your enterprise chain and e-commerce with massive savings for an annual commitment.",
+        "shortDescription": "Total power. Smart savings.",
+        "planType": "ENTERPRISE",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 19990,
+                "discount": 20
+            }
+        ],
+        "highlights": [
+            "Save 20% on Ultimate Tier",
+            "Online Storefront & AI (500 prompts)",
+            "Deep Analytics & Full Reporting",
+            "Up to 15 Staff Members"
+        ],
+        "displayOrder": 7,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": true,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "expense",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "sales_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "staff",
+                "usageType": "TOTAL",
+                "usageLimit": 15,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "reports",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "analytics",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "store",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "ai",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 500,
+                "report": true,
+                "analytics": true
+            }
+        ]
+    },
+    {
+        "name": "Mega Custom Suite",
+        "description": "Unlimited everything for large franchises, built for massive scalability, heavy AI and multi-store handling.",
+        "shortDescription": "Unmetered access.",
+        "planType": "CUSTOM",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 49999,
+                "discount": 0
+            }
+        ],
+        "highlights": [
+            "100 Staff Members",
+            "Unlimited AI Prompts",
+            "White-glove Support",
+            "Custom Enterprise Configurations"
+        ],
+        "displayOrder": 8,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "billing",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "supplier",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "expense",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "sales_order",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "staff",
+                "usageType": "TOTAL",
+                "usageLimit": 100,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "reports",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "analytics",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "store",
+                "usageType": "UNLIMITED",
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "ai",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            }
+        ]
+    }
+]

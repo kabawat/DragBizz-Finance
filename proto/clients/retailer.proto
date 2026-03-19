@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package retailer.subscription;
+
+service SubscriptionService {
+  rpc CreateSubscription (Request) returns (Response);
+}
+
+message Feature {
+  string module = 1;
+  bool report = 2;
+  bool analytics = 3;
+  string usageType = 4;
+  int32 maxLimit = 5;
+  int32 customDailyLimit = 6;
+}
+
+message Request {
+  string userId = 1;
+  string agencyId = 2;
+  string subscriptionId = 3;
+  string startDate = 4;
+  string endDate = 5;
+  string status = 6;
+  repeated Feature features = 7;
+}
+
+message Response {
+  bool success = 1;
+  string message = 2;
+  string subscriptionId = 3;
+}

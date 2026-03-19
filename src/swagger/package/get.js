@@ -173,25 +173,17 @@
  *                       discount: 10
  *                       discountedAmount: 899.1
  *                     features:
- *                       - feature:
- *                           id: "64a1b2c3d4e5f6789abcdef1"
- *                           name: "Advanced Analytics"
- *                           description: "Get detailed insights"
- *                           category: "analytics"
- *                           icon: "chart-icon"
- *                         enabled: true
- *                         limit: null
- *                         unit: null
+ *                       - module: "product"
+ *                         report: true
+ *                         analytics: false
+ *                         usageType: "UNLIMITED"
+ *                         usageLimit: null
  *                     planType: "PROFESSIONAL"
  *                     displayOrder: 1
  *                     isPopular: true
  *                     isRecommended: false
  *                     status: "ACTIVE"
  *                     isVisible: true
- *                     maxSubscribers: 500
- *                     trialPeriod:
- *                       enabled: true
- *                       days: 14
  *                     tags:
  *                       - "popular"
  *                       - "recommended"
@@ -393,26 +385,17 @@
  *           items:
  *             type: object
  *             properties:
- *               feature:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   description:
- *                     type: string
- *                   category:
- *                     type: string
- *                   icon:
- *                     type: string
- *               enabled:
+ *               module:
+ *                 type: string
+ *               report:
  *                 type: boolean
- *               limit:
+ *               analytics:
+ *                 type: boolean
+ *               usageType:
+ *                 type: string
+ *               usageLimit:
  *                 type: number
  *                 nullable: true
- *               unit:
- *                 type: string
  *         planType:
  *           type: string
  *           enum: [BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM]
@@ -433,16 +416,6 @@
  *         isVisible:
  *           type: boolean
  *           example: true
- *         maxSubscribers:
- *           type: number
- *           example: 500
- *         trialPeriod:
- *           type: object
- *           properties:
- *             enabled:
- *               type: boolean
- *             days:
- *               type: number
  *         tags:
  *           type: array
  *           items:
