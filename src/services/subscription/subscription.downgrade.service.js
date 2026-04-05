@@ -17,26 +17,18 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
         const endDate = new Date(startDate);
         endDate.setMonth(endDate.getMonth() + months);
 
-        let trialEndDate = null;
-        if (newPackage.trialPeriod && newPackage.trialPeriod.enabled) {
-            trialEndDate = new Date(startDate);
-            trialEndDate.setDate(trialEndDate.getDate() + newPackage.trialPeriod.days);
-        }
-
-        const processedFeatures = processFeatures(newPackage.featureUsageLimits);
+        const processedFeatures = processFeatures(newPackage.features);
 
         const newSubscriptionData = {
             userId: existingSubscription.userId,
             packageId: newPackage._id,
             paymentId: payment._id,
-            status: trialEndDate ? 'TRIAL' : 'ACTIVE',
+            status: 'ACTIVE',
             billingCycle: payment.billingCycle,
             startDate,
             endDate,
-            trialEndDate,
             autoRenew: false,
             nextBillingDate: months === 1 ? endDate : null,
-            maxSubscribersSnapshot: newPackage.maxSubscribers ?? null,
             features: processedFeatures
         };
 
@@ -69,13 +61,7 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
     const endDate = new Date(startDate);
     endDate.setMonth(endDate.getMonth() + months);
 
-    let trialEndDate = null;
-    if (newPackage.trialPeriod && newPackage.trialPeriod.enabled) {
-        trialEndDate = new Date(startDate);
-        trialEndDate.setDate(trialEndDate.getDate() + newPackage.trialPeriod.days);
-    }
-
-    const processedFeatures = processFeatures(newPackage.featureUsageLimits);
+    const processedFeatures = processFeatures(newPackage.features);
 
     const newSubscriptionData = {
         userId: existingSubscription.userId,
@@ -85,10 +71,8 @@ async function downgradeSubscription(existingSubscription, newPackage, payment, 
         billingCycle: payment.billingCycle,
         startDate,
         endDate,
-        trialEndDate,
         autoRenew: false,
         nextBillingDate: months === 1 ? endDate : null,
-        maxSubscribersSnapshot: newPackage.maxSubscribers ?? null,
         features: processedFeatures
     };
 

@@ -64,7 +64,7 @@ class Response {
         // Handle both array of errors and object fields
         let validationErrors = [];
         let fieldsData = {};
-        
+
         if (Array.isArray(fields)) {
             validationErrors = fields.map(error => ({
                 field: 'general',
@@ -78,7 +78,7 @@ class Response {
             }));
             fieldsData = fields;
         }
-        
+
         return this.error(res, {
             message,
             error: "Validation Error",
@@ -109,10 +109,21 @@ class Response {
     }
 
     // Forbidden Error Response Handler
-    static forbidden(res, message = "Access denied", error = "Forbidden") {
+    static forbidden(res, options = "Access denied", errorName = "Forbidden") {
+        let message = typeof options === 'string' ? options : "Access denied";
+        let error = errorName;
+        let data = null;
+
+        if (options && typeof options === 'object') {
+            message = options.message || message;
+            error = options.error || error;
+            data = options.data || null;
+        }
+
         return this.error(res, {
             message,
             error,
+            data,
             statusCode: STATUS_CODES.FORBIDDEN || 403
         });
     }
@@ -120,14 +131,14 @@ class Response {
     static handleError(res, error, context = "Unknown") {
         const logger = require("@src/utils/logger");
         logger.error(`${context} Error:`, { error: error.message, stack: error.stack, context });
-        
+
         // Handle Mongoose validation errors
         if (error.name === 'ValidationError') {
             const fields = {};
             Object.keys(error.errors).forEach(field => {
                 fields[field] = error.errors[field].message;
             });
-            
+
             return this.validationError(res, "Validation failed", fields);
         }
 

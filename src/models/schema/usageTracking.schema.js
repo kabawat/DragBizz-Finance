@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { PACKAGE_MODULES } = require('@src/constants/enum/package.enum');
 
 /**
  * Usage Tracking Schema
@@ -20,11 +21,12 @@ const usageTrackingSchema = new mongoose.Schema({
         index: true
     },
 
-    // Feature Key (e.g., 'invoice_management', 'product_management')
-    featureKey: {
+    // Module Name (e.g., 'invoice', 'product')
+    module: {
         type: String,
         required: true,
         trim: true,
+        enum: PACKAGE_MODULES,
         index: true
     },
 
@@ -68,10 +70,10 @@ const usageTrackingSchema = new mongoose.Schema({
 });
 
 // Compound indexes for efficient queries
-usageTrackingSchema.index({ subscriptionId: 1, featureKey: 1, date: 1 }, { unique: true });
-usageTrackingSchema.index({ subscriptionId: 1, featureKey: 1, month: 1 });
-usageTrackingSchema.index({ userId: 1, featureKey: 1, date: 1 });
-usageTrackingSchema.index({ userId: 1, featureKey: 1, month: 1 });
+usageTrackingSchema.index({ subscriptionId: 1, module: 1, date: 1 }, { unique: true });
+usageTrackingSchema.index({ subscriptionId: 1, module: 1, month: 1 });
+usageTrackingSchema.index({ userId: 1, module: 1, date: 1 });
+usageTrackingSchema.index({ userId: 1, module: 1, month: 1 });
 
 // Pre-save hook to set month and year from date
 usageTrackingSchema.pre('save', function (next) {

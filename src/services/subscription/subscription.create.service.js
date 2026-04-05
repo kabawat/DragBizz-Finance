@@ -129,27 +129,19 @@ async function createSubscription(subscriptionData) {
             const endDate = new Date(startDate);
             endDate.setMonth(endDate.getMonth() + months);
 
-            let trialEndDate = null;
-            if (packageDoc.trialPeriod && packageDoc.trialPeriod.enabled) {
-                trialEndDate = new Date(startDate);
-                trialEndDate.setDate(trialEndDate.getDate() + packageDoc.trialPeriod.days);
-            }
-
-            const processedFeatures = processFeatures(packageDoc.featureUsageLimits);
+            const processedFeatures = processFeatures(packageDoc.features);
 
             const newSubscriptionData = {
                 userId,
                 agencyId,
                 packageId: payment.packageId,
                 paymentId: payment._id,
-                status: trialEndDate ? 'TRIAL' : 'ACTIVE',
+                status: 'ACTIVE',
                 billingCycle: payment.billingCycle,
                 startDate,
                 endDate,
-                trialEndDate,
                 autoRenew: false,
                 nextBillingDate: months === 1 ? endDate : null,
-                maxSubscribersSnapshot: packageDoc.maxSubscribers ?? null,
                 features: processedFeatures
             };
 
@@ -198,9 +190,8 @@ async function createSubscription(subscriptionData) {
             const userEmail = extractUserEmail(payment);
 
             if (userEmail) {
-                const features = (packageData?.featureUsageLimits || [])
-                    .filter(limit => limit && limit.featureKey && limit.enabled !== false)
-                    .map(limit => FEATURE_DISPLAY_NAMES[limit.featureKey] || limit.featureKey);
+                const features = (packageData?.features || [])
+                    .map(limit => FEATURE_DISPLAY_NAMES[limit.module] || limit.module);
 
                 const emailPayload = {
                     userName: "User",

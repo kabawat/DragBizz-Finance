@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { SUBSCRIPTION_STATUS } = require('@src/constants/enum/payment.enum');
+const { PACKAGE_MODULES } = require('@src/constants/enum/package.enum');
 
 const subscriptionSchema = new mongoose.Schema({
     // User Information (Owner who makes the payment)
@@ -59,10 +60,7 @@ const subscriptionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    trialEndDate: {
-        type: Date,
-        default: null
-    },
+
 
     // Auto-renewal
     autoRenew: {
@@ -89,34 +87,35 @@ const subscriptionSchema = new mongoose.Schema({
 
     // Features (snapshot at subscription time)
     features: [{
-        featureKey: {
+        module: {
             type: String,
             required: true,
             trim: true,
+            enum: PACKAGE_MODULES,
             index: true
         },
-        featureName: {
-            type: String,
-            trim: true
-        },
-        enabled: {
+        report: {
             type: Boolean,
-            default: true
+            default: false
         },
-        usageLimits: {
-            usageType: {
-                type: String,
-                enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'TOTAL', 'UNLIMITED'],
-                default: 'UNLIMITED'
-            },
-            totalLimit: {
-                type: Number,
-                default: null
-            },
-            customDailyLimit: {
-                type: Number,
-                default: null
-            }
+        analytics: {
+            type: Boolean,
+            default: false
+        },
+        usageType: {
+            type: String,
+            enum: ['DAILY_FIXED', 'DAILY_ROLLING', 'MONTHLY_TOTAL', 'TOTAL', 'UNLIMITED'],
+            default: 'UNLIMITED'
+        },
+        usageLimit: {
+            type: Number,
+            default: null,
+            min: 0
+        },
+        customDailyLimit: {
+            type: Number,
+            default: null,
+            min: 0
         },
         metadata: {
             type: mongoose.Schema.Types.Mixed,
@@ -136,10 +135,7 @@ const subscriptionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         default: {}
     },
-    maxSubscribersSnapshot: {
-        type: Number,
-        default: null
-    }
+
 }, {
     timestamps: true,
     strict: 'throw'
@@ -174,11 +170,6 @@ subscriptionSchema.virtual('isExpired').get(function () {
     return this.endDate < now;
 });
 
-// Virtual for checking if subscription is in trial
-subscriptionSchema.virtual('isTrial').get(function () {
-    const now = new Date();
-    return this.trialEndDate && this.trialEndDate > now;
-});
 
 // Pre-save hook to set end date based on billing cycle
 subscriptionSchema.pre('save', function (next) {
@@ -209,4 +200,3 @@ subscriptionSchema.pre('save', function (next) {
 });
 
 module.exports = subscriptionSchema;
-

@@ -11,7 +11,7 @@
  *       **Features:**
  *       - ✅ Create packages with pricing information
  *       - ✅ Configure features and limits
- *       - ✅ Set trial periods
+ *       - ✅ Configure features arrays natively
  *       - ✅ Automatic slug generation from name
  *       - ✅ Feature validation
  *       
@@ -76,9 +76,24 @@
  *               features:
  *                 type: array
  *                 items:
- *                   type: string
- *                   example: "64a1b2c3d4e5f6789abcdef0"
- *                 description: Array of feature IDs linked to this package
+ *                   type: object
+ *                   properties:
+ *                     module:
+ *                       type: string
+ *                       example: "product"
+ *                     report:
+ *                       type: boolean
+ *                       example: true
+ *                     analytics:
+ *                       type: boolean
+ *                       example: false
+ *                     usageType:
+ *                       type: string
+ *                       example: "UNLIMITED"
+ *                     usageLimit:
+ *                       type: number
+ *                       example: null
+ *                 description: Array of features specifying modules and behavior linked to this package
  *               planType:
  *                 type: string
  *                 enum: [BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM]
@@ -111,24 +126,6 @@
  *                 example: true
  *                 default: true
  *                 description: Visibility status (optional)
- *               maxSubscribers:
- *                 type: number
- *                 example: 500
- *                 default: null
- *                 description: Total number of subscriptions available for this package (null means unlimited)
- *               trialPeriod:
- *                 type: object
- *                 properties:
- *                   enabled:
- *                     type: boolean
- *                     example: true
- *                     default: false
- *                     description: Enable trial period (optional)
- *                   days:
- *                     type: number
- *                     example: 14
- *                     default: 0
- *                     description: Trial period in days (required if enabled is true)
  *               tags:
  *                 type: array
  *                 items:
@@ -146,7 +143,6 @@
  *                   currency: "INR"
  *                   billingCycle: "MONTHLY"
  *                 planType: "BASIC"
- *                 maxSubscribers: 100
  *             professional_plan:
  *               summary: Professional Plan Example
  *               value:
@@ -160,10 +156,6 @@
  *                   discount: 10
  *                 planType: "PROFESSIONAL"
  *                 isPopular: true
- *                 maxSubscribers: 500
- *                 trialPeriod:
- *                   enabled: true
- *                   days: 14
  *     responses:
  *       201:
  *         description: Package created successfully
@@ -222,25 +214,16 @@
  *                       items:
  *                         type: object
  *                         properties:
- *                           feature:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                               name:
- *                                 type: string
- *                               description:
- *                                 type: string
- *                               category:
- *                                 type: string
- *                               icon:
- *                                 type: string
- *                           enabled:
- *                             type: boolean
- *                           limit:
- *                             type: number
- *                           unit:
+ *                           module:
  *                             type: string
+ *                           report:
+ *                             type: boolean
+ *                           analytics:
+ *                             type: boolean
+ *                           usageType:
+ *                             type: string
+ *                           usageLimit:
+ *                             type: number
  *                     planType:
  *                       type: string
  *                       example: "PROFESSIONAL"
@@ -259,16 +242,6 @@
  *                     isVisible:
  *                       type: boolean
  *                       example: true
- *                     maxSubscribers:
- *                       type: number
- *                       example: 500
- *                     trialPeriod:
- *                       type: object
- *                       properties:
- *                         enabled:
- *                           type: boolean
- *                         days:
- *                           type: number
  *                     tags:
  *                       type: array
  *                       items:
