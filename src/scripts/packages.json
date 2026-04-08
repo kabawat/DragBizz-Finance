@@ -579,7 +579,8 @@
             },
             {
                 "module": "store",
-                "usageType": "UNLIMITED",
+                "usageType": "TOTAL",
+                "usageLimit": 8,
                 "report": true,
                 "analytics": true
             },
@@ -691,7 +692,8 @@
             },
             {
                 "module": "store",
-                "usageType": "UNLIMITED",
+                "usageType": "TOTAL",
+                "usageLimit": 10,
                 "report": true,
                 "analytics": true
             },
