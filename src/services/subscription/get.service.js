@@ -32,15 +32,10 @@ async function getActiveSubscription(userId, options = {}) {
     }
 
     const now = new Date();
-    let query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId));
+    const query = SubscriptionModel.findOne(getActiveSubscriptionQuery(userId, now, agencyId))
+        .select('_id status billingCycle startDate endDate nextBillingDate features packageId paymentId createdAt');
 
-    if (populatePackage) {
-        query = populateSubscription(query);
-    } else {
-        query = query.populate('paymentId', 'amount currency status');
-    }
-
-    const subscription = await query
+    const subscription = await (populatePackage ? populateSubscription(query) : query.populate('paymentId', 'amount currency status'))
         .sort({ createdAt: -1 })
         .lean();
 
