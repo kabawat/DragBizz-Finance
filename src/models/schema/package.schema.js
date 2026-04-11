@@ -69,6 +69,10 @@ const packageSchema = new mongoose.Schema({
             enum: PACKAGE_MODULES,
             index: true
         },
+        moduleName: {
+            type: String,
+            trim: true
+        },
         report: {
             type: Boolean,
             default: false

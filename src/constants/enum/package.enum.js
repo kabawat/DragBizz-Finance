@@ -18,7 +18,9 @@ const PACKAGE_MODULES = [
     'reports',
     'analytics',
     'store',
-    'ai'
+    'ai',
+    'api',
+    'online_store'
 ];
 
 module.exports = {
