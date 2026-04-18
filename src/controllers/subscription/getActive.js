@@ -1,24 +1,37 @@
 const { getActiveSubscription } = require('@src/services/subscription/get.service');
-const Response = require('@src/utils/responseHandler/standardized');
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 
-async function getActiveSubscriptionController(req, res) {
+// Get active subscription controller
+async function getActive(req, res) {
     try {
         const userId = req.user?.sub;
         const agencyId = req.user?.agencyId;
 
-        if (!userId) return Response.validationError(res, 'User ID not found in token');
+        // Check user ID
+        if (!userId) {
+            return errorResponse(res, {
+                message: 'User ID not found in token',
+                statusCode: STATUS_CODES.UNAUTHORIZED
+            });
+        }
 
+        // Fetch subscription
         const subscription = await getActiveSubscription(userId, {
             agencyId,
             populatePackage: true
         });
 
+        // Handle not found
         if (!subscription) {
-            return Response.notFound(res, 'No active subscription found');
+            return errorResponse(res, {
+                message: 'No active subscription found',
+                statusCode: STATUS_CODES.NOT_FOUND
+            });
         }
 
-        // --- Data Transformation ---
-        // 1. Keep essential data for usage limits
+        // Transform features data
         const detailedFeatures = (subscription.features || []).map(f => ({
             module: f.module,
             currentUsage: f.currentUsage || 0,
@@ -26,23 +39,23 @@ async function getActiveSubscriptionController(req, res) {
             usageType: f.usageType
         }));
 
-        // 2. Remove agencyId and clean up packageId fields
+        // Clean up subscription object
         const { agencyId: _, ...cleanSubscription } = subscription;
-
-        // Note: packageId fields are controlled by PACKAGE_POPULATE_FIELDS in helpers.js,
-        // but we ensure the response is strictly what you asked for.
         const responseData = {
             ...cleanSubscription,
             features: detailedFeatures
         };
 
-        return Response.success(res, {
+        // Success response
+        return successResponse(res, {
             message: 'Active subscription details fetched successfully',
             data: responseData
         });
+
     } catch (error) {
-        return Response.handleError(res, error, 'getActiveSubscriptionController');
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 
-module.exports = getActiveSubscriptionController;
+module.exports = getActive;

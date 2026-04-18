@@ -1,6 +1,8 @@
 const PackageService = require("@src/services/package/package.service");
 const { packageCreationSerializer, packageListSerializer } = require("@src/utils/serializer/package.serializer");
-const Response = require("@src/utils/responseHandler/standardized");
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 const mongoose = require("mongoose");
 
 const { PACKAGE_STATUS } = require('@src/constants/enum/package.enum');
@@ -10,6 +12,7 @@ const VALID_PLAN_TYPES = ['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'];
 const VALID_SORT_BY = ['name', 'price', 'createdAt', 'updatedAt', 'displayOrder'];
 const VALID_SORT_ORDER = ['asc', 'desc', '1', '-1'];
 
+// Query params validator
 function validateQueryParams(queryParams) {
     const errors = {};
 
@@ -65,31 +68,41 @@ function validateQueryParams(queryParams) {
     };
 }
 
+// Get packages controller
 async function getPackageController(req, res) {
     try {
         const queryParams = req.query;
 
+        // Get single package by ID
         if (queryParams?.id) {
             if (!mongoose.Types.ObjectId.isValid(queryParams?.id)) {
-                return Response.validationError(res, "Invalid package ID format", {
-                    id: "Package ID must be a valid MongoDB ObjectId"
+                return errorResponse(res, {
+                    message: "Invalid package ID format",
+                    fields: { id: "Package ID must be a valid MongoDB ObjectId" },
+                    statusCode: STATUS_CODES.BAD_REQUEST
                 });
             }
 
             const packageDoc = await PackageService.getById(queryParams?.id);
             const responseData = packageCreationSerializer(packageDoc);
 
-            return Response.success(res, {
+            return successResponse(res, {
                 message: "Package fetched successfully",
                 data: responseData
             });
         }
 
+        // Validate query params for list
         const validation = validateQueryParams(queryParams);
         if (!validation.isValid) {
-            return Response.validationError(res, "Invalid query parameters", validation.errors);
+            return errorResponse(res, {
+                message: "Invalid query parameters",
+                fields: validation.errors,
+                statusCode: STATUS_CODES.BAD_REQUEST
+            });
         }
 
+        // Prepare pagination options
         const paginationOptions = {
             page: queryParams.page ? parseInt(queryParams.page) : undefined,
             limit: queryParams.limit ? parseInt(queryParams.limit) : undefined,
@@ -104,7 +117,8 @@ async function getPackageController(req, res) {
         const result = await PackageService.getPaginated(paginationOptions);
         const serializedPackages = packageListSerializer(result.packages);
 
-        return Response.success(res, {
+        // Success response
+        return successResponse(res, {
             message: "Packages fetched successfully",
             data: serializedPackages,
             meta: {
@@ -113,11 +127,16 @@ async function getPackageController(req, res) {
         });
 
     } catch (error) {
+        // Handle specific "not found" case
         if (error.message === 'Package not found') {
-            return Response.notFound(res, "Package not found");
+            return errorResponse(res, {
+                message: "Package not found",
+                statusCode: STATUS_CODES.NOT_FOUND
+            });
         }
 
-        return Response.handleError(res, error, "getPackageController");
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 

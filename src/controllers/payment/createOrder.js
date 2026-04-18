@@ -5,52 +5,66 @@ const { validateCreateOrder } = require('@src/utils/validations/payment.validati
 const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
 const { comparePackages } = require('@src/services/subscription/helpers');
-const Response = require('@src/utils/responseHandler/standardized');
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 
+// Create payment order controller
 async function createOrderController(req, res) {
     try {
         const userId = req.user?.sub;
-
         if (!userId) {
-            return Response.validationError(res, 'User ID not found in token');
+            return errorResponse(res, {
+                message: 'User ID not found in token',
+                statusCode: STATUS_CODES.UNAUTHORIZED
+            });
         }
 
+        // Sanitize and validate input
         const sanitizedData = sanitizeCreateOrderData(req.body);
         const validation = validateCreateOrder(sanitizedData);
         if (!validation.isValid) {
-            return Response.validationError(res, 'Validation failed', validation.errors);
+            return errorResponse(res, {
+                message: 'Validation failed',
+                fields: validation.errors,
+                statusCode: STATUS_CODES.BAD_REQUEST
+            });
         }
 
+        // Check existing subscription logic
         const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
-
         if (existingSubscription) {
             const newPackage = await PackageModel.findById(sanitizedData.packageId).lean();
             if (!newPackage) {
-                return Response.notFound(res, 'Package not found');
+                return errorResponse(res, {
+                    message: 'Package not found',
+                    statusCode: STATUS_CODES.NOT_FOUND
+                });
             }
 
             const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
             if (existingPackage) {
                 const comparison = comparePackages(existingPackage, newPackage);
-
                 if (comparison === 'SAME') {
                     const now = new Date();
                     const endDate = new Date(existingSubscription.endDate);
                     const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
 
                     if (daysRemaining > 30) {
-                        return Response.validationError(res,
-                            'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
-                            {
+                        return errorResponse(res, {
+                            message: 'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
+                            fields: {
                                 daysRemaining: daysRemaining.toString(),
                                 suggestion: 'You can renew this subscription closer to the expiry date'
-                            }
-                        );
+                            },
+                            statusCode: STATUS_CODES.BAD_REQUEST
+                        });
                     }
                 }
             }
         }
 
+        // Create order in payment gateway
         const orderData = await PaymentService.createOrder({
             userId,
             agencyId: req.user?.agencyId || null,
@@ -61,24 +75,40 @@ async function createOrderController(req, res) {
         });
 
         if (!orderData) {
-            return Response.error(res, {
+            return errorResponse(res, {
                 message: 'Failed to create payment order',
                 error: 'Order creation returned no data',
-                statusCode: 500
+                statusCode: STATUS_CODES.INTERNAL_SERVER_ERROR
             });
         }
 
+        // Success response
         const responseData = serializeOrderResponse(orderData);
-        return Response.created(res, 'Payment order created successfully', responseData);
+        return successResponse(res, {
+            message: 'Payment order created successfully',
+            data: responseData,
+            statusCode: STATUS_CODES.CREATED
+        });
+
     } catch (error) {
+        // Handle specific error cases
         if (error.message === 'Package not found or not available') {
-            return Response.notFound(res, error.message);
+            return errorResponse(res, {
+                message: error.message,
+                statusCode: STATUS_CODES.NOT_FOUND
+            });
         }
         if (error.message.includes('billing cycle')) {
-            return Response.validationError(res, error.message);
+            return errorResponse(res, {
+                message: error.message,
+                statusCode: STATUS_CODES.BAD_REQUEST
+            });
         }
-        return Response.handleError(res, error, 'createOrderController');
+
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 
 module.exports = createOrderController;
+

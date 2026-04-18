@@ -2,7 +2,9 @@ const PackageService = require("@src/services/package/package.service");
 const { validatePackage } = require("@src/utils/validations/package.validation");
 const { sanitizePackageData } = require("@src/utils/sanitizer/package.sanitizer");
 const { packageCreationSerializer } = require("@src/utils/serializer/package.serializer");
-const Response = require("@src/utils/responseHandler/standardized");
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 
 // Create a new package (Admin only)
 async function createPackageController(req, res) {
@@ -10,35 +12,42 @@ async function createPackageController(req, res) {
         const body = req.body;
         const adminId = req.admin?.id;
 
-        // Validate required fields
+        // Validate package data
         const validationResult = validatePackage(body);
         if (!validationResult.isValid) {
-            return Response.validationError(res, "Package validation failed", validationResult.fields);
-        }
-
-        // Check for duplicate package name
-        const duplicateName = await PackageService.nameExists(body.name);
-        if (duplicateName) {
-            return Response.validationError(res, "Package name already exists", {
-                name: "A package with this name already exists"
+            return errorResponse(res, {
+                message: "Package validation failed",
+                fields: validationResult.fields,
+                statusCode: STATUS_CODES.BAD_REQUEST
             });
         }
 
-        // Sanitize incoming data
-        const sanitizedData = sanitizePackageData(body);
+        // Check for duplicate name
+        const duplicateName = await PackageService.nameExists(body.name);
+        if (duplicateName) {
+            return errorResponse(res, {
+                message: "Package name already exists",
+                fields: { name: "A package with this name already exists" },
+                statusCode: STATUS_CODES.CONFLICT
+            });
+        }
 
         // Create package
+        const sanitizedData = sanitizePackageData(body);
         const packageDoc = await PackageService.create(sanitizedData, adminId);
-
-        // Serialize response data
         const responseData = packageCreationSerializer(packageDoc);
 
-        return Response.created(res, "Package created successfully", responseData);
+        // Success response
+        return successResponse(res, {
+            message: "Package created successfully",
+            data: responseData,
+            statusCode: STATUS_CODES.CREATED
+        });
 
     } catch (error) {
-        return Response.handleError(res, error, "createPackageController");
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 
 module.exports = createPackageController;
-

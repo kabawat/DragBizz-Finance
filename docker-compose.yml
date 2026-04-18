@@ -1,0 +1,38 @@
+services:
+  dragbizz-subscription:
+    build: .
+    container_name: dragbizz_subscription
+    ports:
+      - "4002:3000"   # REST: 3000 internal → 4002 on host
+      - "8002:50052"  # gRPC: 50052 internal → 8002 on host
+    env_file:
+      - .env
+    environment:
+      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
+      - GRPC_PORT=${GRPC_PORT:-50052}
+    command: sh -c "yarn install && yarn dev"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - subscription-network
+    stdin_open: true
+    tty: true
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: dragbizz_subscription-redis
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+    volumes:
+      - redis_data:/data
+    networks:
+      - subscription-network
+
+volumes:
+  redis_data:
+
+networks:
+  subscription-network:
+    driver: bridge

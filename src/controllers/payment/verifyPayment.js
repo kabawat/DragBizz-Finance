@@ -2,31 +2,46 @@ const PaymentService = require('@src/services/payment');
 const { validateVerifyPayment } = require('@src/utils/validations/payment.validation');
 const { sanitizeVerifyPaymentData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializePayment } = require('@src/utils/serializer/payment.serializer');
-const Response = require('@src/utils/responseHandler/standardized');
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 const logger = require('@src/utils/logger');
 
+// Verify payment controller
 async function verifyPaymentController(req, res) {
     try {
         const userId = req.user?.sub;
-
         if (!userId) {
-            return Response.validationError(res, 'User ID not found in token');
+            return errorResponse(res, {
+                message: 'User ID not found in token',
+                statusCode: STATUS_CODES.UNAUTHORIZED
+            });
         }
 
+        // Sanitize and validate input
         const sanitizedData = sanitizeVerifyPaymentData(req.body);
         const validation = validateVerifyPayment(sanitizedData);
         if (!validation.isValid) {
-            return Response.validationError(res, 'Validation failed', validation.errors);
+            return errorResponse(res, {
+                message: 'Validation failed',
+                fields: validation.errors,
+                statusCode: STATUS_CODES.BAD_REQUEST
+            });
         }
 
+        // Verify payment with service
         const payment = await PaymentService.verifyPayment({
             ...sanitizedData,
             ipAddress: req.clientIp,
             userAgent: req.userAgent
         });
 
+        // Check ownership
         if (payment.userId !== userId) {
-            return Response.forbidden(res, 'You are not authorized to verify this payment');
+            return errorResponse(res, {
+                message: 'You are not authorized to verify this payment',
+                statusCode: STATUS_CODES.FORBIDDEN
+            });
         }
 
         let subscription = null;
@@ -68,8 +83,8 @@ async function verifyPaymentController(req, res) {
             }
         }
 
+        // Success response
         const proratedCredit = payment.metadata?.proratedCredit || 0;
-
         const responseData = {
             payment: serializePayment(payment),
             subscription: subscription ? {
@@ -86,22 +101,31 @@ async function verifyPaymentController(req, res) {
             } : null
         };
 
-        return Response.success(res, {
+        return successResponse(res, {
             message: payment.status === 'SUCCESS'
                 ? 'Payment verified successfully.'
                 : 'Payment verification completed',
             data: responseData
         });
+
     } catch (error) {
+        // Handle specific error cases
         if (error.message === 'Invalid payment signature') {
-            return Response.validationError(res, error.message);
+            return errorResponse(res, {
+                message: error.message,
+                statusCode: STATUS_CODES.BAD_REQUEST
+            });
         }
         if (error.message.includes('not found')) {
-            return Response.notFound(res, error.message);
+            return errorResponse(res, {
+                message: error.message,
+                statusCode: STATUS_CODES.NOT_FOUND
+            });
         }
-        return Response.handleError(res, error, 'verifyPaymentController');
+
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 
 module.exports = verifyPaymentController;
-

@@ -1,25 +1,38 @@
 const { getPurchaseHistory } = require('@src/services/billing/history.service');
-const Response = require('@src/utils/responseHandler/standardized');
+const { successResponse } = require("@src/utils/responseHandler/success");
+const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
+const STATUS_CODES = require("@src/constants/statusCode");
 
+// Get purchase history controller
 async function getHistory(req, res) {
     try {
         const agencyId = req.user?.agencyId;
         const userId = req.user?.sub;
 
-        if (!agencyId) return Response.validationError(res, 'Agency ID not found in token');
-        if (!userId) return Response.validationError(res, 'User ID not found in token');
+        // Check required IDs
+        if (!agencyId || !userId) {
+            return errorResponse(res, {
+                message: 'Agency or User ID not found in token',
+                statusCode: STATUS_CODES.UNAUTHORIZED
+            });
+        }
 
+        // Fetch purchase history
         const options = { page: req.query.page, limit: req.query.limit };
         const result = await getPurchaseHistory(agencyId, userId, options);
 
-        return Response.success(res, {
+        // Success response
+        return successResponse(res, {
             message: 'Purchase history fetched successfully',
             data: result.history,
             meta: { pagination: result.pagination }
         });
+
     } catch (error) {
-        return Response.handleError(res, error, 'getHistory');
+        // Handle other errors
+        return errorResponse(res, parseErrorForResponse(error));
     }
 }
 
 module.exports = getHistory;
+
