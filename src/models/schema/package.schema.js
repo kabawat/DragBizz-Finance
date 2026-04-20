@@ -110,8 +110,8 @@ const packageSchema = new mongoose.Schema({
     // Plan Metadata
     planType: {
         type: String,
-        enum: ['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'],
-        default: 'BASIC',
+        enum: ['STARTUP', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'],
+        default: 'STARTUP',
         index: true
     },
     label: {

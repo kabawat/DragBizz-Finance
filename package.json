@@ -17,8 +17,7 @@
     "dev:clean": "docker compose -f docker-compose.yml down -v --remove-orphans",
     "backup:create": "node scripts/backup.js",
     "backup:restore": "node scripts/restore.js",
-    "dev:package": "node src/scripts/seed-7day-package.js",
-    "health:check": "curl -f http://localhost:4002/health || exit 1"
+    "dev:package": "node src/scripts/seed-packages.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.0",

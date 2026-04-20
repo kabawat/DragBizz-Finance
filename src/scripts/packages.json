@@ -1,5 +1,151 @@
 [
     {
+        "name": "Startup Plan",
+        "description": "Basic entry plan for small retailers to start their digital journey.",
+        "shortDescription": "One-time low cost entry.",
+        "planType": "STARTUP",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 49,
+                "discount": 0,
+                "discountedPrice": 49
+            }
+        ],
+        "highlights": [
+            "1 Store App Access",
+            "Up to 50 Products Catalog",
+            "Single Staff Member (Admin)",
+            "Generate Up to 30 Invoices Daily",
+            "Accept Public Sales Orders",
+            "Essential Inventory Management",
+            "Share Invoices via WhatsApp",
+            "Basic Expense Tracking"
+        ],
+        "displayOrder": 0,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "store",
+                "moduleName": "Store Management",
+                "usageType": "TOTAL",
+                "usageLimit": 1,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "TOTAL",
+                "usageLimit": 50,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "staff",
+                "moduleName": "Staff Accounts",
+                "usageType": "TOTAL",
+                "usageLimit": 1,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "billing",
+                "moduleName": "Billing",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "customer",
+                "moduleName": "Customer Tracking",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "moduleName": "Expense Tracking",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 150,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "inventory",
+                "moduleName": "Inventory Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "purchase_order",
+                "moduleName": "Purchase Orders",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "sales_order",
+                "moduleName": "Sales Orders",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "reports",
+                "moduleName": "Reports & Analytics",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": []
+                }
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "ai",
+                "moduleName": "AI Suite",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            }
+        ]
+    },
+    {
         "name": "Basic",
         "description": "Essential features for single-store retailers getting started with digital operations.",
         "shortDescription": "Perfect for solo retailers.",
@@ -25,12 +171,14 @@
             }
         ],
         "highlights": [
-            "1 Store Management",
-            "Up to 50 Products",
-            "Single Staff Member",
-            "Basic Billing & Invoicing",
-            "WhatsApp Invoice Sharing",
-            "Standard Reports"
+            "Includes all Startup Plan features",
+            "Handle Up to 1000 Products",
+            "Add up to 3 Staff Members",
+            "Unlimited Billing & Invoicing",
+            "Manage Unlimited Customers & Suppliers",
+            "Track Purchase Orders & Inventory",
+            "Custom Catalog Themes",
+            "Automated Standard Reports"
         ],
         "displayOrder": 1,
         "status": "ACTIVE",
@@ -50,7 +198,7 @@
                 "module": "product",
                 "moduleName": "Product Catalog",
                 "usageType": "TOTAL",
-                "usageLimit": 50,
+                "usageLimit": 500,
                 "report": true,
                 "analytics": false
             },
@@ -58,7 +206,7 @@
                 "module": "staff",
                 "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
-                "usageLimit": 1,
+                "usageLimit": 3,
                 "report": false,
                 "analytics": false
             },
@@ -73,94 +221,83 @@
             {
                 "module": "invoice",
                 "moduleName": "Invoicing",
-                "usageType": "MONTHLY_TOTAL",
-                "usageLimit": 200,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": true,
                 "analytics": false
             },
             {
                 "module": "customer",
                 "moduleName": "Customer Tracking",
-                "usageType": "TOTAL",
-                "usageLimit": 50,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": true,
                 "analytics": false
             },
             {
                 "module": "supplier",
                 "moduleName": "Supplier Management",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "expense",
                 "moduleName": "Expense Tracking",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "inventory",
                 "moduleName": "Inventory Management",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "purchase_order",
                 "moduleName": "Purchase Orders",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "sales_order",
                 "moduleName": "Sales Orders",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "reports",
-                "moduleName": "Advanced Reports",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "analytics",
-                "moduleName": "Deep Analytics",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
+                "moduleName": "Reports & Analytics",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": false,
+                "metadata": {
+                    "includes": [
+                        "gst"
+                    ]
+                }
             },
             {
                 "module": "online_store",
                 "moduleName": "Online Store",
                 "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
+                "usageLimit": 1,
+                "report": true,
                 "analytics": false
             },
             {
                 "module": "ai",
                 "moduleName": "AI Suite",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "api",
-                "moduleName": "API Access",
                 "usageType": "TOTAL",
                 "usageLimit": 0,
                 "report": false,
@@ -194,12 +331,14 @@
             }
         ],
         "highlights": [
-            "2 Stores Management",
-            "Up to 200 Products",
-            "Up to 5 Staff Members",
-            "Inventory Management",
-            "Purchase & Sales Orders",
-            "Advanced Analytics"
+            "Manage up to 2 Branch Stores",
+            "Unlimited Product Uploads",
+            "Manage up to 10 Staff Members",
+            "Basic Voice/Generative AI (100 runs/mo)",
+            "Real-time Analytics Dashboard",
+            "Centralized Supplier & Expense Control",
+            "Role-Based Access Control",
+            "Premium Quality Support"
         ],
         "displayOrder": 2,
         "status": "ACTIVE",
@@ -219,178 +358,9 @@
                 "module": "product",
                 "moduleName": "Product Catalog",
                 "usageType": "TOTAL",
-                "usageLimit": 200,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "TOTAL",
-                "usageLimit": 5,
+                "usageLimit": 1000,
                 "report": true,
                 "analytics": false
-            },
-            {
-                "module": "billing",
-                "moduleName": "Billing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "inventory",
-                "moduleName": "Inventory Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "purchase_order",
-                "moduleName": "Purchase Orders",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "sales_order",
-                "moduleName": "Sales Orders",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "reports",
-                "moduleName": "Advanced Reports",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "analytics",
-                "moduleName": "Deep Analytics",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "online_store",
-                "moduleName": "Online Store",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "ai",
-                "moduleName": "AI Suite",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "api",
-                "moduleName": "API Access",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            }
-        ]
-    },
-    {
-        "name": "Premium",
-        "description": "Full-scale solution for large retailers needing comprehensive AI and e-commerce integration.",
-        "shortDescription": "Everything you need.",
-        "planType": "ENTERPRISE",
-        "pricing": [
-            {
-                "months": 1,
-                "price": 1999,
-                "discount": 0,
-                "discountedPrice": 1999
-            },
-            {
-                "months": 6,
-                "price": 11994,
-                "discount": 20,
-                "discountedPrice": 9595
-            },
-            {
-                "months": 12,
-                "price": 23988,
-                "discount": 30,
-                "discountedPrice": 16791
-            }
-        ],
-        "highlights": [
-            "4 Stores Management",
-            "Up to 500 Products",
-            "Up to 10 Staff Members",
-            "Full AI Suite",
-            "Online Storefront Builder",
-            "Priority 24/7 Support"
-        ],
-        "displayOrder": 3,
-        "status": "ACTIVE",
-        "isVisible": true,
-        "isPopular": false,
-        "isRecommended": true,
-        "features": [
-            {
-                "module": "store",
-                "moduleName": "Store Management",
-                "usageType": "TOTAL",
-                "usageLimit": 4,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "product",
-                "moduleName": "Product Catalog",
-                "usageType": "TOTAL",
-                "usageLimit": 500,
-                "report": true,
-                "analytics": true
             },
             {
                 "module": "staff",
@@ -430,7 +400,7 @@
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": false
             },
             {
                 "module": "expense",
@@ -438,7 +408,7 @@
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": false
             },
             {
                 "module": "inventory",
@@ -466,90 +436,82 @@
             },
             {
                 "module": "reports",
-                "moduleName": "Advanced Reports",
+                "moduleName": "Reports & Analytics",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
-            },
-            {
-                "module": "analytics",
-                "moduleName": "Deep Analytics",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "gst",
+                        "sales_summary"
+                    ]
+                }
             },
             {
                 "module": "online_store",
                 "moduleName": "Online Store",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
+                "usageType": "TOTAL",
+                "usageLimit": 2,
+                "report": false,
+                "analytics": false
             },
             {
                 "module": "ai",
                 "moduleName": "AI Suite",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 100,
                 "report": true,
-                "analytics": true
-            },
-            {
-                "module": "api",
-                "moduleName": "API Access",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
                 "analytics": false
             }
         ]
     },
     {
-        "name": "Customize",
-        "description": "Tailor-made solution for massive franchises and unique business requirements.",
-        "shortDescription": "Unmetered access.",
-        "planType": "CUSTOM",
+        "name": "Premium",
+        "description": "Full-scale solution for large retailers needing comprehensive AI and e-commerce integration.",
+        "shortDescription": "Everything you need.",
+        "planType": "ENTERPRISE",
         "pricing": [
             {
                 "months": 1,
-                "price": 0,
+                "price": 1999,
                 "discount": 0,
-                "discountedPrice": 0
+                "discountedPrice": 1999
             },
             {
                 "months": 6,
-                "price": 0,
-                "discount": 0,
-                "discountedPrice": 0
+                "price": 11994,
+                "discount": 20,
+                "discountedPrice": 9595
             },
             {
                 "months": 12,
-                "price": 0,
-                "discount": 0,
-                "discountedPrice": 0
+                "price": 23988,
+                "discount": 30,
+                "discountedPrice": 16791
             }
         ],
         "highlights": [
-            "Custom Store Count",
-            "Unlimited Products",
-            "Unlimited Staff Members",
-            "White-label Solution",
+            "Up to 5 Stores & Branches",
+            "Unlimited Staff & Products",
+            "Unrestricted Voice & AI Suite",
+            "Custom Branded Online Store",
+            "Advanced Multi-Branch GST Accounting",
             "Dedicated Account Manager",
-            "Custom API Access"
+            "24/7 Priority Support Hotline",
+            "Complete Data Export & Backup"
         ],
-        "displayOrder": 4,
+        "displayOrder": 3,
         "status": "ACTIVE",
         "isVisible": true,
         "isPopular": false,
-        "isRecommended": false,
+        "isRecommended": true,
         "features": [
             {
                 "module": "store",
                 "moduleName": "Store Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "usageType": "TOTAL",
+                "usageLimit": 5,
                 "report": true,
                 "analytics": true
             },
@@ -635,39 +597,32 @@
             },
             {
                 "module": "reports",
-                "moduleName": "Advanced Reports",
+                "moduleName": "Reports & Analytics",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
-            },
-            {
-                "module": "analytics",
-                "moduleName": "Deep Analytics",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "gst",
+                        "sales_summary",
+                        "sales_prediction",
+                        "profit_loss",
+                        "stock_forecast"
+                    ]
+                }
             },
             {
                 "module": "online_store",
                 "moduleName": "Online Store",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "usageType": "TOTAL",
+                "usageLimit": 5,
                 "report": true,
                 "analytics": true
             },
             {
                 "module": "ai",
                 "moduleName": "AI Suite",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "api",
-                "moduleName": "API Access",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,

@@ -16,10 +16,8 @@ const PACKAGE_MODULES = [
     'sales_order',
     'staff',
     'reports',
-    'analytics',
     'store',
     'ai',
-    'api',
     'online_store'
 ];
 
