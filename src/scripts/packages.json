@@ -48,7 +48,7 @@
                 "module": "staff",
                 "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
-                "usageLimit": 1,
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
@@ -206,7 +206,7 @@
                 "module": "staff",
                 "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
-                "usageLimit": 3,
+                "usageLimit": 2,
                 "report": false,
                 "analytics": false
             },
@@ -366,7 +366,7 @@
                 "module": "staff",
                 "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
-                "usageLimit": 10,
+                "usageLimit": 5,
                 "report": true,
                 "analytics": true
             },
