@@ -11,7 +11,7 @@ async function getInvoices(agencyId, userId, options = {}) {
 
     const agencyObjectId = new mongoose.Types.ObjectId(agencyId);
 
-    const query = { agencyId: agencyObjectId };
+    const query = { agencyId: agencyObjectId, userId };
 
     // Cursor: fetch records older than the given cursor (_id)
     if (cursor && mongoose.Types.ObjectId.isValid(cursor)) {

@@ -1,4 +1,5 @@
 const { extractEntity, findPaymentByPaymentId } = require('./helpers');
+const logger = require('@src/utils/logger');
 
 async function handleRefundCreated(payload) {
     try {
@@ -15,7 +16,8 @@ async function handleRefundCreated(payload) {
             payment.refundStatus = 'PENDING';
             payment.refundedAt = new Date(refundEntity.created_at * 1000);
 
-            if (refundAmount >= payment.finalAmount) {
+            const finalAmount = typeof payment.finalAmount === 'number' ? payment.finalAmount : 0;
+            if (finalAmount > 0 && refundAmount >= finalAmount) {
                 payment.status = 'REFUNDED';
             } else {
                 payment.status = 'PARTIALLY_REFUNDED';
@@ -24,6 +26,7 @@ async function handleRefundCreated(payload) {
             await payment.save();
         }
     } catch (error) {
+        logger.error('Error handling refund.created', { error: error?.message, stack: error?.stack });
         throw error;
     }
 }

@@ -1,5 +1,7 @@
 const { SubscriptionModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
+const { deleteCache } = require('@src/services/cache.service');
+const { getCacheKey } = require('./helpers');
 
 async function renewSubscription(existingSubscription, payment, months, ipAddress, userAgent) {
     const currentEndDate = new Date(existingSubscription.endDate);
@@ -13,6 +15,10 @@ async function renewSubscription(existingSubscription, payment, months, ipAddres
 
     payment.subscriptionId = existingSubscription._id;
     await payment.save();
+
+    // Invalidate cache so renewed subscription is immediately visible (fix: was missing before)
+    const cacheKey = getCacheKey(existingSubscription.userId);
+    await deleteCache(cacheKey).catch(() => { });
 
     await logSubscriptionEvent('SUBSCRIPTION_RENEWED', {
         subscriptionId: existingSubscription._id,
@@ -30,4 +36,3 @@ async function renewSubscription(existingSubscription, payment, months, ipAddres
 module.exports = {
     renewSubscription
 };
-

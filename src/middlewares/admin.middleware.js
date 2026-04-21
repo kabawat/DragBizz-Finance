@@ -6,14 +6,14 @@ const ADMIN_ROLES = ["super_admin", "admin", "manager"];
 const adminMiddleware = async (req, res, next) => {
     try {
         const user = req.user;
-        
+
         if (!user || !user.role) {
             return Response.validationError(res, "Unauthorized - User role missing in token.");
         }
 
         // Verify admin role
         if (!ADMIN_ROLES.includes(user.role)) {
-            return Response.validationError(res, "Access denied - Admin privileges required.");
+            return Response.forbidden(res, "Access denied - Admin privileges required.");
         }
 
         // Attach admin info to request

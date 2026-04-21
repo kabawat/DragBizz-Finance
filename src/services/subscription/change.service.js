@@ -1,7 +1,8 @@
 const { SubscriptionModel } = require('@src/models');
 const { logSubscriptionEvent } = require('@src/utils/audit/audit.logger');
 const { PACKAGE_MODULES } = require('@src/constants/enum/package.enum');
-const { processFeatures, calculateProratedCredit } = require('./helpers');
+const { processFeatures, calculateProratedCredit, getCacheKey } = require('./helpers');
+const { deleteCache } = require('@src/services/cache.service');
 
 function resolveChangeStrategy(type, existingSubscription) {
     const now = new Date();
@@ -109,7 +110,11 @@ async function changeSubscription(type, existingSubscription, newPackage, paymen
 
     await payment.save();
 
-    // ── 6. Audit log ─────────────────────────────────────────────────────────
+    // ── 6. Invalidate cache — plan changed, stale data must not be served ────
+    const cacheKey = getCacheKey(existingSubscription.userId);
+    await deleteCache(cacheKey).catch(() => { });
+
+    // ── 7. Audit log ─────────────────────────────────────────────────────────
     await logSubscriptionEvent(strategy.eventCreated, {
         subscriptionId: subscription._id,
         userId: existingSubscription.userId,

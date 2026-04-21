@@ -85,8 +85,13 @@ function comparePackages(oldPackage, newPackage) {
     if (newOrder > oldOrder) return 'UPGRADE';
     if (newOrder < oldOrder) return 'DOWNGRADE';
 
-    const oldPrice = (oldPackage.pricing && oldPackage.pricing[0] && oldPackage.pricing[0].price) ? oldPackage.pricing[0].price : 0;
-    const newPrice = (newPackage.pricing && newPackage.pricing[0] && newPackage.pricing[0].price) ? newPackage.pricing[0].price : 0;
+    const getMinPrice = (pkg) => {
+        const prices = Array.isArray(pkg.pricing) ? pkg.pricing.map(p => p.price).filter(p => typeof p === 'number') : [];
+        return prices.length > 0 ? Math.min(...prices) : 0;
+    };
+
+    const oldPrice = getMinPrice(oldPackage);
+    const newPrice = getMinPrice(newPackage);
 
     if (newPrice > oldPrice) return 'UPGRADE';
     if (newPrice < oldPrice) return 'DOWNGRADE';

@@ -27,17 +27,13 @@ async function handlePaymentCaptured(payload) {
         }
 
         if ((updated || payment.status === 'SUCCESS') && !payment.subscriptionId) {
-            try {
-                await SubscriptionService.createSubscription({
-                    userId: payment.userId,
-                    agencyId: payment.agencyId || null,
-                    paymentId: payment._id,
-                    ipAddress: payment.metadata ? payment.metadata.ipAddress : null,
-                    userAgent: payment.metadata ? payment.metadata.userAgent : null
-                });
-            } catch (subError) {
-                logger.error('Error creating subscription from webhook', { error: subError && subError.message, stack: subError && subError.stack });
-            }
+            await SubscriptionService.createSubscription({
+                userId: payment.userId,
+                agencyId: payment.agencyId || null,
+                paymentId: payment._id,
+                ipAddress: payment.metadata ? payment.metadata.ipAddress : null,
+                userAgent: payment.metadata ? payment.metadata.userAgent : null
+            });
         }
     } catch (error) {
         throw error;

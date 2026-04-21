@@ -1,5 +1,7 @@
 const { SubscriptionModel } = require('@src/models');
 const { deleteCache } = require('@src/services/cache.service');
+const createSubscriptionGrpc = require('@src/lib/grpc/clients/retailer/services/createSubscription.service');
+const logger = require('@src/utils/logger');
 const {
     ACTIVE_STATUSES,
     getCacheKey
@@ -26,10 +28,28 @@ async function cancelSubscription(subscriptionId, userId, reason = null) {
     const cacheKey = getCacheKey(subscription.userId);
     await deleteCache(cacheKey);
 
+    // Notify Retailer service so it immediately stops granting access
+    try {
+        await createSubscriptionGrpc({
+            userId: subscription.userId.toString(),
+            agencyId: subscription.agencyId ? subscription.agencyId.toString() : '',
+            subscriptionId: subscription._id.toString(),
+            startDate: subscription.startDate.toISOString(),
+            endDate: subscription.endDate.toISOString(),
+            status: 'CANCELLED',
+            features: []
+        });
+    } catch (grpcErr) {
+        logger.error('[ALERT] Failed to sync subscription CANCELLED with Retailer service', {
+            error: grpcErr.message,
+            subscriptionId: subscription._id.toString(),
+            userId
+        });
+    }
+
     return subscription;
 }
 
 module.exports = {
     cancelSubscription
 };
-

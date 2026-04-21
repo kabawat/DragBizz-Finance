@@ -59,7 +59,7 @@ async function verifyPaymentController(req, res) {
                     .lean();
 
                 if (subscription) break;
-                await new Promise(res => setTimeout(res, 500));
+                await new Promise(resolve => setTimeout(resolve, 500));
                 retries++;
             }
 

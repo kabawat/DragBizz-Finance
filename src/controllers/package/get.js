@@ -31,20 +31,8 @@ function validateQueryParams(queryParams) {
             errors.limit = "Limit cannot exceed 100";
         }
     }
-
-    if (queryParams.status !== undefined && !VALID_STATUSES.includes(queryParams.status)) {
-        errors.status = `Status must be one of: ${VALID_STATUSES.join(', ')}`;
-    }
-
     if (queryParams.planType !== undefined && !VALID_PLAN_TYPES.includes(queryParams.planType)) {
         errors.planType = `Plan type must be one of: ${VALID_PLAN_TYPES.join(', ')}`;
-    }
-
-    if (queryParams.isVisible !== undefined) {
-        const isVisible = queryParams.isVisible.toLowerCase();
-        if (isVisible !== 'true' && isVisible !== 'false') {
-            errors.isVisible = "isVisible must be 'true' or 'false'";
-        }
     }
 
     if (queryParams.search !== undefined) {
@@ -103,12 +91,13 @@ async function getPackageController(req, res) {
         }
 
         // Prepare pagination options
+        // isVisible and status are forced for public access — callers cannot override
         const paginationOptions = {
             page: queryParams.page ? parseInt(queryParams.page) : undefined,
             limit: queryParams.limit ? parseInt(queryParams.limit) : undefined,
-            status: queryParams.status,
+            status: 'ACTIVE',       // Public route always shows only active packages
+            isVisible: true,        // Public route never exposes hidden/draft packages
             planType: queryParams.planType,
-            isVisible: queryParams.isVisible ? queryParams.isVisible.toLowerCase() === 'true' : undefined,
             search: queryParams.search?.trim(),
             sortBy: queryParams.sortBy,
             sortOrder: queryParams.sortOrder

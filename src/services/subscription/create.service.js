@@ -163,7 +163,12 @@ async function createSubscription(subscriptionData) {
 
                 await createSubscriptionGrpc(grpcPayload);
             } catch (grpcErr) {
-                logger.error('Failed to sync subscription with Retailer service', { error: grpcErr.message, subscriptionId });
+                logger.error('[ALERT] Failed to sync subscription with Retailer service — retailer is OUT OF SYNC', {
+                    error: grpcErr.message,
+                    subscriptionId: subscriptionId.toString(),
+                    userId,
+                    agencyId: populatedSubscription.agencyId ? populatedSubscription.agencyId.toString() : null
+                });
             }
 
             const populatedPayment = populatedSubscription.paymentId;
@@ -176,8 +181,11 @@ async function createSubscription(subscriptionData) {
                     .map(limit => FEATURE_DISPLAY_NAMES[limit.module] || limit.module);
 
                 const emailPayload = {
-                    userName: "User",
-                    name: "User",
+                    userName: (populatedPayment && populatedPayment.metadata && populatedPayment.metadata.name)
+                        || (populatedPayment && populatedPayment.notes && (typeof populatedPayment.notes === 'object' ? populatedPayment.notes.name : null))
+                        || "User",
+                    name: (populatedPayment && populatedPayment.metadata && populatedPayment.metadata.name)
+                        || "User",
                     planName: (packageData && packageData.name) ? packageData.name : "Subscription Plan",
                     planDuration: populatedSubscription.billingCycle || "Monthly",
                     amount: (populatedPayment && populatedPayment.amount) ? populatedPayment.amount : 0,
