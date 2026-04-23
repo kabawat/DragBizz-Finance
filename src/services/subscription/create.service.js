@@ -70,7 +70,7 @@ async function createSubscription(subscriptionData) {
         let subscription;
 
         if (activeSub) {
-            const comparison = comparePackages(activeSub.packageId, packageDoc);
+            const comparison = comparePackages(activeSub.packageId, packageDoc, months);
 
             if (comparison === 'SAME') {
                 await renewSubscription(activeSub, payment, months, ipAddress, userAgent);
@@ -139,36 +139,54 @@ async function createSubscription(subscriptionData) {
             await setCache(cacheKey, populatedSubscription, SUBSCRIPTION_CACHE_TTL);
 
             // Sync with Retailer Microservice
-            try {
-                const featuresSync = (populatedSubscription.features || [])
-                    .filter(f => PACKAGE_MODULES.includes(f.module))
-                    .map(f => ({
-                        module: f.module,
-                        report: Boolean(f.report),
-                        analytics: Boolean(f.analytics),
-                        usageType: f.usageType || 'UNLIMITED',
-                        maxLimit: f.usageLimit ? Number(f.usageLimit) : 0,
-                        customDailyLimit: f.customDailyLimit ? Number(f.customDailyLimit) : 0
-                    }));
+            // Sync with Retailer Microservice — with Retry Logic
+            let grpcSuccess = false;
+            const featuresSync = (populatedSubscription.features || [])
+                .filter(f => PACKAGE_MODULES.includes(f.module))
+                .map(f => ({
+                    module: f.module,
+                    report: Boolean(f.report),
+                    analytics: Boolean(f.analytics),
+                    usageType: f.usageType || 'UNLIMITED',
+                    maxLimit: f.usageLimit ? Number(f.usageLimit) : 0,
+                    customDailyLimit: f.customDailyLimit ? Number(f.customDailyLimit) : 0
+                }));
 
-                const grpcPayload = {
-                    userId: populatedSubscription.userId.toString(),
-                    agencyId: populatedSubscription.agencyId ? populatedSubscription.agencyId.toString() : "",
-                    subscriptionId: populatedSubscription._id.toString(),
-                    startDate: populatedSubscription.startDate.toISOString(),
-                    endDate: populatedSubscription.endDate.toISOString(),
-                    status: populatedSubscription.status,
-                    features: featuresSync
-                };
+            const grpcPayload = {
+                userId: populatedSubscription.userId.toString(),
+                agencyId: populatedSubscription.agencyId ? populatedSubscription.agencyId.toString() : "",
+                subscriptionId: populatedSubscription._id.toString(),
+                startDate: populatedSubscription.startDate.toISOString(),
+                endDate: populatedSubscription.endDate.toISOString(),
+                status: populatedSubscription.status,
+                features: featuresSync
+            };
 
-                await createSubscriptionGrpc(grpcPayload);
-            } catch (grpcErr) {
-                logger.error('[ALERT] Failed to sync subscription with Retailer service — retailer is OUT OF SYNC', {
-                    error: grpcErr.message,
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    await createSubscriptionGrpc(grpcPayload);
+                    grpcSuccess = true;
+                    break;
+                } catch (grpcErr) {
+                    logger.warn(`[gRPC] Retailer sync attempt ${attempt} failed`, {
+                        error: grpcErr.message,
+                        subscriptionId: subscriptionId.toString()
+                    });
+                    if (attempt < 3) {
+                        const delay = attempt * 500;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+            }
+
+            if (!grpcSuccess) {
+                logger.error('[ALERT] Retailer sync failed after 3 attempts — marking subscription as PENDING_SYNC', {
                     subscriptionId: subscriptionId.toString(),
                     userId,
                     agencyId: populatedSubscription.agencyId ? populatedSubscription.agencyId.toString() : null
                 });
+                // Update sync status to PENDING for background worker retry
+                await SubscriptionModel.findByIdAndUpdate(subscriptionId, { syncStatus: 'PENDING' });
             }
 
             const populatedPayment = populatedSubscription.paymentId;

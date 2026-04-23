@@ -136,6 +136,14 @@ const subscriptionSchema = new mongoose.Schema({
         default: {}
     },
 
+    // Sync Status (for tracking gRPC synchronization with Retailer Service)
+    syncStatus: {
+        type: String,
+        enum: ['SYNCED', 'PENDING'],
+        default: 'SYNCED',
+        index: true
+    },
+
 }, {
     timestamps: true,
     strict: 'throw'

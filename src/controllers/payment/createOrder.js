@@ -13,9 +13,18 @@ const STATUS_CODES = require("@src/constants/statusCode");
 async function createOrderController(req, res) {
     try {
         const userId = req.user?.sub;
+        const agencyId = req.user?.agencyId;
+
         if (!userId) {
             return errorResponse(res, {
                 message: 'User ID not found in token',
+                statusCode: STATUS_CODES.UNAUTHORIZED
+            });
+        }
+
+        if (!agencyId) {
+            return errorResponse(res, {
+                message: 'Agency context missing from token. Please re-login.',
                 statusCode: STATUS_CODES.UNAUTHORIZED
             });
         }
@@ -44,7 +53,7 @@ async function createOrderController(req, res) {
 
             const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
             if (existingPackage) {
-                const comparison = comparePackages(existingPackage, newPackage);
+                const comparison = comparePackages(existingPackage, newPackage, sanitizedData.months || 1);
                 if (comparison === 'SAME') {
                     const now = new Date();
                     const endDate = new Date(existingSubscription.endDate);
@@ -67,7 +76,7 @@ async function createOrderController(req, res) {
         // Create order in payment gateway
         const orderData = await PaymentService.createOrder({
             userId,
-            agencyId: req.user?.agencyId || null,
+            agencyId,
             ...sanitizedData,
             idempotencyKey: req.idempotencyKey,
             ipAddress: req.clientIp,

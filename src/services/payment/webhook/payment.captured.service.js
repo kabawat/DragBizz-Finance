@@ -4,11 +4,14 @@ const { extractEntity, extractRazorpayIds, findPaymentByOrderId } = require('./h
 const SubscriptionService = require('@src/services/subscription');
 
 async function handlePaymentCaptured(payload) {
+    let razorpayOrderId = 'unknown';
     try {
         const paymentEntity = extractEntity(payload, 'payment');
         if (!paymentEntity) return;
 
-        const { razorpayPaymentId, razorpayOrderId } = extractRazorpayIds(paymentEntity);
+        const ids = extractRazorpayIds(paymentEntity);
+        razorpayOrderId = ids.razorpayOrderId;
+        const { razorpayPaymentId } = ids;
 
         const payment = await findPaymentByOrderId(razorpayOrderId);
 
@@ -36,6 +39,11 @@ async function handlePaymentCaptured(payload) {
             });
         }
     } catch (error) {
+        logger.error('[WEBHOOK] payment.captured handler failed', {
+            error: error.message,
+            stack: error.stack,
+            razorpayOrderId: razorpayOrderId || 'unknown'
+        });
         throw error;
     }
 }

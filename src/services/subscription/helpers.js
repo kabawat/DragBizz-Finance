@@ -77,7 +77,7 @@ function processFeatures(features) {
         : [];
 }
 
-function comparePackages(oldPackage, newPackage) {
+function comparePackages(oldPackage, newPackage, currentBillingMonths = 1) {
     const planTypeOrder = { 'BASIC': 1, 'PROFESSIONAL': 2, 'ENTERPRISE': 3, 'CUSTOM': 4 };
     const oldOrder = planTypeOrder[oldPackage.planType] || 0;
     const newOrder = planTypeOrder[newPackage.planType] || 0;
@@ -85,13 +85,16 @@ function comparePackages(oldPackage, newPackage) {
     if (newOrder > oldOrder) return 'UPGRADE';
     if (newOrder < oldOrder) return 'DOWNGRADE';
 
-    const getMinPrice = (pkg) => {
-        const prices = Array.isArray(pkg.pricing) ? pkg.pricing.map(p => p.price).filter(p => typeof p === 'number') : [];
-        return prices.length > 0 ? Math.min(...prices) : 0;
+    // Same planType: compare price for the same billing cycle
+    const getPriceForMonths = (pkg, months) => {
+        const pricing = Array.isArray(pkg.pricing) ? pkg.pricing : [];
+        const match = pricing.find(p => p.months === months);
+        // Fallback to first pricing entry or 0 if no match
+        return match ? match.price : (pricing[0]?.price ?? 0);
     };
 
-    const oldPrice = getMinPrice(oldPackage);
-    const newPrice = getMinPrice(newPackage);
+    const oldPrice = getPriceForMonths(oldPackage, currentBillingMonths);
+    const newPrice = getPriceForMonths(newPackage, currentBillingMonths);
 
     if (newPrice > oldPrice) return 'UPGRADE';
     if (newPrice < oldPrice) return 'DOWNGRADE';
