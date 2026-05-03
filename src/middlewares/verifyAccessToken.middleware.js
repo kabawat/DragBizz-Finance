@@ -19,6 +19,7 @@ const accessMiddleware = async (req, res, next) => {
                 );
             }
             req.user = decoded;
+            req.tenant = decoded?.tenant;
             return next();
         }
 
@@ -48,6 +49,7 @@ const accessMiddleware = async (req, res, next) => {
         }
 
         req.user = decoded;
+        req.tenant = decoded?.tenant;
         next();
     } catch (err) {
         return Response.handleError(res, err, "accessMiddleware");

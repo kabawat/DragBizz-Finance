@@ -5,6 +5,9 @@ const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 
 const SECRET = {
   ENVIRONMENT,
+  logger: {
+    level: process.env.LOG_LEVEL || 'info'
+  },
   server: {
     url: process.env.SERVER_URL,
     auth: process.env.SERVER_URL,
@@ -13,6 +16,8 @@ const SECRET = {
   },
   mongo: {
     uri: ENVIRONMENT === 'production' ? process.env.MONGODB_URI : process.env.MONGODB_URI_DEV,
+    maxPoolSize: parseInt(process.env.MONGO_MAX_POOL_SIZE) || undefined,
+    minPoolSize: parseInt(process.env.MONGO_MIN_POOL_SIZE) || undefined,
   },
   redis: {
     host: process.env.REDIS_HOST,

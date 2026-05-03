@@ -2,8 +2,9 @@ const axios = require('axios');
 const crypto = require('crypto');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+const SECRET = require('@src/config/env.config');
 
-const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'secret';
+const secret = SECRET?.razorpay?.webhookSecret || 'secret';
 const payload = {
   event: 'payment.captured',
   payload: {

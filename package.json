@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "lint": "echo \"✔ Lint check passed\"",
-    "start": "nodemon --ignore dump/ --ignore mongodb-backup.zip index.js",
+    "start": "node index.js",
+    "audit:high": "yarn audit --severity high",
     "build": "echo successfull",
     "dev": "nodemon --watch . --legacy-watch --delay 1000ms --ignore dump/ --ignore mongodb-backup.zip index.js",
     "dev:start": "docker compose -f docker-compose.yml up -d --build",
@@ -22,7 +23,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.12.0",
     "@grpc/proto-loader": "^0.7.13",
-    "axios": "^1.12.0",
+    "axios": "^1.15.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -48,7 +49,8 @@
     "js-yaml": ">=4.1.1",
     "body-parser": ">=2.2.1",
     "qs": ">=6.14.1",
-    "validator": ">=13.15.22"
+    "validator": ">=13.15.22",
+    "path-to-regexp": ">=8.4.0"
   },
   "_moduleAliases": {
     "@middlewares": "./src/middlewares",

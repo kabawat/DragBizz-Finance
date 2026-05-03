@@ -1,6 +1,7 @@
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
+const SECRET = require('@src/config/env.config');
 
 const logsDir = path.join(__dirname, '../../logs');
 if (!fs.existsSync(logsDir)) {
@@ -27,7 +28,7 @@ const consoleFormat = winston.format.combine(
 );
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || 'info',
+    level: SECRET?.logger?.level || 'info',
     format: logFormat,
     defaultMeta: { service: 'dragbizz-subscription' },
     transports: [
@@ -45,7 +46,7 @@ const logger = winston.createLogger({
     ]
 });
 
-if (process.env.NODE_ENV !== 'production' && process.env.ENVIRONMENT !== 'production') {
+if (SECRET.ENVIRONMENT !== 'production') {
     logger.add(new winston.transports.Console({
         format: consoleFormat
     }));
