@@ -6,7 +6,6 @@ const specs = require("./swagger");
 const swaggerUi = require("swagger-ui-express");
 const SECRET = require("@config/env.config");
 const router = require("@routes/");
-const csrfProtection = require("@src/middlewares/csrf.middleware");
 
 const app = express();
 app.use(cookieParser());
@@ -57,7 +56,6 @@ app.use(
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
-app.use(csrfProtection);
 app.use("/", router);
 
 if (!isProduction) {
