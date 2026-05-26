@@ -30,9 +30,9 @@ function timingSafeEqual(a, b) {
     return crypto.timingSafeEqual(bufA, bufB);
 }
 
-// Validate X-Internal-Secret header against configured INTERNAL_SERVICE_SECRET.
+// Validate X-Internal-Secret header against configured internal service secret.
 function hasValidInternalSecret(req) {
-    const secret = SECRET.INTERNAL_SERVICE_SECRET;
+    const secret = SECRET.internalServiceSecret;
     if (!secret || secret.length < 16) return false;
 
     const headerSecret = req.headers["x-internal-secret"];
