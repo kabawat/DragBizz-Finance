@@ -1,9 +1,7 @@
 const SECRET = require("@src/config/env.config");
 const crypto = require("crypto");
-//Parse comma-separated IP whitelist from env
 function getWhitelistedIPs() {
-    const raw = SECRET.ALLOWED_IPS || "127.0.0.1,::1";
-    return raw.split(",").map((ip) => ip.trim()).filter(Boolean);
+    return SECRET.voiceAiWhitelistIPs;
 }
 
 let _cachedWhitelist = null;

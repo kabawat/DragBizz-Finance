@@ -1,24 +1,10 @@
-const SECRET = require("@config/env.config");
+const SECRET = require("@src/config/env.config");
 const { jwtVerify, createRemoteJWKSet } = require("jose");
 const crypto = require("crypto");
 const { getCache, setCache } = require("@src/services/cache.service");
-const logger = require("@src/utils/logger");
 
-function resolveJwksUrl() {
-    const explicit = SECRET?.server?.jwksUrl;
-    if (explicit) {
-        return new URL(explicit);
-    }
-    const base = SECRET?.server?.url;
-    if (!base) {
-        throw new Error("Set SERVER_URL or JWKS_URL for JWT verification (JWKS fetch).");
-    }
-    const normalized = String(base).replace(/\/$/, "");
-    return new URL(`${normalized}/auth/.well-known/jwks.json`);
-}
-
-// 🔑 Remote JWKS config (Auth micro-service)
-const jwksUrl = resolveJwksUrl();
+// 🔑 Remote JWKS config (Auth micro-service) — same as dragbizz-retailer
+const jwksUrl = new URL(`${SECRET?.server?.url}/auth/.well-known/jwks.json`);
 if (SECRET?.ENVIRONMENT === "production" && jwksUrl.protocol !== "https:") {
     throw new Error("JWKS URL must use HTTPS in production");
 }
@@ -41,18 +27,19 @@ const extractBearerToken = (authHeader) => {
     return parts.length === 2 && parts[0] === "Bearer" ? parts[1] : null;
 };
 
-// ✅ Verify public token (Auth micro-service, RS256) with Redis caching — same flow as dragbizz-retailer
+// ✅ Verify public token (Auth micro-service, RS256) with Redis caching
 async function verifyAccessToken(token) {
     try {
-        // Step 1: Check Redis cache first
+        // Step 1: Check Redis cache first (ultra fast - ~1ms)
         const cacheKey = getTokenCacheKey(token);
         const cachedResult = await getCache(cacheKey);
+
         if (cachedResult) {
             return {
                 valid: cachedResult.valid,
                 expired: cachedResult.expired,
                 decoded: cachedResult.decoded,
-                cached: true
+                cached: true,
             };
         }
 
@@ -65,32 +52,26 @@ async function verifyAccessToken(token) {
             audience,
             clockTolerance: 60,
         });
+
         // Step 3: Cache successful verification
         const result = {
             valid: true,
             expired: false,
             decoded: payload,
-            cached: false
+            cached: false,
         };
 
+        // Cache for 5 minutes (less than token expiry)
         await setCache(cacheKey, result, VERIFY_CACHE_TTL);
 
         return result;
     } catch (err) {
+        // Handle expired tokens
         if (err.code === "ERR_JWT_EXPIRED") {
             return { valid: false, expired: true, decoded: null, cached: false };
         }
 
-        const msg = String(err?.message || "");
-        if (msg.includes("JSON Web Key Set") || err?.code === "ERR_JOSE_GENERIC") {
-            logger.warn("JWKS request failed (need HTTP 200). From this process, open JWKS_URL in a browser or curl.", {
-                jwksUrl: jwksUrl.href,
-                error: msg,
-            });
-        } else {    
-            logger.warn("Token verification error", { error: msg || String(err) });
-        }
-
+        // Don't cache invalid tokens
         return { valid: false, expired: false, decoded: null, error: err, cached: false };
     }
 }
@@ -99,4 +80,3 @@ module.exports = {
     verifyAccessToken,
     extractBearerToken,
 };
-

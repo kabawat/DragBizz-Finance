@@ -10,9 +10,6 @@ const SECRET = {
   },
   server: {
     url: process.env.SERVER_URL,
-    auth: process.env.SERVER_URL,
-    /** Full URL to `jwks.json`. Use in Docker when SERVER_URL is not reachable from the container (e.g. http://dragbizz.local/auth/.well-known/jwks.json). */
-    jwksUrl: (process.env.JWKS_URL || "").trim() || null,
     port: process.env.PORT || 4002,
     allowedOrigins: process.env.ALLOWED_ORIGINS || (ENVIRONMENT === "production" ? "https://dragbizz.com" : "http://localhost:3000,https://test.dragbizz.com"),
   },
@@ -51,7 +48,10 @@ const SECRET = {
   },
 
   // Internal service auth (Voice-AI → Subscription)
-  ALLOWED_IPS: process.env.ALLOWED_IPS || "127.0.0.1,::1",
+  voiceAiWhitelistIPs: (process.env.ALLOWED_IPS || "127.0.0.1,::1")
+    .split(",")
+    .map((ip) => ip.trim())
+    .filter(Boolean),
   internalServiceSecret: process.env.INTERNAL_SERVICE_SECRET || null,
 };
 

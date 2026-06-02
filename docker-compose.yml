@@ -16,6 +16,9 @@ services:
       - /app/node_modules
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "dragbizz.local:host-gateway"
+    depends_on:
+      - redis
     networks:
       - subscription-network
     stdin_open: true
@@ -28,7 +31,9 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - subscription-network
+      subscription-network:
+        aliases:
+          - redis-dev
 
 volumes:
   redis_data:
