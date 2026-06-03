@@ -1,7 +1,11 @@
 services:
   dragbizz-subscription:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dragbizz-subscription:prod
     container_name: dragbizz_subscription
+    restart: unless-stopped
     ports:
       - "4002:3000"   # REST: 3000 internal → 4002 on host
       - "8002:50052"  # gRPC: 50052 internal → 8002 on host
@@ -10,10 +14,6 @@ services:
     environment:
       - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
       - GRPC_PORT=${GRPC_PORT:-50052}
-    command: ["node", "index.js"]
-    volumes:
-      - .:/app
-      - /app/node_modules
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "dragbizz.local:host-gateway"
@@ -21,19 +21,16 @@ services:
       - redis
     networks:
       - subscription-network
-    stdin_open: true
-    tty: true
 
   redis:
     image: redis:7.2-alpine
     container_name: dragbizz_subscription-redis
-    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redis_data:/data
     networks:
-      subscription-network:
-        aliases:
-          - redis-dev
+      - subscription-network
 
 volumes:
   redis_data:
