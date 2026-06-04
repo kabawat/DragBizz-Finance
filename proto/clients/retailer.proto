@@ -4,6 +4,7 @@ package retailer.subscription;
 
 service SubscriptionService {
   rpc CreateSubscription (Request) returns (Response);
+  rpc GetOwnerAgency (GetOwnerAgencyRequest) returns (GetOwnerAgencyResponse);
 }
 
 message Feature {
@@ -29,4 +30,16 @@ message Response {
   bool success = 1;
   string message = 2;
   string subscriptionId = 3;
+}
+
+message GetOwnerAgencyRequest {
+  string userId = 1;
+  string subdomain = 2;
+}
+
+message GetOwnerAgencyResponse {
+  bool success = 1;
+  string message = 2;
+  string agencyId = 3;
+  string subdomain = 4;
 }

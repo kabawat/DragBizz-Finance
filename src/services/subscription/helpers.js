@@ -25,8 +25,10 @@ function getActiveSubscriptionQuery(userId, now = new Date(), agencyId = null) {
 
     if (agencyId) {
         query.agencyId = agencyId;
-    } else {
-        query.userId = userId;
+    }
+
+    if (userId) {
+        query.userId = userId; // scope to owner
     }
 
     return query;

@@ -1,4 +1,5 @@
 const { getActiveSubscription } = require('@src/services/subscription/get.service');
+const { resolveAgencyId } = require('@src/services/subscription/resolveAgencyId.service');
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
@@ -7,9 +8,8 @@ const STATUS_CODES = require("@src/constants/statusCode");
 async function getActive(req, res) {
     try {
         const userId = req.user?.sub;
-        const agencyId = req.user?.agencyId;
+        const tenant = req.user?.tenant; // JWT only, not cookies
 
-        // Check user ID
         if (!userId) {
             return errorResponse(res, {
                 message: 'User ID not found in token',
@@ -17,10 +17,17 @@ async function getActive(req, res) {
             });
         }
 
-        // Fetch subscription
+        const agencyId = await resolveAgencyId({
+            userId,
+            agencyId: req.user?.agencyId,
+            tenant,
+        });
+
+        const populatePackage = req.query.populatePackage !== 'false';
+
         const subscription = await getActiveSubscription(userId, {
             agencyId,
-            populatePackage: true
+            populatePackage,
         });
 
         // Handle not found
