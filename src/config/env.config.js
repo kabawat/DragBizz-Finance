@@ -3,6 +3,14 @@ const logger = require("@src/utils/logger");
 
 const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 
+const corsOriginEnv = (process.env.CORS_ORIGIN || "").trim();
+const allowedOriginsEnv = (process.env.ALLOWED_ORIGINS || "").trim();
+const corsAllowAll = corsOriginEnv === "*" || allowedOriginsEnv === "*";
+const defaultAllowedOrigins =
+    ENVIRONMENT === "production"
+        ? "https://dragbizz.io,https://www.dragbizz.io"
+        : "http://localhost:3000,https://test.dragbizz.com";
+
 const SECRET = {
   ENVIRONMENT,
   logger: {
@@ -11,7 +19,14 @@ const SECRET = {
   server: {
     url: process.env.SERVER_URL,
     port: process.env.PORT || 4002,
-    allowedOrigins: process.env.ALLOWED_ORIGINS || (ENVIRONMENT === "production" ? "https://dragbizz.com" : "http://localhost:3000,https://test.dragbizz.com"),
+    hostname: (process.env.HOSTNAME || ".dragbizz.io").trim(),
+    corsAllowAll: ENVIRONMENT === "development" ? true : corsAllowAll,
+    allowedOrigins:
+      ENVIRONMENT === "development"
+        ? "*"
+        : corsAllowAll
+          ? ""
+          : allowedOriginsEnv || corsOriginEnv || defaultAllowedOrigins,
   },
   mongo: {
     uri: ENVIRONMENT === 'production' ? process.env.MONGODB_URI : process.env.MONGODB_URI_DEV,

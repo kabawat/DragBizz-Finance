@@ -3,11 +3,10 @@ const Response = require("@src/utils/responseHandler/standardized");
 const STATUS_CODES = require("@src/constants/statusCode");
 const { isIPWhitelisted, hasValidInternalSecret, getClientIP } = require("@src/utils/internalAuth");
 const SECRET = require("@src/config/env.config");
-const isProd = SECRET.ENVIRONMENT === "production";
 
 const accessMiddleware = async (req, res, next) => {
     try {
-        let token = req.cookies[isProd ? "__Host-at" : "at"];
+        let token = req.cookies.at || req.cookies["__Host-at"];
         if (token) {
             const result = await verifyAccessToken(token);
             const { valid, expired, decoded } = result;
