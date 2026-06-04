@@ -38,7 +38,7 @@ async function verifyAccessToken(token) {
             return {
                 valid: cachedResult.valid,
                 expired: cachedResult.expired,
-                decoded: cachedResult.decoded,
+                decoded: normalizeAccessClaims(cachedResult.decoded),
                 cached: true,
             };
         }
@@ -54,10 +54,11 @@ async function verifyAccessToken(token) {
         });
 
         // Step 3: Cache successful verification
+        const decoded = normalizeAccessClaims(payload);
         const result = {
             valid: true,
             expired: false,
-            decoded: payload,
+            decoded,
             cached: false,
         };
 
@@ -76,7 +77,17 @@ async function verifyAccessToken(token) {
     }
 }
 
+function normalizeAccessClaims(payload) {
+    if (!payload || typeof payload !== "object") return payload;
+    const out = { ...payload };
+    if (out.sub != null) out.sub = String(out.sub);
+    if (out.agencyId != null) out.agencyId = String(out.agencyId);
+    if (out.tenant != null) out.tenant = String(out.tenant).trim().toLowerCase();
+    return out;
+}
+
 module.exports = {
     verifyAccessToken,
     extractBearerToken,
+    normalizeAccessClaims,
 };
