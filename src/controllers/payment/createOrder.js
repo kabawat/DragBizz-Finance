@@ -41,7 +41,7 @@ async function createOrderController(req, res) {
         }
 
         // Check existing subscription logic
-        const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
+        const existingSubscription = await SubscriptionService.getActiveSubscription(userId, { agencyId });
         if (existingSubscription) {
             const newPackage = await PackageModel.findById(sanitizedData.packageId).lean();
             if (!newPackage) {

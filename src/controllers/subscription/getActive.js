@@ -1,4 +1,6 @@
 const { getActiveSubscription } = require('@src/services/subscription/get.service');
+const { SubscriptionModel } = require('@src/models');
+const { getActiveSubscriptionQuery } = require('@src/services/subscription/helpers');
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
@@ -50,7 +52,21 @@ async function getActive(req, res) {
         });
 
         if (!subscription) {
-            console.log(`${LOG} [9a] getActive: STOP NOT_FOUND`);
+            const now = new Date();
+            const existsForAgency = await SubscriptionModel.exists(
+                getActiveSubscriptionQuery(null, now, agencyId)
+            );
+
+            if (existsForAgency) {
+                console.log(`${LOG} [9a] getActive: STOP STALE_SESSION (wrong userId in JWT)`);
+                return errorResponse(res, {
+                    message: 'Session is outdated. Please refresh or log in again.',
+                    statusCode: STATUS_CODES.UNAUTHORIZED,
+                    code: 'STALE_SESSION',
+                });
+            }
+
+            console.log(`${LOG} [9b] getActive: STOP NOT_FOUND`);
             return errorResponse(res, {
                 message: 'No active subscription found',
                 statusCode: STATUS_CODES.NOT_FOUND

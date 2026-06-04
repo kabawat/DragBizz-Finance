@@ -17,9 +17,13 @@ applySecurityMiddleware(app);
 app.use(express.json({
   limit: "10mb",
   verify: (req, res, buf) => {
-    // Save raw body for webhook verification before it gets parsed
-    if (req.originalUrl && req.originalUrl.includes('/webhooks')) {
-      req.rawBody = buf.toString();
+    const path = req.originalUrl || req.url || '';
+    if (path.includes('/webhooks')) {
+      req.rawBody = buf.toString('utf8');
+      console.log('[WEBHOOK] [0] rawBody captured in express.json verify', {
+        path,
+        bufLen: buf.length,
+      });
     }
   }
 }));

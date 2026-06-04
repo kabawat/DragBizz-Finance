@@ -8,7 +8,7 @@ const ownerMiddleware = (req, res, next) => {
         console.log(`${LOG} [5a] ownerMiddleware: STOP forbidden`);
         return Response.forbidden(res, "Access Denied: Only store owners can purchase or modify subscriptions.");
     }
-    console.log(`${LOG} [6] ownerMiddleware: OK, calling getActive`);
+    console.log(`${LOG} [6] ownerMiddleware: OK`);
     next();
 };
 

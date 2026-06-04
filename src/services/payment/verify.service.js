@@ -1,8 +1,7 @@
-const getRazorpayInstance = require('@src/lib/payment/razorpay.instance');
 const { PaymentModel } = require('@src/models');
 const { verifyPaymentSignature } = require('@src/utils/payment/razorpay.verify');
-const { validateAmount } = require('@src/utils/security/amount.validation');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
+const { activateSubscriptionAfterPayment } = require('@src/services/payment/activateSubscription.service');
 const logger = require('@src/utils/logger');
 
 async function verifyPayment(paymentData) {
@@ -51,6 +50,7 @@ async function verifyPayment(paymentData) {
         if (saveNeeded) {
             await payment.save();
         }
+        await activateSubscriptionAfterPayment(payment);
         return payment;
     }
 
@@ -88,6 +88,10 @@ async function verifyPayment(paymentData) {
         ipAddress,
         userAgent
     });
+
+    if (finalPaymentDoc.status === 'SUCCESS') {
+        await activateSubscriptionAfterPayment(finalPaymentDoc);
+    }
 
     return finalPaymentDoc;
 }

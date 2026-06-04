@@ -1,10 +1,34 @@
-const { extractBearerToken, verifyAccessToken } = require("@src/lib/token");
+const { extractBearerToken, verifyAccessToken, normalizeAccessClaims } = require("@src/lib/token");
 const Response = require("@src/utils/responseHandler/standardized");
 const STATUS_CODES = require("@src/constants/statusCode");
 const { isIPWhitelisted, hasValidInternalSecret, getClientIP } = require("@src/utils/internalAuth");
+const { getCache } = require("@src/services/cache.service");
 const SECRET = require("@src/config/env.config");
 
 const LOG = "[SUB_ACTIVE]";
+
+async function assertTokenVersion(decoded) {
+    const userId = decoded?.sub;
+    if (!userId) return null;
+
+    const cacheKey = `user:tv:${userId}`;
+    let currentTv = await getCache(cacheKey);
+
+    if (currentTv !== null && typeof currentTv === "object" && currentTv !== undefined) {
+        currentTv = Number(currentTv);
+    }
+
+    const tokenTv = Number(decoded.tv || 0);
+    if (currentTv !== null && currentTv !== undefined && tokenTv !== Number(currentTv)) {
+        return "Session expired. Please refresh or log in again.";
+    }
+    return null;
+}
+
+function attachUser(req, decoded) {
+    req.user = normalizeAccessClaims(decoded);
+    req.tenant = req.user?.tenant;
+}
 
 const accessMiddleware = async (req, res, next) => {
     try {
@@ -32,8 +56,12 @@ const accessMiddleware = async (req, res, next) => {
                     STATUS_CODES.UNAUTHORIZED
                 );
             }
-            req.user = decoded;
-            req.tenant = decoded?.tenant;
+            const tvError = await assertTokenVersion(decoded);
+            if (tvError) {
+                console.log(`${LOG} [3b] accessMiddleware: STOP tokenVersion mismatch`);
+                return Response.validationError(res, tvError, {}, STATUS_CODES.UNAUTHORIZED);
+            }
+            attachUser(req, decoded);
             console.log(`${LOG} [4] accessMiddleware: OK, calling next()`);
             return next();
         }
@@ -64,8 +92,11 @@ const accessMiddleware = async (req, res, next) => {
             );
         }
 
-        req.user = decoded;
-        req.tenant = decoded?.tenant;
+        const tvError = await assertTokenVersion(decoded);
+        if (tvError) {
+            return Response.validationError(res, tvError, {}, STATUS_CODES.UNAUTHORIZED);
+        }
+        attachUser(req, decoded);
         console.log(`${LOG} [4] accessMiddleware: bearer OK, calling next()`);
         next();
     } catch (err) {

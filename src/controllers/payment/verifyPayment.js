@@ -64,7 +64,9 @@ async function verifyPaymentController(req, res) {
             }
 
             if (subscription) {
-                const existingSubscription = await SubscriptionService.getActiveSubscription(userId);
+                const existingSubscription = await SubscriptionService.getActiveSubscription(userId, {
+                    agencyId: req.user?.agencyId,
+                });
 
                 if (subscription.status === 'PENDING') {
                     subscriptionType = 'DOWNGRADE';
