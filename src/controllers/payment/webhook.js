@@ -68,7 +68,10 @@ async function razorpayWebhookController(req, res) {
 
     if (!verification.ok) {
         if (verification.reason === 'SIGNATURE_MISMATCH') {
-            console.log(`${LOG} [FAIL] fix: set RAZORPAY_WEBHOOK_SECRET from Razorpay Dashboard → Webhooks → same mode as RAZORPAY_MODE (${SECRET.razorpay?.mode})`);
+            console.log(`${LOG} [FAIL] wrong RAZORPAY_WEBHOOK_SECRET (do NOT use RAZORPAY_KEY_SECRET)`, {
+                mode: SECRET.razorpay?.mode,
+                hint: 'Dashboard → Test/Live mode → Webhooks → open YOUR webhook URL → copy Secret → restart container',
+            });
         }
         if (verification.reason === 'WEBHOOK_SECRET_NOT_CONFIGURED') {
             console.log(`${LOG} [FAIL] fix: add RAZORPAY_WEBHOOK_SECRET to subscription service .env`);

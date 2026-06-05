@@ -45,9 +45,10 @@ const SECRET = {
     audience: process.env.AUDIENCE || "DRAGBIZZ",
   },
   razorpay: {
-    keyId: process.env.RAZORPAY_KEY_ID,
-    keySecret: process.env.RAZORPAY_KEY_SECRET,
-    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+    keyId: process.env.RAZORPAY_KEY_ID?.trim?.() || process.env.RAZORPAY_KEY_ID,
+    keySecret: process.env.RAZORPAY_KEY_SECRET?.trim?.() || process.env.RAZORPAY_KEY_SECRET,
+    // Webhook secret ≠ RAZORPAY_KEY_SECRET — copy from Dashboard → Webhooks → [your URL] → Secret
+    webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET?.trim?.() || process.env.RAZORPAY_WEBHOOK_SECRET,
     mode: process.env.RAZORPAY_MODE || 'test'
   },
   provider: {
