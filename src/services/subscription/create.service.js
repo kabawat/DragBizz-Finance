@@ -53,7 +53,6 @@ async function createSubscription(subscriptionData) {
         }
 
         const activeSub = await SubscriptionModel.findOne(activeSubQuery)
-            .populate('packageId', 'planType pricing')
             .populate('paymentId', 'amount');
 
         const paymentQuery = {
@@ -70,14 +69,35 @@ async function createSubscription(subscriptionData) {
         let subscription;
 
         if (activeSub) {
-            const comparison = comparePackages(activeSub.packageId, packageDoc, months);
+            const existingPackage = await PackageModel.findById(activeSub.packageId)
+                .select('planType pricing')
+                .lean();
 
-            if (comparison === 'SAME') {
-                await renewSubscription(activeSub, payment, months, ipAddress, userAgent);
-                subscription = activeSub;
+            if (existingPackage) {
+                const comparison = comparePackages(existingPackage, packageDoc, months);
+
+                if (comparison === 'SAME') {
+                    await renewSubscription(activeSub, payment, months, ipAddress, userAgent);
+                    subscription = activeSub;
+                } else {
+                    subscription = await changeSubscription(
+                        comparison,
+                        activeSub,
+                        packageDoc,
+                        payment,
+                        months,
+                        ipAddress,
+                        userAgent
+                    );
+                }
             } else {
+                logger.warn('Active subscription references missing package; replacing subscription', {
+                    subscriptionId: activeSub._id?.toString?.(),
+                    packageId: activeSub.packageId?.toString?.(),
+                    paymentId: payment._id?.toString?.(),
+                });
                 subscription = await changeSubscription(
-                    comparison,
+                    'UPGRADE',
                     activeSub,
                     packageDoc,
                     payment,

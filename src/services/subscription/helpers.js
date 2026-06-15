@@ -80,6 +80,13 @@ function processFeatures(features) {
 }
 
 function comparePackages(oldPackage, newPackage, currentBillingMonths = 1) {
+    if (!newPackage) {
+        throw new Error('New package is required for comparison');
+    }
+    if (!oldPackage) {
+        return 'UPGRADE';
+    }
+
     const planTypeOrder = { 'BASIC': 1, 'PROFESSIONAL': 2, 'ENTERPRISE': 3, 'CUSTOM': 4 };
     const oldOrder = planTypeOrder[oldPackage.planType] || 0;
     const newOrder = planTypeOrder[newPackage.planType] || 0;
