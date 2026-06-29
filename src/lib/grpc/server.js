@@ -3,6 +3,7 @@ const protoLoader = require('@grpc/proto-loader');
 const path = require('path');
 const SECRET = require('@src/config/env.config');
 const logger = require('@src/utils/logger');
+const entitlementService = require('./services/entitlement.service');
 // gRPC Server Setup
 class GrpcServer {
     constructor() {
@@ -69,9 +70,15 @@ class GrpcServer {
     }
 
     // Register gRPC services
-    registerServices(proto) {
+    registerServices(subscriptionProto) {
+        if (!subscriptionProto || !subscriptionProto.EntitlementService) {
+            logger.warn('EntitlementService not found in proto');
+            return;
+        }
 
-        logger.info('gRPC Server started (no services registered)');
+        const handlers = entitlementService.createEntitlementHandlers();
+        this.server.addService(subscriptionProto.EntitlementService.service, handlers);
+        logger.info('gRPC EntitlementService registered');
     }
 
     // Graceful shutdown

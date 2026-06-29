@@ -2,4 +2,35 @@ syntax = "proto3";
 
 package subscription;
 
-option go_package = "subscription";
+service EntitlementService {
+  rpc CheckFeature(CheckFeatureRequest) returns (CheckFeatureResponse);
+  rpc IncrementUsage(IncrementUsageRequest) returns (IncrementUsageResponse);
+}
+
+message CheckFeatureRequest {
+  string agency_id = 1;
+  string module = 2;
+}
+
+message CheckFeatureResponse {
+  bool entitled = 1;
+  string code = 2;
+  string message = 3;
+  string usage_type = 4;
+  int32 max_limit = 5;
+  int32 current_usage = 6;
+  int32 remaining = 7;
+}
+
+message IncrementUsageRequest {
+  string agency_id = 1;
+  string module = 2;
+  int32 amount = 3;
+}
+
+message IncrementUsageResponse {
+  bool success = 1;
+  int32 current_usage = 2;
+  int32 remaining = 3;
+  string code = 4;
+}
