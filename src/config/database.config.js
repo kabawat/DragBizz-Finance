@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const SECRET = require("./env.config");
 const logger = require("@src/utils/logger");
 
+const IS_PROD = SECRET.ENVIRONMENT === "production";
+
 const connectDB = async () => {
   try {
     const options = {
@@ -10,6 +12,9 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 10000,
+      readPreference: "primary",
+      directConnection: !IS_PROD,
+      serverSelectionTimeoutMS: IS_PROD ? 5000 : 15000,
       retryWrites: true,
       retryReads: true,
       bufferCommands: false,
