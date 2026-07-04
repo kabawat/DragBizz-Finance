@@ -61,8 +61,8 @@ function validatePackage(data) {
         errors.shortDescription = 'Short description must be less than 200 characters';
     }
 
-    if (data.planType && !['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'].includes(data.planType)) {
-        errors.planType = 'Plan type must be one of: BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM';
+    if (data.planType && !['STARTUP', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'].includes(data.planType)) {
+        errors.planType = 'Plan type must be one of: STARTUP, BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM';
     }
 
     if (data.status && !PACKAGE_STATUS.includes(data.status)) {
@@ -186,8 +186,8 @@ function validatePackageUpdate(data) {
         errors.shortDescription = 'Short description must be less than 200 characters';
     }
 
-    if (data.planType && !['BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'].includes(data.planType)) {
-        errors.planType = 'Plan type must be one of: BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM';
+    if (data.planType && !['STARTUP', 'BASIC', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'].includes(data.planType)) {
+        errors.planType = 'Plan type must be one of: STARTUP, BASIC, PROFESSIONAL, ENTERPRISE, CUSTOM';
     }
 
     if (data.status && !PACKAGE_STATUS.includes(data.status)) {

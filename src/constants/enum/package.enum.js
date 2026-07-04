@@ -18,7 +18,9 @@ const PACKAGE_MODULES = [
     'reports',
     'store',
     'ai',
-    'online_store'
+    'online_store',
+    'cashbook',
+    'payment_reminder',
 ];
 
 module.exports = {

@@ -1,5 +1,171 @@
 [
     {
+        "name": "Khata Free",
+        "description": "Free khata-first plan for kirana stores — udhari, reminders, cashbook, and light invoicing.",
+        "shortDescription": "Free forever — khata, reminders, 30 invoices/day.",
+        "planType": "STARTUP",
+        "pricing": [
+            {
+                "months": 12,
+                "price": 0,
+                "discount": 0,
+                "discountedPrice": 0
+            }
+        ],
+        "highlights": [
+            "Unlimited Khata (Customer Ledger)",
+            "Unlimited Payment Reminders",
+            "Cashbook Tracking",
+            "Up to 30 Invoices per Day",
+            "Up to 50 Products",
+            "1 Store"
+        ],
+        "displayOrder": -1,
+        "status": "ACTIVE",
+        "isVisible": true,
+        "isPopular": false,
+        "isRecommended": false,
+        "features": [
+            {
+                "module": "store",
+                "moduleName": "Store Management",
+                "usageType": "TOTAL",
+                "usageLimit": 1,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "customer",
+                "moduleName": "Khata (Customer Ledger)",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "cashbook",
+                "moduleName": "Cashbook",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": ["draft"]
+                }
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "TOTAL",
+                "usageLimit": 50,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "inventory",
+                "moduleName": "Inventory Management",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": []
+                }
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "billing",
+                "moduleName": "Billing",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "purchase_order",
+                "moduleName": "Purchase Orders",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "expense",
+                "moduleName": "Expense Tracking",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "staff",
+                "moduleName": "Staff Accounts",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "reports",
+                "moduleName": "Reports & Analytics",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": []
+                }
+            },
+            {
+                "module": "sales_order",
+                "moduleName": "Sales Orders",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "ai",
+                "moduleName": "AI Suite",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            }
+        ]
+    },
+    {
         "name": "Startup Plan",
         "description": "Basic entry plan for small retailers to start their digital journey.",
         "shortDescription": "One-time low cost entry.",
@@ -545,7 +711,10 @@
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": true,
+                "metadata": {
+                    "includes": ["pos", "release", "draft"]
+                }
             },
             {
                 "module": "customer",
@@ -554,6 +723,22 @@
                 "usageLimit": null,
                 "report": true,
                 "analytics": true
+            },
+            {
+                "module": "cashbook",
+                "moduleName": "Cashbook",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
             },
             {
                 "module": "supplier",
@@ -577,7 +762,10 @@
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": true,
+                "metadata": {
+                    "includes": ["fifo", "batches", "stock_events"]
+                }
             },
             {
                 "module": "purchase_order",

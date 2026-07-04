@@ -168,8 +168,9 @@ async function createSubscription(subscriptionData) {
                     report: Boolean(f.report),
                     analytics: Boolean(f.analytics),
                     usageType: f.usageType || 'UNLIMITED',
-                    maxLimit: f.usageLimit ? Number(f.usageLimit) : 0,
-                    customDailyLimit: f.customDailyLimit ? Number(f.customDailyLimit) : 0
+                    maxLimit: f.usageLimit !== undefined && f.usageLimit !== null ? Number(f.usageLimit) : 0,
+                    customDailyLimit: f.customDailyLimit ? Number(f.customDailyLimit) : 0,
+                    metadata: f.metadata || {},
                 }));
 
             const grpcPayload = {
