@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy only package.json and yarn.lock for caching
 COPY package.json yarn.lock* ./
 
-RUN yarn install --frozen-lockfile
+RUN yarn install --network-timeout 100000
 
 # Copy rest of the project
 COPY . .
