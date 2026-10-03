@@ -3,8 +3,8 @@ services:
     build: .
     container_name: dragbizz_subscription
     ports:
-      - "4002:3000"   # REST: 3000 internal → 4002 on host
-      - "8002:50052"  # gRPC: 50052 internal → 8002 on host
+      - "${HOST_HTTP_PORT:-8004}:${PORT:-3000}"   # REST: PORT internal → HOST_HTTP_PORT on host
+      - "${HOST_GRPC_PORT:-5004}:${GRPC_PORT:-50052}"  # gRPC: GRPC_PORT internal → HOST_GRPC_PORT on host
     env_file:
       - .env
     environment:
