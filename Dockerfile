@@ -3,10 +3,14 @@ FROM node:22
 # Set working directory to /app (matching docker-compose volumes)
 WORKDIR /app
 
-# Copy only package.json and yarn.lock for caching
-COPY package.json yarn.lock* ./
+# Copy only package.json, lockfile, and Yarn config for caching
+COPY package.json yarn.lock* .yarnrc.yml ./
 
-RUN yarn install --network-timeout 100000
+# node:22 ships Yarn 1, which cannot use these Yarn 4 lockfiles
+RUN rm -f /usr/local/bin/yarn /usr/local/bin/yarnpkg \
+  && corepack enable \
+  && corepack prepare yarn@4.14.1 --activate \
+  && yarn install
 
 # Copy rest of the project
 COPY . .
