@@ -20,7 +20,7 @@ const SUBSCRIPTION_STATUS = [
 ];
 
 // Payment Gateway Enum
-const PAYMENT_GATEWAY = ['RAZORPAY', 'STRIPE', 'CASHFREE', 'INTERNAL'];
+const PAYMENT_GATEWAY = ['RAZORPAY', 'STRIPE', 'CASHFREE', 'PAYU', 'EASEBUZZ', 'INTERNAL'];
 
 // Refund Status Enum
 const REFUND_STATUS = [

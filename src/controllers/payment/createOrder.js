@@ -1,10 +1,7 @@
-const PaymentService = require('@src/services/payment');
-const SubscriptionService = require('@src/services/subscription');
-const { PackageModel } = require('@src/models');
+const { createSubscriptionPayment } = require('@src/services/subscription/checkout.service');
 const { validateCreateOrder } = require('@src/utils/validations/payment.validation');
 const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
-const { comparePackages } = require('@src/services/subscription/helpers');
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
@@ -40,41 +37,7 @@ async function createOrderController(req, res) {
             });
         }
 
-        // Check existing subscription logic
-        const existingSubscription = await SubscriptionService.getActiveSubscription(userId, { agencyId });
-        if (existingSubscription) {
-            const newPackage = await PackageModel.findById(sanitizedData.packageId).lean();
-            if (!newPackage) {
-                return errorResponse(res, {
-                    message: 'Package not found',
-                    statusCode: STATUS_CODES.NOT_FOUND
-                });
-            }
-
-            const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
-            if (existingPackage) {
-                const comparison = comparePackages(existingPackage, newPackage, sanitizedData.months || 1);
-                if (comparison === 'SAME') {
-                    const now = new Date();
-                    const endDate = new Date(existingSubscription.endDate);
-                    const daysRemaining = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
-
-                    if (daysRemaining > 30) {
-                        return errorResponse(res, {
-                            message: 'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
-                            fields: {
-                                daysRemaining: daysRemaining.toString(),
-                                suggestion: 'You can renew this subscription closer to the expiry date'
-                            },
-                            statusCode: STATUS_CODES.BAD_REQUEST
-                        });
-                    }
-                }
-            }
-        }
-
-        // Create order in payment gateway
-        const orderData = await PaymentService.createOrder({
+        const orderData = await createSubscriptionPayment({
             userId,
             agencyId,
             ...sanitizedData,
@@ -101,15 +64,17 @@ async function createOrderController(req, res) {
 
     } catch (error) {
         // Handle specific error cases
-        if (error.message === 'Package not found or not available') {
+        if (error.statusCode === 404 || error.message === 'Package not found or not available') {
             return errorResponse(res, {
                 message: error.message,
+                fields: error.fields,
                 statusCode: STATUS_CODES.NOT_FOUND
             });
         }
-        if (error.message.includes('billing cycle')) {
+        if (error.statusCode === 400 || error.message.includes('billing cycle') || error.message.includes('phone number') || error.message.includes('Unsupported payment gateway')) {
             return errorResponse(res, {
                 message: error.message,
+                fields: error.fields,
                 statusCode: STATUS_CODES.BAD_REQUEST
             });
         }

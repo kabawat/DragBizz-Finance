@@ -1,4 +1,8 @@
 require('module-alias/register');
+const { onPaymentSettled } = require('@src/services/payment/hooks');
+const { activateSubscriptionAfterPayment } = require('@src/services/subscription/activate-from-payment.service');
+onPaymentSettled(activateSubscriptionAfterPayment);
+
 const server = require('@src/app');
 const mongoose = require('mongoose');
 const { connectDB } = require('@config/database.config');

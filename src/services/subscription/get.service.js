@@ -1,7 +1,6 @@
 const { SubscriptionModel } = require('@src/models');
 const { getCache, setCache, deleteCache } = require('@src/services/cache.service');
 const {
-    PAYMENT_POPULATE_FIELDS_WITH_ORDER,
     getCacheKey,
     populateSubscription,
     getActiveSubscriptionQuery,
@@ -73,62 +72,6 @@ async function getActiveSubscription(userId, options = {}) {
     return subscription;
 }
 
-async function getUserSubscriptions(userId, options = {}) {
-    const {
-        page = 1,
-        limit = 10,
-        status
-    } = options;
-
-    const pageNum = Math.max(1, parseInt(page) || 1);
-    const limitNum = Math.min(Math.max(1, parseInt(limit) || 10), 100);
-    const skip = (pageNum - 1) * limitNum;
-
-    const query = { userId };
-    if (status) {
-        query.status = status;
-    }
-
-    const total = await SubscriptionModel.countDocuments(query);
-    const subscriptions = await populateSubscription(
-        SubscriptionModel.find(query)
-    )
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean();
-
-    return {
-        subscriptions,
-        pagination: {
-            currentPage: pageNum,
-            limit: limitNum,
-            total,
-            totalPages: Math.ceil(total / limitNum),
-            hasNextPage: pageNum < Math.ceil(total / limitNum),
-            hasPrevPage: pageNum > 1
-        }
-    };
-}
-
-async function getSubscriptionById(subscriptionId, userId) {
-    const subscription = await populateSubscription(
-        SubscriptionModel.findOne({
-            _id: subscriptionId,
-            userId
-        }),
-        PAYMENT_POPULATE_FIELDS_WITH_ORDER
-    ).lean();
-
-    if (!subscription) {
-        throw new Error('Subscription not found');
-    }
-
-    return subscription;
-}
-
 module.exports = {
-    getActiveSubscription,
-    getUserSubscriptions,
-    getSubscriptionById
+    getActiveSubscription
 };

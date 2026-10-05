@@ -1,6 +1,6 @@
 const { PackageModel } = require("@src/models");
 const mongoose = require("mongoose");
-const { escapeRegex } = require("@src/utils/helpers/escapeRegex.helper");
+const { escapeRegex } = require("@src/utils/helper/escapeRegex.helper");
 
 class PackageService {
     // Create a new package

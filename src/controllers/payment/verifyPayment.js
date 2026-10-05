@@ -1,11 +1,11 @@
-const PaymentService = require('@src/services/payment');
+const { verifyPayment } = require('@src/services/payment/verify.service');
+const { getPaymentSubscriptionSummary } = require('@src/services/subscription/payment-result.service');
 const { validateVerifyPayment } = require('@src/utils/validations/payment.validation');
 const { sanitizeVerifyPaymentData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializePayment } = require('@src/utils/serializer/payment.serializer');
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
-const logger = require('@src/utils/logger');
 
 // Verify payment controller
 async function verifyPaymentController(req, res) {
@@ -30,7 +30,7 @@ async function verifyPaymentController(req, res) {
         }
 
         // Verify payment with service
-        const payment = await PaymentService.verifyPayment({
+        const payment = await verifyPayment({
             ...sanitizedData,
             ipAddress: req.clientIp,
             userAgent: req.userAgent
@@ -44,63 +44,15 @@ async function verifyPaymentController(req, res) {
             });
         }
 
-        let subscription = null;
-        let subscriptionType = null;
-        let retries = 0;
+        const subscription = await getPaymentSubscriptionSummary({
+            payment,
+            userId,
+            agencyId: req.user?.agencyId
+        });
 
-        // Wait for webhook (max 2s) to get UI display data
-        if (payment.status === 'SUCCESS') {
-            const { SubscriptionModel } = require('@src/models');
-            const SubscriptionService = require('@src/services/subscription');
-
-            while (retries < 4) {
-                subscription = await SubscriptionModel.findOne({ paymentId: payment._id })
-                    .populate('packageId', 'name')
-                    .lean();
-
-                if (subscription) break;
-                await new Promise(resolve => setTimeout(resolve, 500));
-                retries++;
-            }
-
-            if (subscription) {
-                const existingSubscription = await SubscriptionService.getActiveSubscription(userId, {
-                    agencyId: req.user?.agencyId,
-                });
-
-                if (subscription.status === 'PENDING') {
-                    subscriptionType = 'DOWNGRADE';
-                } else if (existingSubscription && existingSubscription._id.toString() !== subscription._id.toString()) {
-                    const existingPackageId = existingSubscription.packageId?._id?.toString() || existingSubscription.packageId?.toString();
-                    const newPackageId = subscription.packageId?._id?.toString() || subscription.packageId?.toString();
-
-                    if (existingPackageId === newPackageId) {
-                        subscriptionType = 'RENEWAL';
-                    } else {
-                        subscriptionType = 'UPGRADE';
-                    }
-                } else {
-                    subscriptionType = 'NEW';
-                }
-            }
-        }
-
-        // Success response
-        const proratedCredit = payment.metadata?.proratedCredit || 0;
         const responseData = {
             payment: serializePayment(payment),
-            subscription: subscription ? {
-                id: subscription._id,
-                status: subscription.status,
-                startDate: subscription.startDate,
-                endDate: subscription.endDate,
-                package: subscription.packageId ? {
-                    id: subscription.packageId._id,
-                    name: subscription.packageId.name
-                } : null,
-                type: subscriptionType,
-                proratedCredit: proratedCredit > 0 ? proratedCredit : null
-            } : null
+            subscription
         };
 
         return successResponse(res, {
@@ -112,7 +64,7 @@ async function verifyPaymentController(req, res) {
 
     } catch (error) {
         // Handle specific error cases
-        if (error.message === 'Invalid payment signature') {
+        if (error.message === 'Invalid payment signature' || error.code === 'PAYMENT_PENDING' || error.code === 'AMOUNT_MISMATCH') {
             return errorResponse(res, {
                 message: error.message,
                 statusCode: STATUS_CODES.BAD_REQUEST

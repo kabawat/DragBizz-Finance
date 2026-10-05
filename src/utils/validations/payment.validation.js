@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { getActiveGateway } = require('@src/lib/payment/gateway.factory');
+const { normalizeGatewayId } = require('@src/lib/payment/registry');
 
 const VALID_MONTHS = [1, 3, 6, 12, 18, 24, 36, 48];
 
@@ -20,6 +22,11 @@ function validateCreateOrder(data) {
         } else if (!VALID_MONTHS.includes(months)) {
             errors.months = `Months must be one of: ${VALID_MONTHS.join(', ')}`;
         }
+    }
+
+    const gateway = getActiveGateway();
+    if (data.gateway && normalizeGatewayId(data.gateway) !== gateway.id) {
+        errors.gateway = `Payment gateway is configured as ${gateway.schemaId}`;
     }
 
     if (data.couponCode && typeof data.couponCode !== 'string') {
@@ -55,6 +62,13 @@ function validateCreateOrder(data) {
         }
     }
 
+    if (gateway.requiresCustomerPhone && !errors.phone && !data.phone) {
+        errors.phone = 'Phone number is required';
+    }
+    if (gateway.requiresCustomerEmail && !errors.email && !data.email) {
+        errors.email = 'Email is required';
+    }
+
     return {
         isValid: Object.keys(errors).length === 0,
         errors
@@ -63,24 +77,7 @@ function validateCreateOrder(data) {
 
 // Validate verify payment request
 function validateVerifyPayment(data) {
-    const errors = {};
-
-    if (!data.razorpayOrderId || typeof data.razorpayOrderId !== 'string' || data.razorpayOrderId.length > 50) {
-        errors.razorpayOrderId = 'Razorpay order ID is required and must be valid';
-    }
-
-    if (!data.razorpayPaymentId || typeof data.razorpayPaymentId !== 'string' || data.razorpayPaymentId.length > 50) {
-        errors.razorpayPaymentId = 'Razorpay payment ID is required and must be valid';
-    }
-
-    if (!data.razorpaySignature || typeof data.razorpaySignature !== 'string' || data.razorpaySignature.length > 200) {
-        errors.razorpaySignature = 'Razorpay signature is required and must be valid';
-    }
-
-    return {
-        isValid: Object.keys(errors).length === 0,
-        errors
-    };
+    return getActiveGateway().validateVerificationInput(data);
 }
 
 module.exports = {

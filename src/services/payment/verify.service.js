@@ -1,101 +1,104 @@
 const { PaymentModel } = require('@src/models');
-const { verifyPaymentSignature } = require('@src/utils/payment/razorpay.verify');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
-const { activateSubscriptionAfterPayment } = require('@src/services/payment/activateSubscription.service');
-const logger = require('@src/utils/logger');
+const { notifyPaymentSettled } = require('./hooks');
+const { getActiveGateway } = require('@src/lib/payment/gateway.factory');
+const { GatewayError } = require('@src/lib/payment/errors');
+const { PaymentStatus } = require('@src/lib/payment/events');
+const { amountsMatch } = require('@src/lib/payment/money');
+const { findPaymentByReference } = require('./lookup');
+
+const SUCCESS_FROM = ['PENDING', 'PROCESSING', 'CANCELLED', 'FAILED'];
 
 async function verifyPayment(paymentData) {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, ipAddress, userAgent } = paymentData;
-
-    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-        throw new Error('Missing required payment verification data');
-    }
-
-    const isValidSignature = verifyPaymentSignature(
-        razorpayOrderId,
-        razorpayPaymentId,
-        razorpaySignature
-    );
-
-    if (!isValidSignature) {
-        await logPaymentEvent('PAYMENT_VERIFICATION_FAILED', {
-            orderId: razorpayOrderId,
-            paymentId: razorpayPaymentId,
-            reason: 'Invalid signature',
-            ipAddress,
-            userAgent
-        });
-        throw new Error('Invalid payment signature');
-    }
-
-    const payment = await PaymentModel.findOne({
-        razorpayOrderId
+    const gateway = getActiveGateway();
+    const payment = await findPaymentByReference({
+        gatewayOrderId: paymentData.gatewayOrderId || paymentData.orderId,
+        merchantOrderId: paymentData.orderId
     });
 
     if (!payment) {
         throw new Error('Payment order not found');
     }
 
-    // Handle Idempotency / Race Condition
-    if (payment.status === 'SUCCESS') {
-        let saveNeeded = false;
-        if (!payment.razorpayPaymentId && razorpayPaymentId) {
-            payment.razorpayPaymentId = razorpayPaymentId;
-            saveNeeded = true;
+    let result;
+    try {
+        result = await gateway.verifyPayment({
+            ...paymentData,
+            gatewayOrderId: paymentData.gatewayOrderId || payment.gatewayOrderId,
+            orderId: paymentData.orderId || payment.orderId,
+            expectedAmount: payment.finalAmount,
+            email: paymentData.email || payment.metadata?.email,
+            phone: paymentData.phone || payment.metadata?.phone
+        });
+    } catch (error) {
+        if (error.code === 'INVALID_SIGNATURE') {
+            await logPaymentEvent('PAYMENT_VERIFICATION_FAILED', {
+                orderId: payment.orderId,
+                paymentId: payment._id,
+                reason: 'Invalid signature',
+                gateway: gateway.schemaId,
+                ipAddress: paymentData.ipAddress,
+                userAgent: paymentData.userAgent
+            });
         }
-        if (!payment.razorpaySignature && razorpaySignature) {
-            payment.razorpaySignature = razorpaySignature;
-            saveNeeded = true;
+        throw error;
+    }
+
+    if (result.amount != null && !amountsMatch(payment.finalAmount, result.amount)) {
+        throw new GatewayError('Paid amount does not match the order', { code: 'AMOUNT_MISMATCH', statusCode: 400 });
+    }
+
+    if (result.status !== PaymentStatus.SUCCESS) {
+        if (payment.status === PaymentStatus.SUCCESS) {
+            await notifyPaymentSettled(payment);
+            return payment;
         }
-        if (saveNeeded) {
-            await payment.save();
-        }
-        await activateSubscriptionAfterPayment(payment);
+        throw new GatewayError('Payment is not completed', { code: 'PAYMENT_PENDING', statusCode: 400 });
+    }
+
+    return settleSuccess(payment, result, paymentData);
+}
+
+async function settleSuccess(payment, result, context = {}) {
+    if (payment.status === PaymentStatus.SUCCESS) {
+        await notifyPaymentSettled(payment);
         return payment;
     }
 
-    if (payment.status !== 'PENDING') {
-        throw new Error(`Payment already processed with status: ${payment.status}`);
+    if (payment.status === PaymentStatus.REFUNDED || payment.status === PaymentStatus.PARTIALLY_REFUNDED) {
+        return payment;
     }
 
-    const paymentStatus = 'SUCCESS';
-
-    const updatedPayment = await PaymentModel.findOneAndUpdate(
-        {
-            _id: payment._id,
-            status: 'PENDING'
-        },
+    const updated = await PaymentModel.findOneAndUpdate(
+        { _id: payment._id, status: { $in: SUCCESS_FROM } },
         {
             $set: {
-                razorpayPaymentId,
-                razorpaySignature,
-                status: paymentStatus,
-                paidAt: new Date()
+                status: PaymentStatus.SUCCESS,
+                paidAt: result.paidAt || new Date(),
+                paymentMethod: result.paymentMethod || payment.paymentMethod,
+                gatewayPaymentId: result.gatewayPaymentId || payment.gatewayPaymentId,
+                ...(result.persistence || {})
             }
         },
         { new: true }
     );
 
-    // If null, webhook already updated it
-    const finalPaymentDoc = updatedPayment || payment;
-
-    await logPaymentEvent(paymentStatus === 'SUCCESS' ? 'PAYMENT_SUCCESS' : 'PAYMENT_FAILED', {
-        paymentId: payment._id,
-        orderId: razorpayOrderId,
-        userId: payment.userId,
-        amount: payment.finalAmount,
-        status: paymentStatus,
-        ipAddress,
-        userAgent
+    const finalPayment = updated || await PaymentModel.findById(payment._id);
+    await logPaymentEvent('PAYMENT_SUCCESS', {
+        paymentId: finalPayment._id,
+        orderId: finalPayment.orderId,
+        userId: finalPayment.userId,
+        amount: finalPayment.finalAmount,
+        status: finalPayment.status,
+        gateway: finalPayment.gateway,
+        ipAddress: context.ipAddress,
+        userAgent: context.userAgent
     });
 
-    if (finalPaymentDoc.status === 'SUCCESS') {
-        await activateSubscriptionAfterPayment(finalPaymentDoc);
+    if (finalPayment.status === PaymentStatus.SUCCESS) {
+        await notifyPaymentSettled(finalPayment);
     }
-
-    return finalPaymentDoc;
+    return finalPayment;
 }
 
-module.exports = {
-    verifyPayment
-};
+module.exports = { verifyPayment, settleSuccess };

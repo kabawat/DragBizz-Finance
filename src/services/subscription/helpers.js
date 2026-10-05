@@ -3,8 +3,6 @@ const { FEATURE_DISPLAY_NAMES } = require('@src/constants/features');
 const ACTIVE_STATUSES = ['ACTIVE', 'TRIAL'];
 const PACKAGE_POPULATE_FIELDS = 'name description planType';
 const PAYMENT_POPULATE_FIELDS_BASIC = 'amount currency status';
-const PAYMENT_POPULATE_FIELDS_FULL = 'amount currency status notes metadata razorpayResponse';
-const PAYMENT_POPULATE_FIELDS_WITH_ORDER = 'amount currency status razorpayOrderId';
 
 function getCacheKey(userId) {
     return `sub:active:${userId}`;
@@ -132,8 +130,6 @@ function calculateProratedCredit(subscription, months) {
 
 module.exports = {
     ACTIVE_STATUSES,
-    PAYMENT_POPULATE_FIELDS_FULL,
-    PAYMENT_POPULATE_FIELDS_WITH_ORDER,
     getCacheKey,
     populateSubscription,
     getActiveSubscriptionQuery,

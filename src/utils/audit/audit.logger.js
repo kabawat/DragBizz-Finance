@@ -13,7 +13,7 @@ async function logPaymentEvent(eventType, data) {
                 orderId: data.orderId,
                 amount: data.amount,
                 status: data.status,
-                gateway: data.gateway || 'RAZORPAY'
+                gateway: data.gateway || null
             },
             ipAddress: data.ipAddress ? String(data.ipAddress).substring(0, 45) : undefined,
             userAgent: data.userAgent ? String(data.userAgent).substring(0, 300) : undefined,

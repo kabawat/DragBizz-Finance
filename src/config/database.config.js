@@ -24,11 +24,57 @@ const connectDB = async () => {
 
     await mongoose.connect(SECRET.mongo.uri, options);
     logger.info("MongoDB connected successfully (subscription)");
+    await ensurePaymentGatewayIndexes();
   } catch (err) {
     logger.error("MongoDB connection error (subscription)", { error: err?.message, stack: err?.stack });
     process.exit(1);
   }
 };
+
+async function ensurePaymentGatewayIndexes() {
+  const collection = mongoose.connection.collection("payments");
+  let indexes = [];
+  try {
+    indexes = await collection.indexes();
+  } catch (err) {
+    if (err?.codeName !== "NamespaceNotFound" && err?.code !== 26) {
+      throw err;
+    }
+  }
+
+  const legacyRazorpayIndex = indexes.find((idx) =>
+    idx.name === "razorpayOrderId_1" && idx.unique && !idx.partialFilterExpression
+  );
+  if (legacyRazorpayIndex) {
+    await collection.dropIndex("razorpayOrderId_1");
+    logger.info("Replaced razorpayOrderId unique index with a partial index for multi-gateway payments");
+  }
+
+  await collection.createIndex(
+    { gatewayOrderId: 1 },
+    {
+      name: "gatewayOrderId_partial_unique",
+      unique: true,
+      partialFilterExpression: { gatewayOrderId: { $type: "string" } },
+    }
+  );
+  await collection.createIndex(
+    { razorpayOrderId: 1 },
+    {
+      name: "razorpayOrderId_partial_unique",
+      unique: true,
+      partialFilterExpression: { razorpayOrderId: { $type: "string" } },
+    }
+  );
+  await collection.createIndex(
+    { cashfreeOrderId: 1 },
+    {
+      name: "cashfreeOrderId_partial_unique",
+      unique: true,
+      partialFilterExpression: { cashfreeOrderId: { $type: "string" } },
+    }
+  );
+}
 
 module.exports = { connectDB };
 

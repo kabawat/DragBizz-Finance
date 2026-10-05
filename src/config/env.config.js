@@ -3,6 +3,20 @@ const logger = require("@src/utils/logger");
 
 const ENVIRONMENT = process.env.ENVIRONMENT || "development";
 
+function normalizeCashfreeEnv(value) {
+  return normalizeProviderEnv(value);
+}
+
+function normalizeProviderEnv(value) {
+  const env = String(value || 'sandbox').trim().toLowerCase();
+  if (env === 'production' || env === 'live' || env === 'prod') return 'production';
+  return 'sandbox';
+}
+
+function normalizeGatewayName(value) {
+  return String(value || 'razorpay').trim().toLowerCase();
+}
+
 const corsOriginEnv = (process.env.CORS_ORIGIN || "").trim();
 const allowedOriginsEnv = (process.env.ALLOWED_ORIGINS || "").trim();
 const corsAllowAll = corsOriginEnv === "*" || allowedOriginsEnv === "*";
@@ -44,17 +58,42 @@ const SECRET = {
     algorithm: process.env.ALGORITHM || "RS256",
     audience: process.env.AUDIENCE || "DRAGBIZZ",
   },
+  payment: {
+    gateway: normalizeGatewayName(process.env.PAYMENT_GATEWAY || 'razorpay')
+  },
   razorpay: {
     keyId: process.env.RAZORPAY_KEY_ID?.trim?.() || process.env.RAZORPAY_KEY_ID,
     keySecret: process.env.RAZORPAY_KEY_SECRET?.trim?.() || process.env.RAZORPAY_KEY_SECRET,
-    // Webhook secret ≠ RAZORPAY_KEY_SECRET — copy from Dashboard → Webhooks → [your URL] → Secret
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET?.trim?.() || process.env.RAZORPAY_WEBHOOK_SECRET,
     mode: process.env.RAZORPAY_MODE || 'test'
   },
-  provider: {
-    stripeSecret: process.env.STRIPE_SECRET,
-    cashfreeAppId: process.env.CF_APP_ID,
-    cashfreeSecret: process.env.CF_SECRET_KEY,
+  stripe: {
+    secretKey: (process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET || '').trim(),
+    publishableKey: (process.env.STRIPE_PUBLISHABLE_KEY || '').trim(),
+    webhookSecret: (process.env.STRIPE_WEBHOOK_SECRET || '').trim()
+  },
+  payu: {
+    key: (process.env.PAYU_KEY || '').trim(),
+    salt: (process.env.PAYU_SALT || '').trim(),
+    environment: normalizeProviderEnv(process.env.PAYU_ENV),
+    successUrl: (process.env.PAYU_SUCCESS_URL || '').trim(),
+    failureUrl: (process.env.PAYU_FAILURE_URL || '').trim()
+  },
+  easebuzz: {
+    key: (process.env.EASEBUZZ_KEY || '').trim(),
+    salt: (process.env.EASEBUZZ_SALT || '').trim(),
+    environment: normalizeProviderEnv(process.env.EASEBUZZ_ENV),
+    successUrl: (process.env.EASEBUZZ_SUCCESS_URL || '').trim(),
+    failureUrl: (process.env.EASEBUZZ_FAILURE_URL || '').trim()
+  },
+  cashfree: {
+    clientId: (process.env.CASHFREE_CLIENT_ID || process.env.CF_APP_ID || '').trim(),
+    clientSecret: (process.env.CASHFREE_CLIENT_SECRET || process.env.CF_SECRET_KEY || '').trim(),
+    // sandbox | production. "test" and "live" are accepted aliases.
+    environment: normalizeCashfreeEnv(process.env.CASHFREE_ENV || process.env.CF_ENV),
+    apiVersion: (process.env.CASHFREE_API_VERSION || '2026-01-01').trim(),
+    returnUrl: (process.env.CASHFREE_RETURN_URL || '').trim(),
+    notifyUrl: (process.env.CASHFREE_NOTIFY_URL || '').trim(),
   },
   grpc: {
     port: process.env.GRPC_PORT || 50052,
@@ -81,11 +120,34 @@ if (!SECRET.redis.host) {
   process.exit(1);
 }
 
-if (SECRET.razorpay.mode === 'live') {
+const activeGateway = SECRET.payment.gateway;
+if (activeGateway === 'razorpay' && SECRET.razorpay.mode === 'live') {
   if (!SECRET.razorpay.keyId || !SECRET.razorpay.keySecret) {
     logger.error("Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be set for live mode. Refusing to start.");
     process.exit(1);
   }
+}
+
+if (activeGateway === 'cashfree' && SECRET.cashfree.environment === 'production') {
+  if (!SECRET.cashfree.clientId || !SECRET.cashfree.clientSecret) {
+    logger.error("Cashfree credentials (CASHFREE_CLIENT_ID, CASHFREE_CLIENT_SECRET) must be set when CASHFREE_ENV=production. Refusing to start.");
+    process.exit(1);
+  }
+}
+
+if (activeGateway === 'stripe' && ENVIRONMENT === 'production' && !SECRET.stripe.secretKey) {
+  logger.error("STRIPE_SECRET_KEY must be set when PAYMENT_GATEWAY=stripe in production. Refusing to start.");
+  process.exit(1);
+}
+
+if (activeGateway === 'payu' && SECRET.payu.environment === 'production' && (!SECRET.payu.key || !SECRET.payu.salt)) {
+  logger.error("PAYU_KEY and PAYU_SALT must be set when PAYMENT_GATEWAY=payu in production. Refusing to start.");
+  process.exit(1);
+}
+
+if (activeGateway === 'easebuzz' && SECRET.easebuzz.environment === 'production' && (!SECRET.easebuzz.key || !SECRET.easebuzz.salt)) {
+  logger.error("EASEBUZZ_KEY and EASEBUZZ_SALT must be set when PAYMENT_GATEWAY=easebuzz in production. Refusing to start.");
+  process.exit(1);
 }
 
 if (!SECRET.jwt.issuer) {

@@ -5,7 +5,6 @@ const { paymentCreateRateLimiter, paymentVerifyRateLimiter } = require('@src/mid
 const paymentSecurityMiddleware = require('@src/middlewares/payment.security.middleware');
 const ownerMiddleware = require('@src/middlewares/owner.middleware');
 
-// Protect both creating the intent and actual verification step
 router.post('/create-order', paymentCreateRateLimiter, paymentSecurityMiddleware, ownerMiddleware, createOrderController);
 router.post('/verify', paymentVerifyRateLimiter, paymentSecurityMiddleware, ownerMiddleware, verifyPaymentController);
 

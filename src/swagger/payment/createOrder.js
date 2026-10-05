@@ -4,7 +4,7 @@
  *   post:
  *     summary: Create a payment order
  *     description: |
- *       Create a new payment order for purchasing a package. This endpoint creates a Razorpay order and returns the order details.
+ *       Create a payment order using the gateway configured by `PAYMENT_GATEWAY`. Checkout fields in the response come from that provider.
  *       
  *       **Features:**
  *       - ✅ Creates Razorpay order
@@ -56,6 +56,18 @@
  *                 type: string
  *                 example: "SAVE10"
  *                 description: Coupon code for discount (optional)
+ *               gateway:
+ *                 type: string
+ *                 enum: [RAZORPAY, CASHFREE]
+ *                 example: "CASHFREE"
+ *                 description: Optional. Must match the server PAYMENT_GATEWAY value. The server selects the provider.
+ *               phone:
+ *                 type: string
+ *                 example: "9876543210"
+ *                 description: Customer phone. Required when gateway is CASHFREE.
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
  *               idempotencyKey:
  *                 type: string
  *                 example: "unique-key-12345"

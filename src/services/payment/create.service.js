@@ -1,133 +1,106 @@
-const getRazorpayInstance = require('@src/lib/payment/razorpay.instance');
-const { PaymentModel, PackageModel } = require('@src/models');
+const mongoose = require('mongoose');
+const { nanoid } = require('nanoid');
+const { PaymentModel } = require('@src/models');
 const { generateIdempotencyKey, checkIdempotency } = require('@src/utils/security/idempotency');
 const { validateAmount } = require('@src/utils/security/amount.validation');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
-const { nanoid } = require('nanoid');
 const logger = require('@src/utils/logger');
-const mongoose = require('mongoose');
+const { getActiveGateway } = require('@src/lib/payment/gateway.factory');
+const { presentOrder } = require('./present.service');
 
-
-const { getBillingCycleFromMonths, calculateFinalPricing, buildOrderResponse } = require('./helpers');
-
-async function createOrder(orderData) {
-    const { userId, agencyId = null, packageId, months, couponCode, email, phone, idempotencyKey, ipAddress, userAgent } = orderData;
-
-    const packageDoc = await PackageModel.findOne({
-        _id: packageId,
-        status: 'ACTIVE',
-        isVisible: true,
-        deletedAt: null
-    }).select('name pricing').lean();
-
-    if (!packageDoc) {
-        throw new Error('Package not found or not available');
-    }
-
-    const monthsNum = parseInt(months, 10);
-
-    const pricingOption = packageDoc.pricing?.find(p => p.months === monthsNum);
-
-    if (!pricingOption) {
-        throw new Error(`Pricing not available for ${monthsNum} month(s)`);
-    }
-
-    const { baseAmount, discountAmount, taxAmount, finalAmount } = await calculateFinalPricing(pricingOption, couponCode);
-
-    const amountValidation = validateAmount(finalAmount);
+async function createPaymentOrder({
+    userId,
+    amount,
+    currency = 'INR',
+    description,
+    customer = {},
+    context = {},
+    idempotencyKey,
+    ipAddress,
+    userAgent
+}) {
+    const gateway = getActiveGateway();
+    const amountValidation = validateAmount(amount);
     if (!amountValidation.isValid) {
         throw new Error(`Invalid final amount: ${amountValidation.error}`);
     }
-
-    const billingCycle = getBillingCycleFromMonths(monthsNum);
-    const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, packageId, finalAmount);
-
-    const idempotencyCheck = await checkIdempotency(finalIdempotencyKey, userId);
-
-    if (idempotencyCheck.isDuplicate) {
-        return buildOrderResponse(idempotencyCheck.payment);
-    }
-
-
-    const amountInPaise = Math.round(finalAmount * 100);
-    if (amountInPaise < 100) {
+    if (Math.round(Number(amount) * 100) < 100) {
         throw new Error('Minimum amount is ₹1.00');
     }
 
+    const reference = context.packageId || context.referenceId || description || 'payment';
+    const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, reference, amount);
+    const idempotencyCheck = await checkIdempotency(finalIdempotencyKey, userId);
+    if (idempotencyCheck.isDuplicate) {
+        return presentOrder(idempotencyCheck.payment);
+    }
+
     const orderId = `order_${nanoid(16)}`;
-
-    let razorpayOrder;
-    try {
-        razorpayOrder = await getRazorpayInstance().orders.create({
-            amount: amountInPaise,
-            currency: 'INR', // Default INR
-            receipt: orderId,
-            notes: {
-                userId,
-                packageId: packageId.toString(),
-                months: monthsNum,
-                billingCycle,
-                packageName: packageDoc.name ? packageDoc.name.substring(0, 250) : '',
-                ...(email && { email }),
-                ...(phone && { phone })
-            }
-        });
-    } catch (razorpayError) {
-        logger.error('Razorpay order creation failed', { error: razorpayError?.message, stack: razorpayError?.stack });
-        throw new Error(`Failed to create Razorpay order: ${razorpayError.message || 'Unknown error'}`);
-    }
-
-    if (!razorpayOrder || !razorpayOrder.id) {
-        throw new Error('Invalid response from Razorpay: Order ID not found');
-    }
-
-    const paymentData = {
+    const created = await gateway.createOrder({
+        orderId,
+        amount,
+        currency,
         userId,
-        agencyId: agencyId || null,
-        packageId: packageId,
+        email: customer.email,
+        phone: customer.phone,
+        customerName: customer.name,
+        packageId: context.packageId,
+        packageName: description,
+        months: context.months,
+        billingCycle: context.billingCycle
+    });
+
+    const persistence = { ...(created.persistence || {}) };
+    const metadataPatch = persistence.metadataPatch;
+    delete persistence.metadataPatch;
+
+    const payment = new PaymentModel({
+        userId,
+        agencyId: context.agencyId || null,
+        ...(context.packageId && { packageId: context.packageId }),
         paymentId: new mongoose.Types.ObjectId(),
         orderId,
-        razorpayOrderId: razorpayOrder.id,
-        amount: finalAmount,
-        currency: 'INR',
-        baseAmount,
-        discountAmount,
-        taxAmount: 0,
-        finalAmount,
-        billingCycle,
-        months: monthsNum,
+        gatewayOrderId: created.gatewayOrderId,
+        amount,
+        currency,
+        baseAmount: context.baseAmount != null ? context.baseAmount : amount,
+        discountAmount: context.discountAmount || 0,
+        taxAmount: context.taxAmount || 0,
+        finalAmount: amount,
+        ...(context.billingCycle && { billingCycle: context.billingCycle }),
+        ...(context.months && { months: context.months }),
         status: 'PENDING',
-        gateway: 'RAZORPAY',
-        couponCode: couponCode || null,
-        discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
-        gstPercentage: 0,
-        razorpayResponse: razorpayOrder,
+        gateway: gateway.schemaId,
+        couponCode: context.couponCode || null,
+        discountPercentage: context.discountPercentage || 0,
+        gstPercentage: context.gstPercentage || 0,
+        checkout: created.checkout,
+        gatewayResponse: created.raw,
         expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+        ...persistence,
         metadata: {
             idempotencyKey: finalIdempotencyKey,
             ipAddress,
             userAgent,
-            ...(email && { email }),
-            ...(phone && { phone })
+            description: description || null,
+            ...(customer.email && { email: customer.email }),
+            ...(customer.phone && { phone: customer.phone }),
+            ...(metadataPatch || {}),
+            ...(context.metadata || {})
         }
-    };
+    });
 
-    const payment = new PaymentModel(paymentData);
     let savedPayment;
-
     try {
         savedPayment = await payment.save();
     } catch (err) {
         if (err.code === 11000) {
             const existing = await PaymentModel.findOne({ 'metadata.idempotencyKey': finalIdempotencyKey, userId });
-            if (existing) {
-                return buildOrderResponse(existing);
-            }
+            if (existing) return presentOrder(existing);
         }
         throw err;
     }
 
-    // Log event async
     setImmediate(() => {
         logPaymentEvent('PAYMENT_ORDER_CREATED', {
             paymentId: savedPayment._id,
@@ -135,16 +108,15 @@ async function createOrder(orderData) {
             userId,
             amount: savedPayment.finalAmount,
             status: savedPayment.status,
+            gateway: gateway.schemaId,
             ipAddress,
             userAgent
-        }).catch(error => {
+        }).catch((error) => {
             logger.error('Background log event failed', { error: error?.message, stack: error?.stack });
         });
     });
 
-    return buildOrderResponse(savedPayment);
+    return presentOrder(savedPayment);
 }
 
-module.exports = {
-    createOrder
-};
+module.exports = { createPaymentOrder };

@@ -4,16 +4,22 @@ function sanitizeCreateOrderData(data) {
         months: data.months ? parseInt(data.months) : null,
         couponCode: data.couponCode?.trim() || null,
         email: data.email?.trim() || null,
-        phone: data.phone?.trim() || null
+        phone: data.phone?.trim() || null,
+        customerName: data.customerName?.trim() || data.name?.trim() || null,
+        gateway: typeof data.gateway === 'string' ? data.gateway.trim() : null
     };
 }
 
-// Sanitize verify payment data
 function sanitizeVerifyPaymentData(data) {
     return {
-        razorpayOrderId: data.razorpayOrderId?.trim(),
-        razorpayPaymentId: data.razorpayPaymentId?.trim(),
-        razorpaySignature: data.razorpaySignature?.trim()
+        orderId: data.orderId?.trim() || data.txnid?.trim() || null,
+        gatewayOrderId: data.gatewayOrderId?.trim() || data.razorpayOrderId?.trim() || data.cashfreeOrderId?.trim() || null,
+        gatewayPaymentId: data.gatewayPaymentId?.trim() || data.razorpayPaymentId?.trim() || data.mihpayid?.trim() || null,
+        signature: data.signature?.trim() || data.razorpaySignature?.trim() || null,
+        hash: data.hash?.trim() || null,
+        email: data.email?.trim() || null,
+        phone: data.phone?.trim() || null,
+        raw: data
     };
 }
 
@@ -21,4 +27,3 @@ module.exports = {
     sanitizeCreateOrderData,
     sanitizeVerifyPaymentData
 };
-
