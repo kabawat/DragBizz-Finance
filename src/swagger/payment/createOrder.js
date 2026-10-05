@@ -105,6 +105,13 @@
  *                       type: string
  *                       example: "order_abc123xyz456"
  *                       description: Internal order ID
+ *                     gateway:
+ *                       type: string
+ *                       example: "RAZORPAY"
+ *                       description: Which checkout the frontend must open. One of RAZORPAY, CASHFREE, STRIPE, PAYU, EASEBUZZ.
+ *                     checkout:
+ *                       type: object
+ *                       description: Gateway payload for that checkout, including the same gateway value.
  *                     razorpayOrderId:
  *                       type: string
  *                       example: "order_MNOPQR123456"
@@ -128,6 +135,7 @@
  *                   message: "Payment order created successfully"
  *                   data:
  *                     orderId: "order_abc123xyz456"
+ *                     gateway: "RAZORPAY"
  *                     razorpayOrderId: "order_MNOPQR123456"
  *                     amount: 999.00
  *                     currency: "INR"

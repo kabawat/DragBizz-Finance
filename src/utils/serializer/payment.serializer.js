@@ -21,22 +21,29 @@ function serializeOrderResponse(orderData) {
         typeof orderData.requiresPayment === 'boolean'
             ? orderData.requiresPayment
             : (orderData.payment?.finalAmount ?? orderData.amount) > 0;
+    const gateway = orderData.gateway || orderData.payment?.gateway || null;
+    const sourceCheckout = orderData.checkout && typeof orderData.checkout === 'object'
+        ? orderData.checkout
+        : {};
+    const checkout = { ...sourceCheckout, gateway };
 
     return {
         orderId: orderData.orderId,
-        gateway: orderData.gateway || orderData.payment?.gateway || null,
-        gatewayOrderId: orderData.gatewayOrderId || null,
-        checkout: orderData.checkout || null,
-        razorpayOrderId: orderData.razorpayOrderId,
-        paymentSessionId: orderData.paymentSessionId || null,
-        cashfreeOrderId: orderData.cashfreeOrderId || null,
-        cashfreeMode: orderData.cashfreeMode || null,
-        clientSecret: orderData.clientSecret || null,
-        publishableKey: orderData.publishableKey || null,
-        actionUrl: orderData.actionUrl || null,
+        gateway,
+        gatewayOrderId: orderData.gatewayOrderId || sourceCheckout.gatewayOrderId || null,
+        checkout,
+        razorpayOrderId: orderData.razorpayOrderId || sourceCheckout.razorpayOrderId || null,
+        paymentSessionId: orderData.paymentSessionId || sourceCheckout.paymentSessionId || null,
+        cashfreeOrderId: orderData.cashfreeOrderId || sourceCheckout.cashfreeOrderId || null,
+        cashfreeMode: orderData.cashfreeMode || sourceCheckout.cashfreeMode || null,
+        clientSecret: orderData.clientSecret || sourceCheckout.clientSecret || null,
+        publishableKey: orderData.publishableKey || sourceCheckout.publishableKey || null,
+        actionUrl: orderData.actionUrl || sourceCheckout.actionUrl || null,
+        fields: orderData.fields || sourceCheckout.fields || null,
+        accessKey: orderData.accessKey || sourceCheckout.accessKey || null,
         amount: orderData.amount,
         currency: orderData.currency,
-        keyId: orderData.keyId || null,
+        keyId: orderData.keyId || sourceCheckout.keyId || null,
         status: paymentStatus,
         expiresAt: orderData.payment?.expiresAt,
         requiresPayment
