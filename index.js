@@ -9,43 +9,65 @@ const { connectDB } = require('@config/database.config');
 const { connectRedis, disconnectRedis } = require('@config/redis.config');
 const SECRET = require('@config/env.config');
 const logger = require('@src/utils/logger');
+const retailerGrpcClient = require('@src/lib/grpc/clients/retailer/retailer.client');
 
-async function startServer() {
-  server?.listen(SECRET.server.port, async () => {
-    try {
-      await connectDB();
-      logger.info('Database connected');
-      await connectRedis();
-      logger.info('Redis connected');
-      
-      const grpcServer = require('@src/lib/grpc/server');
-      grpcServer.initialize();
-    } catch (err) {
-      logger.error('Connection error', { error: err.message, stack: err.stack });
-      process.exit(1);
-    }
-    logger.info(`Subscription service running at http://localhost:${SECRET.server.port}/health`);
-  });
+function logBootstrap({ httpHost, httpPort, grpcHost, grpcPort, connected }) {
+  console.log(`HTTP server running (${httpHost}:${httpPort})`);
+  console.log(`gRPC server running (${grpcHost}:${grpcPort})`);
+  console.log(`Connected services: ${connected.length ? connected.join(', ') : 'none'}`);
 }
 
-const gracefulShutdown = async (signal) => {
-  logger.info(`${signal} received. Starting graceful shutdown...`);
-  
+async function startServer() {
+  try {
+    await connectDB();
+    await connectRedis();
+
+    const connected = [];
+    try {
+      retailerGrpcClient.initialize();
+      await retailerGrpcClient.waitForReady(SECRET.ENVIRONMENT === 'production' ? 10 : 5);
+      connected.push(`core (${retailerGrpcClient.getAddress()})`);
+    } catch (_error) {
+      if (SECRET.ENVIRONMENT === 'production') {
+        throw _error;
+      }
+    }
+
+    const grpcServer = require('@src/lib/grpc/server');
+    const grpcInfo = await grpcServer.initialize();
+
+    const httpHost = '0.0.0.0';
+    const httpPort = SECRET.server.port;
+
+    await new Promise((resolve) => {
+      server?.listen(httpPort, () => resolve());
+    });
+
+    logBootstrap({
+      httpHost,
+      httpPort,
+      grpcHost: grpcInfo.host,
+      grpcPort: grpcInfo.port,
+      connected,
+    });
+  } catch (err) {
+    logger.error('Connection error', { error: err.message, stack: err.stack });
+    process.exit(1);
+  }
+}
+
+const gracefulShutdown = async () => {
   try {
     const grpcServer = require('@src/lib/grpc/server');
     await grpcServer.shutdown();
     await disconnectRedis();
-    logger.info('Redis disconnected');
     await mongoose.connection.close();
-    logger.info('Database disconnected');
-    
+
     server?.close(() => {
-      logger.info('Server closed');
       process.exit(0);
     });
-    
+
     setTimeout(() => {
-      logger.warn('Forcing shutdown after timeout');
       process.exit(1);
     }, 10000);
   } catch (error) {
@@ -54,21 +76,20 @@ const gracefulShutdown = async (signal) => {
   }
 };
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown());
+process.on('SIGTERM', () => gracefulShutdown());
 
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
-  gracefulShutdown('uncaughtException');
+  gracefulShutdown();
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection', { reason, promise });
-  gracefulShutdown('unhandledRejection');
+  gracefulShutdown();
 });
 
 startServer().catch((e) => {
   logger.error('Error starting subscription service', { error: e.message, stack: e.stack });
   process.exit(1);
 });
-

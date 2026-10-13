@@ -6,6 +6,7 @@ const SECRET = require("@src/config/env.config");
 class RetailerGrpcClient {
     constructor() {
         this.client = null;
+        this.serverAddress = null;
     }
 
     initialize() {
@@ -25,14 +26,32 @@ class RetailerGrpcClient {
 
         const grpcHost = SECRET.grpc?.retailerHost || '192.168.1.29';
         const grpcPort = SECRET.grpc?.retailerPort || 8001;
-        const serverAddress = `${grpcHost}:${grpcPort}`;
+        this.serverAddress = `${grpcHost}:${grpcPort}`;
 
         this.client = new retailerProto.SubscriptionService(
-            serverAddress,
+            this.serverAddress,
             grpc.credentials.createInsecure()
         );
 
         return this.client;
+    }
+
+    waitForReady(deadlineSeconds = 10) {
+        const client = this.getClient();
+        return new Promise((resolve, reject) => {
+            const deadline = new Date();
+            deadline.setSeconds(deadline.getSeconds() + deadlineSeconds);
+            client.waitForReady(deadline, (err) => {
+                if (err) {
+                    return reject(
+                        new Error(
+                            `[Core gRPC] Channel not READY within ${deadlineSeconds}s — ${err.message}`
+                        )
+                    );
+                }
+                resolve();
+            });
+        });
     }
 
     getClient() {
@@ -40,6 +59,10 @@ class RetailerGrpcClient {
             this.initialize();
         }
         return this.client;
+    }
+
+    getAddress() {
+        return this.serverAddress;
     }
 
     promisifyCall(method, request) {

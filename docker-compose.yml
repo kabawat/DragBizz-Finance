@@ -8,12 +8,9 @@ services:
     restart: unless-stopped
     ports:
       - "${HOST_HTTP_PORT:-8002}:${PORT:-3000}"   # REST
-      - "${HOST_GRPC_PORT:-5002}:${GRPC_PORT:-50052}"  # gRPC
+      - "${HOST_GRPC_PORT:-5002}:50052"  # gRPC
     env_file:
       - .env
-    environment:
-      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
-      - GRPC_PORT=${GRPC_PORT:-50052}
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "dragbizz.local:host-gateway"

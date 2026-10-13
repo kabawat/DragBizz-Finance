@@ -1,93 +1,113 @@
+const { PACKAGE_MODULES } = require('./enum/package.enum');
+
+// Feature keys — must match PACKAGE_MODULES / Core FEATURES
 const FEATURES = {
-    // Store Management
-    STORE_MANAGEMENT: 'store_management',
-
-    // Product & Inventory Management
-    PRODUCT_MANAGEMENT: 'product_management',
-    INVENTORY_MANAGEMENT: 'inventory_management',
-    STOCK_MANAGEMENT: 'stock_management',
-
-    // Sales & Billing
-    INVOICE_MANAGEMENT: 'invoice_management',
-    CUSTOMER_MANAGEMENT: 'customer_management',
-
-    // Financial Management
-    EXPENSE_MANAGEMENT: 'expense_management',
-
-    // Purchase & Procurement
-    PURCHASE_MANAGEMENT: 'purchase_management',
-    SUPPLIER_MANAGEMENT: 'supplier_management',
-    BILL_MANAGEMENT: 'bill_management',
-    PAYMENT_MANAGEMENT: 'payment_management',
-
-    // AI Features
     AI: 'ai',
-    VOICE_AI: 'VOICE_AI',
-
-    // E-commerce & Online Presence
-    ONLINE_STORE: 'online_store',
-
-    // Payment Integrations
+    BILLING: 'billing',
+    CASHBOOK: 'cashbook',
+    CUSTOMER: 'customer',
     CUSTOMER_PAYMENT_GATEWAY: 'customer_payment_gateway',
+    EXPENSE: 'expense',
     INTEGRATIONS: 'integrations',
-
-    // Compliance & Tax
-    GST_ANALYSIS: 'gst_analysis',
+    INVENTORY: 'inventory',
+    INVOICE: 'invoice',
+    ONLINE_STORE: 'online_store',
+    PAYMENT_REMINDER: 'payment_reminder',
+    PRODUCT: 'product',
+    PURCHASE_ORDER: 'purchase_order',
+    REPORTS: 'reports',
+    SALES_ORDER: 'sales_order',
+    STAFF: 'staff',
+    STORE: 'store',
+    SUPPLIER: 'supplier',
 };
 
-// Feature display names (for UI)
+// Feature display names (for UI / package serialization)
 const FEATURE_DISPLAY_NAMES = {
-    store_management: 'Store Management',
-    product_management: 'Product Management',
-    inventory_management: 'Inventory Management',
-    stock_management: 'Stock Management',
-    invoice_management: 'Invoice Management',
-    customer_management: 'Customer Management',
-    expense_management: 'Expense Management',
-    purchase_management: 'Purchase Management',
-    supplier_management: 'Supplier Management',
-    bill_management: 'Bill Management',
-    payment_management: 'Payment Management',
     ai: 'AI Suite',
-    VOICE_AI: 'Voice AI',
-    online_store: 'Online Store',
+    billing: 'Billing',
+    cashbook: 'Cashbook',
+    customer: 'Customer Tracking',
     customer_payment_gateway: 'Customer Payment Gateway',
+    expense: 'Expense Tracking',
     integrations: 'Integrations',
-    gst_analysis: 'GST Analysis',
+    inventory: 'Inventory Management',
+    invoice: 'Invoicing',
+    online_store: 'Online Store',
+    payment_reminder: 'Payment Reminders',
+    product: 'Product Catalog',
+    purchase_order: 'Purchase Orders',
+    reports: 'Reports & Analytics',
+    sales_order: 'Sales Orders',
+    staff: 'Staff Accounts',
+    store: 'Store Management',
+    supplier: 'Supplier Management',
 };
 
 // Feature to route mapping (for access control)
 const FEATURE_ROUTES = {
-    store_management: ['/store'],
-    product_management: ['/product', '/category', '/price'],
-    inventory_management: ['/stock', '/inventory'],
-    stock_management: ['/stock'],
-    invoice_management: ['/invoices'],
-    customer_management: ['/customer'],
-    expense_management: ['/expense'],
-    purchase_management: ['/purchase-order'],
-    supplier_management: ['/supplier'],
-    bill_management: ['/supplier-account/bills'],
-    payment_management: ['/supplier-account/payments'],
+    store: ['/store'],
+    product: ['/product', '/category', '/price', '/brand', '/variant'],
+    inventory: ['/stock', '/inventory'],
+    invoice: ['/invoices', '/pos'],
+    customer: ['/customer'],
+    expense: ['/expense'],
+    cashbook: ['/cashbook'],
+    purchase_order: ['/purchase-order'],
+    sales_order: ['/sales-order'],
+    supplier: ['/supplier'],
+    billing: ['/supplier-account/bills', '/supplier-account/payments'],
+    payment_reminder: ['/customer-account/reminders'],
+    staff: ['/staff'],
+    reports: ['/reports', '/analytics', '/gst'],
     online_store: ['/online-store', '/ecommerce'],
-    customer_payment_gateway: ['/payment-gateway'],
+    customer_payment_gateway: ['/payment-gateway', '/customer-account/payments/collect-link'],
     integrations: ['/integrations'],
     ai: ['/ai', '/voice'],
-    gst_analysis: ['/gst-reports', '/tax-analysis'],
 };
 
 // Usage types
 const USAGE_TYPES = {
-    DAILY_FIXED: 'DAILY_FIXED',           // Fixed limit per day (resets daily)
-    DAILY_ROLLING: 'DAILY_ROLLING',      // Daily limit with monthly total, unused quota rolls over
-    MONTHLY_TOTAL: 'MONTHLY_TOTAL',      // Total limit per month
-    TOTAL: 'TOTAL',                       // Overall limit for subscription period (does not reset)
-    UNLIMITED: 'UNLIMITED'                // No limit
+    DAILY_FIXED: 'DAILY_FIXED',
+    DAILY_ROLLING: 'DAILY_ROLLING',
+    MONTHLY_TOTAL: 'MONTHLY_TOTAL',
+    TOTAL: 'TOTAL',
+    UNLIMITED: 'UNLIMITED',
 };
+
+/** Capabilities that Premium (largest) packages must include per module */
+const PREMIUM_CAPABILITY_INCLUDES = {
+    invoice: ['pos', 'release', 'draft'],
+    inventory: ['fifo', 'batches', 'stock_events'],
+    reports: ['gst', 'tally', 'sales_summary', 'sales_prediction', 'profit_loss', 'stock_forecast'],
+    ai: ['voice', 'chat', 'assistant'],
+};
+
+function assertPremiumFeaturesComplete(features = []) {
+    const modules = new Set((features || []).map((f) => f.module));
+    const missingModules = PACKAGE_MODULES.filter((m) => !modules.has(m));
+    const missingCapabilities = [];
+
+    for (const [module, required] of Object.entries(PREMIUM_CAPABILITY_INCLUDES)) {
+        const feature = (features || []).find((f) => f.module === module);
+        const includes = Array.isArray(feature?.metadata?.includes)
+            ? feature.metadata.includes
+            : [];
+        for (const cap of required) {
+            if (!includes.includes(cap)) {
+                missingCapabilities.push(`${module}:${cap}`);
+            }
+        }
+    }
+
+    return { missingModules, missingCapabilities, ok: missingModules.length === 0 && missingCapabilities.length === 0 };
+}
 
 module.exports = {
     FEATURES,
     FEATURE_DISPLAY_NAMES,
     FEATURE_ROUTES,
-    USAGE_TYPES
+    USAGE_TYPES,
+    PREMIUM_CAPABILITY_INCLUDES,
+    assertPremiumFeaturesComplete,
 };

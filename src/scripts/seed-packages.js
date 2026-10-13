@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { PackageModel } = require('../models');
 const { connectDB } = require('../config/database.config');
 const logger = require('../utils/logger');
+const { FEATURE_DISPLAY_NAMES, assertPremiumFeaturesComplete } = require('../constants/features');
 
 async function seedPackages() {
     try {
@@ -18,6 +19,18 @@ async function seedPackages() {
         const jsonContent = fs.readFileSync(dataPath, { encoding: 'utf-8' });
         const packages = JSON.parse(jsonContent);
 
+        const premium = packages.find((pkg) => pkg.planType === 'ENTERPRISE' || pkg.name === 'Premium');
+        if (premium) {
+            const check = assertPremiumFeaturesComplete(premium.features);
+            if (!check.ok) {
+                throw new Error(
+                    `Premium package incomplete — missing modules: [${check.missingModules.join(', ')}], ` +
+                    `missing capabilities: [${check.missingCapabilities.join(', ')}]`
+                );
+            }
+            logger.info('Premium package validated: all modules and capabilities present');
+        }
+
         const retiredPackage = await PackageModel.findOneAndUpdate(
             { name: 'Startup Plan' },
             { $set: { status: 'ARCHIVED', isVisible: false } }
@@ -30,6 +43,14 @@ async function seedPackages() {
         let updatedCount = 0;
 
         for (const pkg of packages) {
+            // Ensure moduleName matches canonical display names
+            if (Array.isArray(pkg.features)) {
+                pkg.features = pkg.features.map((feature) => ({
+                    ...feature,
+                    moduleName: FEATURE_DISPLAY_NAMES[feature.module] || feature.moduleName || feature.module,
+                }));
+            }
+
             // Slug is generated from name, but let's derive it manually for finding
             const expectedSlug = pkg.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 

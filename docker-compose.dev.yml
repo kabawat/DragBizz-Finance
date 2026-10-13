@@ -4,12 +4,9 @@ services:
     container_name: dragbizz_subscription
     ports:
       - "${HOST_HTTP_PORT:-8002}:${PORT:-3000}"   # REST: PORT internal → HOST_HTTP_PORT on host
-      - "${HOST_GRPC_PORT:-5002}:${GRPC_PORT:-50052}"  # gRPC: GRPC_PORT internal → HOST_GRPC_PORT on host
+      - "${HOST_GRPC_PORT:-5002}:50052"  # gRPC: 50052 internal → HOST_GRPC_PORT on host
     env_file:
       - .env
-    environment:
-      - GRPC_HOST=${GRPC_HOST:-0.0.0.0}
-      - GRPC_PORT=${GRPC_PORT:-50052}
     command: sh -c "yarn install && yarn dev"
     volumes:
       - .:/app

@@ -96,8 +96,10 @@ const SECRET = {
     notifyUrl: (process.env.CASHFREE_NOTIFY_URL || '').trim(),
   },
   grpc: {
-    port: process.env.GRPC_PORT || 50052,
-    host: process.env.GRPC_HOST || '0.0.0.0',
+    // Own gRPC server bind address (container-internal)
+    host: '0.0.0.0',
+    port: 50052,
+    // Outbound clients
     retailerHost: process.env.RETAILER_GRPC_HOST || '192.168.1.29',
     retailerPort: process.env.RETAILER_GRPC_PORT || 8001
   },
