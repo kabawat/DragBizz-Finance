@@ -18,6 +18,14 @@ async function seedPackages() {
         const jsonContent = fs.readFileSync(dataPath, { encoding: 'utf-8' });
         const packages = JSON.parse(jsonContent);
 
+        const retiredPackage = await PackageModel.findOneAndUpdate(
+            { name: 'Startup Plan' },
+            { $set: { status: 'ARCHIVED', isVisible: false } }
+        );
+        if (retiredPackage) {
+            logger.info('Archived retired package: Startup Plan');
+        }
+
         let insertedCount = 0;
         let updatedCount = 0;
 

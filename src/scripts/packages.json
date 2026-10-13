@@ -1,8 +1,8 @@
 [
     {
         "name": "Khata Free",
-        "description": "Free khata-first plan for kirana stores — udhari, reminders, cashbook, and light invoicing.",
-        "shortDescription": "Free forever — khata, reminders, 30 invoices/day.",
+        "description": "A free khata-first plan for kirana stores, with payment reminders, cashbook and essential invoicing.",
+        "shortDescription": "Free forever — khata, reminders and 30 invoices/day.",
         "planType": "STARTUP",
         "pricing": [
             {
@@ -20,7 +20,7 @@
             "Up to 50 Products",
             "1 Store"
         ],
-        "displayOrder": -1,
+        "displayOrder": 0,
         "status": "ACTIVE",
         "isVisible": true,
         "isPopular": false,
@@ -66,7 +66,9 @@
                 "report": false,
                 "analytics": false,
                 "metadata": {
-                    "includes": ["draft"]
+                    "includes": [
+                        "draft"
+                    ]
                 }
             },
             {
@@ -146,152 +148,6 @@
                 "usageLimit": 0,
                 "report": false,
                 "analytics": false
-            },
-            {
-                "module": "online_store",
-                "moduleName": "Online Store",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "ai",
-                "moduleName": "AI Suite",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            }
-        ]
-    },
-    {
-        "name": "Startup Plan",
-        "description": "Basic entry plan for small retailers to start their digital journey.",
-        "shortDescription": "One-time low cost entry.",
-        "planType": "STARTUP",
-        "pricing": [
-            {
-                "months": 12,
-                "price": 49,
-                "discount": 0,
-                "discountedPrice": 49
-            }
-        ],
-        "highlights": [
-            "1 Store App Access",
-            "Up to 50 Products Catalog",
-            "Single Staff Member (Admin)",
-            "Generate Up to 30 Invoices Daily",
-            "Accept Public Sales Orders",
-            "Essential Inventory Management",
-            "Share Invoices via WhatsApp",
-            "Basic Expense Tracking"
-        ],
-        "displayOrder": 0,
-        "status": "ACTIVE",
-        "isVisible": true,
-        "isPopular": false,
-        "isRecommended": false,
-        "features": [
-            {
-                "module": "store",
-                "moduleName": "Store Management",
-                "usageType": "TOTAL",
-                "usageLimit": 1,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "product",
-                "moduleName": "Product Catalog",
-                "usageType": "TOTAL",
-                "usageLimit": 50,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "billing",
-                "moduleName": "Billing",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "DAILY_FIXED",
-                "usageLimit": 30,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
-                "usageType": "DAILY_FIXED",
-                "usageLimit": 30,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "MONTHLY_TOTAL",
-                "usageLimit": 150,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "inventory",
-                "moduleName": "Inventory Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "purchase_order",
-                "moduleName": "Purchase Orders",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "sales_order",
-                "moduleName": "Sales Orders",
-                "usageType": "DAILY_FIXED",
-                "usageLimit": 30,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "reports",
-                "moduleName": "Reports & Analytics",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": false,
-                "analytics": false,
-                "metadata": {
-                    "includes": []
-                }
             },
             {
                 "module": "online_store",
@@ -313,8 +169,8 @@
     },
     {
         "name": "Basic",
-        "description": "Essential features for single-store retailers getting started with digital operations.",
-        "shortDescription": "Perfect for solo retailers.",
+        "description": "Essential billing, catalog, inventory and order tools for a single-store retailer.",
+        "shortDescription": "Core tools for a single retail store.",
         "planType": "BASIC",
         "pricing": [
             {
@@ -337,14 +193,14 @@
             }
         ],
         "highlights": [
-            "Includes all Startup Plan features",
-            "Handle Up to 1000 Products",
-            "Add up to 3 Staff Members",
+            "1 Store",
+            "Up to 1,000 Products",
+            "Up to 3 Staff Members",
             "Unlimited Billing & Invoicing",
-            "Manage Unlimited Customers & Suppliers",
-            "Track Purchase Orders & Inventory",
-            "Custom Catalog Themes",
-            "Automated Standard Reports"
+            "Inventory and Purchase Order Management",
+            "Unlimited Customers and Suppliers",
+            "Expense Tracking up to 150 per Month",
+            "Up to 30 Sales Orders per Day"
         ],
         "displayOrder": 1,
         "status": "ACTIVE",
@@ -361,18 +217,66 @@
                 "analytics": false
             },
             {
-                "module": "product",
-                "moduleName": "Product Catalog",
-                "usageType": "TOTAL",
-                "usageLimit": 500,
-                "report": true,
+                "module": "customer",
+                "moduleName": "Customer Tracking",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
                 "analytics": false
             },
             {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
+                "module": "cashbook",
+                "moduleName": "Cashbook",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": [
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
                 "usageType": "TOTAL",
-                "usageLimit": 2,
+                "usageLimit": 1000,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "inventory",
+                "moduleName": "Inventory Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": []
+                }
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": false,
                 "analytics": false
             },
@@ -381,47 +285,7 @@
                 "moduleName": "Billing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "inventory",
-                "moduleName": "Inventory Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
+                "report": false,
                 "analytics": false
             },
             {
@@ -429,36 +293,50 @@
                 "moduleName": "Purchase Orders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
-                "report": true,
+                "report": false,
                 "analytics": false
             },
             {
-                "module": "sales_order",
-                "moduleName": "Sales Orders",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
+                "module": "expense",
+                "moduleName": "Expense Tracking",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 150,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "staff",
+                "moduleName": "Staff Accounts",
+                "usageType": "TOTAL",
+                "usageLimit": 3,
+                "report": false,
                 "analytics": false
             },
             {
                 "module": "reports",
                 "moduleName": "Reports & Analytics",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
                 "analytics": false,
                 "metadata": {
-                    "includes": [
-                        "gst"
-                    ]
+                    "includes": []
                 }
+            },
+            {
+                "module": "sales_order",
+                "moduleName": "Sales Orders",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false
             },
             {
                 "module": "online_store",
                 "moduleName": "Online Store",
                 "usageType": "TOTAL",
-                "usageLimit": 1,
-                "report": true,
+                "usageLimit": 0,
+                "report": false,
                 "analytics": false
             },
             {
@@ -473,8 +351,8 @@
     },
     {
         "name": "Standard",
-        "description": "Advanced operational tools for growing retailers with multiple outlets.",
-        "shortDescription": "Ideal for growing businesses.",
+        "description": "Advanced operations, reporting, analytics and AI for growing retailers with multiple stores.",
+        "shortDescription": "More stores, deeper analytics and AI.",
         "planType": "PROFESSIONAL",
         "pricing": [
             {
@@ -497,14 +375,13 @@
             }
         ],
         "highlights": [
-            "Manage up to 2 Branch Stores",
-            "Unlimited Product Uploads",
-            "Manage up to 10 Staff Members",
-            "Basic Voice/Generative AI (100 runs/mo)",
-            "Real-time Analytics Dashboard",
-            "Centralized Supplier & Expense Control",
-            "Role-Based Access Control",
-            "Premium Quality Support"
+            "Up to 2 Stores",
+            "Up to 5,000 Products",
+            "Up to 10 Staff Members",
+            "Unlimited Billing, Invoicing, Inventory and Orders",
+            "Reports and Analytics including GST",
+            "Online Store for up to 2 Stores",
+            "AI Suite up to 100 runs per Month"
         ],
         "displayOrder": 2,
         "status": "ACTIVE",
@@ -517,39 +394,7 @@
                 "moduleName": "Store Management",
                 "usageType": "TOTAL",
                 "usageLimit": 2,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "product",
-                "moduleName": "Product Catalog",
-                "usageType": "TOTAL",
-                "usageLimit": 1000,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "TOTAL",
-                "usageLimit": 5,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "billing",
-                "moduleName": "Billing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
+                "report": false,
                 "analytics": true
             },
             {
@@ -561,6 +406,60 @@
                 "analytics": true
             },
             {
+                "module": "cashbook",
+                "moduleName": "Cashbook",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "pos",
+                        "release",
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "TOTAL",
+                "usageLimit": 5000,
+                "report": true,
+                "analytics": false
+            },
+            {
+                "module": "inventory",
+                "moduleName": "Inventory Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "fifo",
+                        "batches",
+                        "stock_events"
+                    ]
+                }
+            },
+            {
                 "module": "supplier",
                 "moduleName": "Supplier Management",
                 "usageType": "UNLIMITED",
@@ -569,16 +468,8 @@
                 "analytics": false
             },
             {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "inventory",
-                "moduleName": "Inventory Management",
+                "module": "billing",
+                "moduleName": "Billing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -593,11 +484,19 @@
                 "analytics": true
             },
             {
-                "module": "sales_order",
-                "moduleName": "Sales Orders",
+                "module": "expense",
+                "moduleName": "Expense Tracking",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
+                "analytics": false
+            },
+            {
+                "module": "staff",
+                "moduleName": "Staff Accounts",
+                "usageType": "TOTAL",
+                "usageLimit": 10,
+                "report": false,
                 "analytics": true
             },
             {
@@ -615,6 +514,14 @@
                 }
             },
             {
+                "module": "sales_order",
+                "moduleName": "Sales Orders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
                 "module": "online_store",
                 "moduleName": "Online Store",
                 "usageType": "TOTAL",
@@ -628,14 +535,14 @@
                 "usageType": "MONTHLY_TOTAL",
                 "usageLimit": 100,
                 "report": true,
-                "analytics": false
+                "analytics": true
             }
         ]
     },
     {
         "name": "Premium",
-        "description": "Full-scale solution for large retailers needing comprehensive AI and e-commerce integration.",
-        "shortDescription": "Everything you need.",
+        "description": "Complete DragBizz access with unlimited usage across every included module and capability.",
+        "shortDescription": "All features, unlimited.",
         "planType": "ENTERPRISE",
         "pricing": [
             {
@@ -658,14 +565,12 @@
             }
         ],
         "highlights": [
-            "Up to 5 Stores & Branches",
-            "Unlimited Staff & Products",
-            "Unrestricted Voice & AI Suite",
-            "Custom Branded Online Store",
-            "Advanced Multi-Branch GST Accounting",
-            "Dedicated Account Manager",
-            "24/7 Priority Support Hotline",
-            "Complete Data Export & Backup"
+            "Every Feature Included with Unlimited Usage",
+            "Unlimited Stores, Products and Staff",
+            "Unlimited Billing, Invoicing, Orders and Inventory",
+            "Full Reports, Analytics and GST Capabilities",
+            "Unlimited Online Stores and AI Suite",
+            "POS, Invoice Release, FIFO and Stock Batches"
         ],
         "displayOrder": 3,
         "status": "ACTIVE",
@@ -676,45 +581,10 @@
             {
                 "module": "store",
                 "moduleName": "Store Management",
-                "usageType": "TOTAL",
-                "usageLimit": 5,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "product",
-                "moduleName": "Product Catalog",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
                 "analytics": true
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "billing",
-                "moduleName": "Billing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true,
-                "metadata": {
-                    "includes": ["pos", "release", "draft"]
-                }
             },
             {
                 "module": "customer",
@@ -737,12 +607,66 @@
                 "moduleName": "Payment Reminders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
-                "report": false,
-                "analytics": false
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "pos",
+                        "release",
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "inventory",
+                "moduleName": "Inventory Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "fifo",
+                        "batches",
+                        "stock_events"
+                    ]
+                }
             },
             {
                 "module": "supplier",
                 "moduleName": "Supplier Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "billing",
+                "moduleName": "Billing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "purchase_order",
+                "moduleName": "Purchase Orders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -757,27 +681,8 @@
                 "analytics": true
             },
             {
-                "module": "inventory",
-                "moduleName": "Inventory Management",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true,
-                "metadata": {
-                    "includes": ["fifo", "batches", "stock_events"]
-                }
-            },
-            {
-                "module": "purchase_order",
-                "moduleName": "Purchase Orders",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "sales_order",
-                "moduleName": "Sales Orders",
+                "module": "staff",
+                "moduleName": "Staff Accounts",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -793,6 +698,7 @@
                 "metadata": {
                     "includes": [
                         "gst",
+                        "tally",
                         "sales_summary",
                         "sales_prediction",
                         "profit_loss",
@@ -801,10 +707,18 @@
                 }
             },
             {
+                "module": "sales_order",
+                "moduleName": "Sales Orders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
                 "module": "online_store",
                 "moduleName": "Online Store",
-                "usageType": "TOTAL",
-                "usageLimit": 5,
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": true,
                 "analytics": true
             },
