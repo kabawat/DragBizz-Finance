@@ -27,18 +27,18 @@
         "isRecommended": false,
         "features": [
             {
-                "module": "store",
-                "moduleName": "Store Management",
+                "module": "ai",
+                "moduleName": "AI Suite",
                 "usageType": "TOTAL",
-                "usageLimit": 1,
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "customer",
-                "moduleName": "Khata (Customer Ledger)",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "module": "billing",
+                "moduleName": "Billing",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
@@ -51,31 +51,34 @@
                 "analytics": false
             },
             {
-                "module": "payment_reminder",
-                "moduleName": "Payment Reminders",
+                "module": "customer",
+                "moduleName": "Khata (Customer Ledger)",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "DAILY_FIXED",
-                "usageLimit": 30,
+                "module": "customer_payment_gateway",
+                "moduleName": "Customer Payment Gateway",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
                 "report": false,
-                "analytics": false,
-                "metadata": {
-                    "includes": [
-                        "draft"
-                    ]
-                }
+                "analytics": false
             },
             {
-                "module": "product",
-                "moduleName": "Product Catalog",
+                "module": "expense",
+                "moduleName": "Expense Tracking",
                 "usageType": "TOTAL",
-                "usageLimit": 50,
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "integrations",
+                "moduleName": "Integrations",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
@@ -91,40 +94,45 @@
                 }
             },
             {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "DAILY_FIXED",
+                "usageLimit": 30,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": [
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
                 "usageType": "TOTAL",
                 "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "billing",
-                "moduleName": "Billing",
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
                 "usageType": "TOTAL",
-                "usageLimit": 0,
+                "usageLimit": 50,
                 "report": false,
                 "analytics": false
             },
             {
                 "module": "purchase_order",
                 "moduleName": "Purchase Orders",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "TOTAL",
-                "usageLimit": 0,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
                 "usageLimit": 0,
                 "report": false,
@@ -150,16 +158,24 @@
                 "analytics": false
             },
             {
-                "module": "online_store",
-                "moduleName": "Online Store",
+                "module": "staff",
+                "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
                 "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "ai",
-                "moduleName": "AI Suite",
+                "module": "store",
+                "moduleName": "Store Management",
+                "usageType": "TOTAL",
+                "usageLimit": 1,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
                 "usageType": "TOTAL",
                 "usageLimit": 0,
                 "report": false,
@@ -209,16 +225,16 @@
         "isRecommended": false,
         "features": [
             {
-                "module": "store",
-                "moduleName": "Store Management",
+                "module": "ai",
+                "moduleName": "AI Suite",
                 "usageType": "TOTAL",
-                "usageLimit": 1,
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
+                "module": "billing",
+                "moduleName": "Billing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": false,
@@ -233,31 +249,34 @@
                 "analytics": false
             },
             {
-                "module": "payment_reminder",
-                "moduleName": "Payment Reminders",
+                "module": "customer",
+                "moduleName": "Customer Tracking",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "invoice",
-                "moduleName": "Invoicing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "module": "customer_payment_gateway",
+                "moduleName": "Customer Payment Gateway",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
                 "report": false,
-                "analytics": false,
-                "metadata": {
-                    "includes": [
-                        "draft"
-                    ]
-                }
+                "analytics": false
             },
             {
-                "module": "product",
-                "moduleName": "Product Catalog",
+                "module": "expense",
+                "moduleName": "Expense Tracking",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 150,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "integrations",
+                "moduleName": "Integrations",
                 "usageType": "TOTAL",
-                "usageLimit": 1000,
+                "usageLimit": 0,
                 "report": false,
                 "analytics": false
             },
@@ -273,18 +292,39 @@
                 }
             },
             {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": false,
+                "analytics": false,
+                "metadata": {
+                    "includes": [
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
+                "usageType": "TOTAL",
+                "usageLimit": 0,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "billing",
-                "moduleName": "Billing",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "TOTAL",
+                "usageLimit": 1000,
                 "report": false,
                 "analytics": false
             },
@@ -293,22 +333,6 @@
                 "moduleName": "Purchase Orders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "MONTHLY_TOTAL",
-                "usageLimit": 150,
-                "report": false,
-                "analytics": false
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "TOTAL",
-                "usageLimit": 3,
                 "report": false,
                 "analytics": false
             },
@@ -332,18 +356,26 @@
                 "analytics": false
             },
             {
-                "module": "online_store",
-                "moduleName": "Online Store",
+                "module": "staff",
+                "moduleName": "Staff Accounts",
                 "usageType": "TOTAL",
-                "usageLimit": 0,
+                "usageLimit": 3,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "ai",
-                "moduleName": "AI Suite",
+                "module": "store",
+                "moduleName": "Store Management",
                 "usageType": "TOTAL",
-                "usageLimit": 0,
+                "usageLimit": 1,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": false,
                 "analytics": false
             }
@@ -390,16 +422,23 @@
         "isRecommended": false,
         "features": [
             {
-                "module": "store",
-                "moduleName": "Store Management",
-                "usageType": "TOTAL",
-                "usageLimit": 2,
-                "report": false,
-                "analytics": true
+                "module": "ai",
+                "moduleName": "AI Suite",
+                "usageType": "MONTHLY_TOTAL",
+                "usageLimit": 100,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "voice",
+                        "chat",
+                        "assistant"
+                    ]
+                }
             },
             {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
+                "module": "billing",
+                "moduleName": "Billing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -414,33 +453,34 @@
                 "analytics": false
             },
             {
-                "module": "payment_reminder",
-                "moduleName": "Payment Reminders",
+                "module": "customer",
+                "moduleName": "Customer Tracking",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "customer_payment_gateway",
+                "moduleName": "Customer Payment Gateway",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": false,
                 "analytics": false
             },
             {
-                "module": "invoice",
-                "moduleName": "Invoicing",
+                "module": "expense",
+                "moduleName": "Expense Tracking",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true,
-                "metadata": {
-                    "includes": [
-                        "pos",
-                        "release",
-                        "draft"
-                    ]
-                }
+                "analytics": false
             },
             {
-                "module": "product",
-                "moduleName": "Product Catalog",
-                "usageType": "TOTAL",
-                "usageLimit": 5000,
+                "module": "integrations",
+                "moduleName": "Integrations",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": true,
                 "analytics": false
             },
@@ -460,20 +500,43 @@
                 }
             },
             {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
+                "module": "invoice",
+                "moduleName": "Invoicing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "pos",
+                        "release",
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
+                "usageType": "TOTAL",
+                "usageLimit": 2,
+                "report": false,
                 "analytics": false
             },
             {
-                "module": "billing",
-                "moduleName": "Billing",
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
+                "report": false,
+                "analytics": false
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
+                "usageType": "TOTAL",
+                "usageLimit": 5000,
                 "report": true,
-                "analytics": true
+                "analytics": false
             },
             {
                 "module": "purchase_order",
@@ -481,22 +544,6 @@
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": false
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
-                "usageType": "TOTAL",
-                "usageLimit": 10,
-                "report": false,
                 "analytics": true
             },
             {
@@ -522,20 +569,28 @@
                 "analytics": true
             },
             {
-                "module": "online_store",
-                "moduleName": "Online Store",
+                "module": "staff",
+                "moduleName": "Staff Accounts",
+                "usageType": "TOTAL",
+                "usageLimit": 10,
+                "report": false,
+                "analytics": true
+            },
+            {
+                "module": "store",
+                "moduleName": "Store Management",
                 "usageType": "TOTAL",
                 "usageLimit": 2,
                 "report": false,
-                "analytics": false
+                "analytics": true
             },
             {
-                "module": "ai",
-                "moduleName": "AI Suite",
-                "usageType": "MONTHLY_TOTAL",
-                "usageLimit": 100,
+                "module": "supplier",
+                "moduleName": "Supplier Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": false
             }
         ]
     },
@@ -579,16 +634,23 @@
         "isRecommended": true,
         "features": [
             {
-                "module": "store",
-                "moduleName": "Store Management",
+                "module": "ai",
+                "moduleName": "AI Suite",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "voice",
+                        "chat",
+                        "assistant"
+                    ]
+                }
             },
             {
-                "module": "customer",
-                "moduleName": "Customer Tracking",
+                "module": "billing",
+                "moduleName": "Billing",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -603,31 +665,32 @@
                 "analytics": true
             },
             {
-                "module": "payment_reminder",
-                "moduleName": "Payment Reminders",
+                "module": "customer",
+                "moduleName": "Customer Tracking",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
                 "analytics": true
             },
             {
-                "module": "invoice",
-                "moduleName": "Invoicing",
+                "module": "customer_payment_gateway",
+                "moduleName": "Customer Payment Gateway",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
-                "analytics": true,
-                "metadata": {
-                    "includes": [
-                        "pos",
-                        "release",
-                        "draft"
-                    ]
-                }
+                "analytics": true
             },
             {
-                "module": "product",
-                "moduleName": "Product Catalog",
+                "module": "expense",
+                "moduleName": "Expense Tracking",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "integrations",
+                "moduleName": "Integrations",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -649,16 +712,39 @@
                 }
             },
             {
-                "module": "supplier",
-                "moduleName": "Supplier Management",
+                "module": "invoice",
+                "moduleName": "Invoicing",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true,
+                "metadata": {
+                    "includes": [
+                        "pos",
+                        "release",
+                        "draft"
+                    ]
+                }
+            },
+            {
+                "module": "online_store",
+                "moduleName": "Online Store",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
                 "analytics": true
             },
             {
-                "module": "billing",
-                "moduleName": "Billing",
+                "module": "payment_reminder",
+                "moduleName": "Payment Reminders",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "product",
+                "moduleName": "Product Catalog",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -667,22 +753,6 @@
             {
                 "module": "purchase_order",
                 "moduleName": "Purchase Orders",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "expense",
-                "moduleName": "Expense Tracking",
-                "usageType": "UNLIMITED",
-                "usageLimit": null,
-                "report": true,
-                "analytics": true
-            },
-            {
-                "module": "staff",
-                "moduleName": "Staff Accounts",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
@@ -715,16 +785,24 @@
                 "analytics": true
             },
             {
-                "module": "online_store",
-                "moduleName": "Online Store",
+                "module": "staff",
+                "moduleName": "Staff Accounts",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,
                 "analytics": true
             },
             {
-                "module": "ai",
-                "moduleName": "AI Suite",
+                "module": "store",
+                "moduleName": "Store Management",
+                "usageType": "UNLIMITED",
+                "usageLimit": null,
+                "report": true,
+                "analytics": true
+            },
+            {
+                "module": "supplier",
+                "moduleName": "Supplier Management",
                 "usageType": "UNLIMITED",
                 "usageLimit": null,
                 "report": true,

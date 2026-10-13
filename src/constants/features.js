@@ -21,6 +21,7 @@ const FEATURES = {
     PAYMENT_MANAGEMENT: 'payment_management',
 
     // AI Features
+    AI: 'ai',
     VOICE_AI: 'VOICE_AI',
 
     // E-commerce & Online Presence
@@ -28,6 +29,7 @@ const FEATURES = {
 
     // Payment Integrations
     CUSTOMER_PAYMENT_GATEWAY: 'customer_payment_gateway',
+    INTEGRATIONS: 'integrations',
 
     // Compliance & Tax
     GST_ANALYSIS: 'gst_analysis',
@@ -46,9 +48,11 @@ const FEATURE_DISPLAY_NAMES = {
     supplier_management: 'Supplier Management',
     bill_management: 'Bill Management',
     payment_management: 'Payment Management',
+    ai: 'AI Suite',
     VOICE_AI: 'Voice AI',
     online_store: 'Online Store',
     customer_payment_gateway: 'Customer Payment Gateway',
+    integrations: 'Integrations',
     gst_analysis: 'GST Analysis',
 };
 
@@ -67,6 +71,8 @@ const FEATURE_ROUTES = {
     payment_management: ['/supplier-account/payments'],
     online_store: ['/online-store', '/ecommerce'],
     customer_payment_gateway: ['/payment-gateway'],
+    integrations: ['/integrations'],
+    ai: ['/ai', '/voice'],
     gst_analysis: ['/gst-reports', '/tax-analysis'],
 };
 

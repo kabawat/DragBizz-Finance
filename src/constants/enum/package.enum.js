@@ -5,22 +5,24 @@ const CURRENCIES = ['INR', 'USD', 'EUR'];
 
 // Defines modules available in valid plans
 const PACKAGE_MODULES = [
+    'ai',
     'billing',
-    'invoice',
-    'product',
-    'inventory',
+    'cashbook',
     'customer',
-    'supplier',
+    'customer_payment_gateway',
     'expense',
+    'integrations',
+    'inventory',
+    'invoice',
+    'online_store',
+    'payment_reminder',
+    'product',
     'purchase_order',
+    'reports',
     'sales_order',
     'staff',
-    'reports',
     'store',
-    'ai',
-    'online_store',
-    'cashbook',
-    'payment_reminder',
+    'supplier',
 ];
 
 module.exports = {
