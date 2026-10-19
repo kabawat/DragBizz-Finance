@@ -1,5 +1,5 @@
 const { verifyPayment } = require('@src/services/payment/verify.service');
-const { getPaymentSubscriptionSummary } = require('@src/services/subscription/payment-result.service');
+const { getPaymentSubscriptionSummary } = require('@src/services/payment/subscription-summary.service');
 const { validateVerifyPayment } = require('@src/utils/validations/payment.validation');
 const { sanitizeVerifyPaymentData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializePayment } = require('@src/utils/serializer/payment.serializer');
@@ -46,8 +46,6 @@ async function verifyPaymentController(req, res) {
 
         const subscription = await getPaymentSubscriptionSummary({
             payment,
-            userId,
-            agencyId: req.user?.agencyId
         });
 
         const responseData = {

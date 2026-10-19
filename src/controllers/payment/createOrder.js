@@ -1,4 +1,4 @@
-const { createSubscriptionPayment } = require('@src/services/subscription/checkout.service');
+const { createPackagePayment } = require('@src/services/payment/checkout.service');
 const { validateCreateOrder } = require('@src/utils/validations/payment.validation');
 const { sanitizeCreateOrderData } = require('@src/utils/sanitizer/payment.sanitizer');
 const { serializeOrderResponse } = require('@src/utils/serializer/payment.serializer');
@@ -37,7 +37,7 @@ async function createOrderController(req, res) {
             });
         }
 
-        const orderData = await createSubscriptionPayment({
+        const orderData = await createPackagePayment({
             userId,
             agencyId,
             ...sanitizedData,

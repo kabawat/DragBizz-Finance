@@ -23,10 +23,10 @@ const connectDB = async () => {
     };
 
     await mongoose.connect(SECRET.mongo.uri, options);
-    logger.info("MongoDB connected successfully (subscription)");
+    logger.info("MongoDB connected successfully (finance)");
     await ensurePaymentGatewayIndexes();
   } catch (err) {
-    logger.error("MongoDB connection error (subscription)", { error: err?.message, stack: err?.stack });
+    logger.error("MongoDB connection error (finance)", { error: err?.message, stack: err?.stack });
     process.exit(1);
   }
 };

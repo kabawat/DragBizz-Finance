@@ -25,7 +25,7 @@ class RetailerGrpcClient {
         const retailerProto = grpc.loadPackageDefinition(packageDefinition).retailer.subscription;
 
         const grpcHost = SECRET.grpc?.retailerHost || '192.168.1.29';
-        const grpcPort = SECRET.grpc?.retailerPort || 8001;
+        const grpcPort = SECRET.grpc?.retailerPort || 5001;
         this.serverAddress = `${grpcHost}:${grpcPort}`;
 
         this.client = new retailerProto.SubscriptionService(

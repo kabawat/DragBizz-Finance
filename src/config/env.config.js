@@ -96,15 +96,12 @@ const SECRET = {
     notifyUrl: (process.env.CASHFREE_NOTIFY_URL || '').trim(),
   },
   grpc: {
-    // Own gRPC server bind address (container-internal)
-    host: '0.0.0.0',
-    port: 50052,
-    // Outbound clients
+    // Core gRPC client
     retailerHost: process.env.RETAILER_GRPC_HOST || '192.168.1.29',
-    retailerPort: process.env.RETAILER_GRPC_PORT || 8001
+    retailerPort: process.env.RETAILER_GRPC_PORT || 5001
   },
 
-  // Internal service auth (Voice-AI → Subscription)
+  // Internal service auth
   voiceAiWhitelistIPs: (process.env.ALLOWED_IPS || "127.0.0.1,::1")
     .split(",")
     .map((ip) => ip.trim())

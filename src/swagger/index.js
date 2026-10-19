@@ -5,9 +5,9 @@ const options = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
-            title: 'DragBizz Subscription Service API',
+            title: 'DragBizz Finance Payment Service API',
             version: '1.0.0',
-            description: 'Subscription and package management service. Handles subscription plans, feature-based access control, payment processing, and usage tracking.',
+            description: 'Payment processing, provider callbacks, and payment-backed billing workflows for DragBizz.',
             contact: {
                 name: 'DragBizz Support',
                 email: 'support@dragbizz.com'
@@ -42,10 +42,6 @@ const options = {
             }
         },
         tags: [
-            {
-                name: 'Packages',
-                description: 'Package/Plan management APIs (Admin: create/update/delete | Public: get)'
-            },
             {
                 name: 'Payments',
                 description: 'Payment processing APIs'

@@ -1,7 +1,7 @@
 require('module-alias/register');
 const { onPaymentSettled } = require('@src/services/payment/hooks');
-const { activateSubscriptionAfterPayment } = require('@src/services/subscription/activate-from-payment.service');
-onPaymentSettled(activateSubscriptionAfterPayment);
+const { activateCoreSubscriptionAfterPayment } = require('@src/services/payment/activate-core-subscription.service');
+onPaymentSettled(activateCoreSubscriptionAfterPayment);
 
 const server = require('@src/app');
 const mongoose = require('mongoose');
@@ -11,9 +11,8 @@ const SECRET = require('@config/env.config');
 const logger = require('@src/utils/logger');
 const retailerGrpcClient = require('@src/lib/grpc/clients/retailer/retailer.client');
 
-function logBootstrap({ httpHost, httpPort, grpcHost, grpcPort, connected }) {
+function logBootstrap({ httpHost, httpPort, connected }) {
   console.log(`HTTP server running (${httpHost}:${httpPort})`);
-  console.log(`gRPC server running (${grpcHost}:${grpcPort})`);
   console.log(`Connected services: ${connected.length ? connected.join(', ') : 'none'}`);
 }
 
@@ -33,9 +32,6 @@ async function startServer() {
       }
     }
 
-    const grpcServer = require('@src/lib/grpc/server');
-    const grpcInfo = await grpcServer.initialize();
-
     const httpHost = '0.0.0.0';
     const httpPort = SECRET.server.port;
 
@@ -46,8 +42,6 @@ async function startServer() {
     logBootstrap({
       httpHost,
       httpPort,
-      grpcHost: grpcInfo.host,
-      grpcPort: grpcInfo.port,
       connected,
     });
   } catch (err) {
@@ -58,8 +52,6 @@ async function startServer() {
 
 const gracefulShutdown = async () => {
   try {
-    const grpcServer = require('@src/lib/grpc/server');
-    await grpcServer.shutdown();
     await disconnectRedis();
     await mongoose.connection.close();
 
@@ -90,6 +82,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 startServer().catch((e) => {
-  logger.error('Error starting subscription service', { error: e.message, stack: e.stack });
+  logger.error('Error starting finance service', { error: e.message, stack: e.stack });
   process.exit(1);
 });

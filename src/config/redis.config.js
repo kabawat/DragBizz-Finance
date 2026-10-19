@@ -32,7 +32,7 @@ const redisClient = createClient({
     },
     password: redisConfig.password,
     database: redisConfig.db,
-    name: "subscription-redis-client",
+    name: "finance-redis-client",
     pingInterval: 30000,
     disableOfflineQueue: false,
     maxRetriesPerRequest: null,

@@ -18,17 +18,20 @@ const paymentSchema = new mongoose.Schema({
     // Package Information
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Package',
         default: null,
         index: true
     },
 
-    // Subscription Reference (if payment successful)
+    // Reference to the subscription record owned by Core, if activated.
     subscriptionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Subscription',
+        type: String,
         default: null,
         index: true
+    },
+    subscriptionType: {
+        type: String,
+        enum: ['NEW', 'RENEWAL', 'UPGRADE', 'DOWNGRADE'],
+        default: null,
     },
 
     // Order Information

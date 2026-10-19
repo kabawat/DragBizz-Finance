@@ -1,16 +1,16 @@
-# 💳 DragBizz Subscription Service
+# 💳 DragBizz Finance Service
 
-The **DragBizz Subscription Service** is a dedicated microservice responsible for managing membership plans, user subscriptions, checkout processes, and payment webhooks for the DragBizz platform.
+The **DragBizz Finance Service** creates payment orders, verifies gateway transactions, and handles payment webhooks. DragBizz-Core owns the package catalog and subscriptions; Finance reads package pricing from Core and notifies Core after a payment succeeds.
 
 ---
 
 ## ✨ Key Features
 
-- **Plan Management:** Define and manage various subscription plans (e.g., Free, Pro, Enterprise).
-- **Subscription Lifecycle:** Handle user subscription creation, upgrades, and renewals.
-- **Checkout Integration:** Integrated with payment gateways (e.g., Razorpay) for secure transactions.
+- **Payment Processing:** Create and verify orders with supported payment gateways.
+- **Core Integration:** Requests package data and reports successful payments to Core over gRPC.
+- **Payment Webhooks:** Process signed provider callbacks.
 - **Secure Authentication:** Uses JWKS (JSON Web Key Sets) from the Auth service for robust JWT verification.
-- **Webhooks:** Automated processing of payment and subscription events via webhooks.
+- **Webhooks:** Automated processing of payment provider callbacks.
 - **Health Monitoring:** Built-in health check endpoints for microservices orchestration.
 
 ---
@@ -30,14 +30,13 @@ The **DragBizz Subscription Service** is a dedicated microservice responsible fo
 ## 📁 Project Structure
 
 ```text
-dragbizz-subscription/
+dragbizz-finance/
 ├── src/
-│   ├── api/            # REST and gRPC interfaces
-│   ├── controllers/    # Business logic handlers
-│   ├── models/         # Database schemas
-│   ├── services/       # Core domain services
+│   ├── controllers/    # Payment and billing endpoints
+│   ├── models/         # Payment and audit schemas
+│   ├── services/       # Payment, gateway, and Core client logic
 │   └── utils/          # Shared utilities and helpers
-├── proto/              # gRPC Protobuf definitions
+├── proto/              # Core gRPC client definitions
 └── docker-compose.*.yml # Orchestration configs
 ```
 

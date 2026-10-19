@@ -2,12 +2,12 @@
  * @swagger
  * /payment/verify:
  *   post:
- *     summary: Verify payment and activate subscription
+ *     summary: Verify payment and report settlement to Core
  *     description: |
  *       Confirm a payment with the active gateway (`PAYMENT_GATEWAY`). Razorpay clients send `razorpayOrderId`, `razorpayPaymentId`, and `razorpaySignature`. Other gateways send `orderId`. This endpoint:
  *       - Verifies Razorpay payment signature
  *       - Updates payment status
- *       - Creates subscription if payment is successful
+ *       - Notifies Core to activate or update the subscription after payment succeeds
  *       - Returns payment and subscription details
  *       
  *       **Security:**
@@ -16,10 +16,7 @@
  *       - User authorization check
  *       - Rate limiting (10 requests/minute)
  *       
- *       **Transaction Safety:**
- *       - All operations in MongoDB transaction
- *       - Automatic rollback on errors
- *       - Prevents duplicate processing
+ *       Payment settlement is idempotent; Core uses the payment ID to prevent duplicate subscription activation.
  *     tags:
  *       - Payments
  *     security:

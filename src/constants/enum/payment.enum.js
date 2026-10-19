@@ -9,16 +9,6 @@ const PAYMENT_STATUS = [
     'PARTIALLY_REFUNDED' // Partial refund
 ];
 
-// Subscription Status Enum
-const SUBSCRIPTION_STATUS = [
-    'ACTIVE',       // Active subscription
-    'EXPIRED',      // Subscription expired
-    'CANCELLED',    // Subscription cancelled
-    'SUSPENDED',    // Subscription suspended
-    'PENDING',      // Subscription pending activation
-    'TRIAL'         // Trial period
-];
-
 // Payment Gateway Enum
 const PAYMENT_GATEWAY = ['RAZORPAY', 'STRIPE', 'CASHFREE', 'PAYU', 'EASEBUZZ', 'INTERNAL'];
 
@@ -32,7 +22,6 @@ const REFUND_STATUS = [
 
 module.exports = {
     PAYMENT_STATUS,
-    SUBSCRIPTION_STATUS,
     PAYMENT_GATEWAY,
     REFUND_STATUS
 };

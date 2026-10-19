@@ -33,7 +33,7 @@ const consoleFormat = winston.format.combine(
 const logger = winston.createLogger({
     level: logLevel,
     format: logFormat,
-    defaultMeta: { service: 'dragbizz-subscription' },
+    defaultMeta: { service: 'dragbizz-finance' },
     transports: [
         new winston.transports.File({
             filename: path.join(logsDir, 'error.log'),

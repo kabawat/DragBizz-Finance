@@ -1,8 +1,7 @@
-const { PackageModel } = require('@src/models');
-const SubscriptionService = require('@src/services/subscription');
+const { getPackageById } = require('@src/services/packageLookup.service');
+const { validatePackagePayment } = require('@src/services/coreSubscription.service');
 const { createPaymentOrder } = require('@src/services/payment/create.service');
-const { comparePackages } = require('./helpers');
-const { getBillingCycleFromMonths, calculateFinalPricing } = require('./pricing');
+const { getBillingCycleFromMonths, calculateFinalPricing } = require('./pricing.service');
 
 function httpError(message, statusCode, fields) {
     const error = new Error(message);
@@ -11,44 +10,26 @@ function httpError(message, statusCode, fields) {
     return error;
 }
 
-async function assertRenewalAllowed({ userId, agencyId, packageId, months }) {
-    const existingSubscription = await SubscriptionService.getActiveSubscription(userId, { agencyId });
-    if (!existingSubscription) return;
-
-    const newPackage = await PackageModel.findById(packageId).lean();
-    if (!newPackage) {
-        throw httpError('Package not found', 404);
-    }
-
-    const existingPackage = await PackageModel.findById(existingSubscription.packageId).lean();
-    if (!existingPackage) return;
-
-    if (comparePackages(existingPackage, newPackage, months || 1) !== 'SAME') return;
-
-    const daysRemaining = Math.ceil((new Date(existingSubscription.endDate) - new Date()) / (1000 * 60 * 60 * 24));
-    if (daysRemaining > 30) {
+async function assertPackagePaymentAllowed({ userId, agencyId, packageId, months }) {
+    const result = await validatePackagePayment({ userId, agencyId, packageId, months });
+    if (!result.allowed) {
         throw httpError(
-            'You already have an active subscription for this package. Please wait until closer to expiry date to renew.',
+            result.message || 'This package purchase is not currently allowed.',
             400,
             {
-                daysRemaining: daysRemaining.toString(),
+                daysRemaining: String(result.daysRemaining || 0),
                 suggestion: 'You can renew this subscription closer to the expiry date'
             }
         );
     }
 }
 
-async function createSubscriptionPayment(orderData) {
+async function createPackagePayment(orderData) {
     const { userId, agencyId = null, packageId, months, couponCode, email, phone, customerName, idempotencyKey, ipAddress, userAgent } = orderData;
 
-    await assertRenewalAllowed({ userId, agencyId, packageId, months });
+    await assertPackagePaymentAllowed({ userId, agencyId, packageId, months });
 
-    const packageDoc = await PackageModel.findOne({
-        _id: packageId,
-        status: 'ACTIVE',
-        isVisible: true,
-        deletedAt: null
-    }).select('name pricing').lean();
+    const packageDoc = await getPackageById(packageId);
 
     if (!packageDoc) {
         throw new Error('Package not found or not available');
@@ -86,4 +67,4 @@ async function createSubscriptionPayment(orderData) {
     });
 }
 
-module.exports = { createSubscriptionPayment };
+module.exports = { createPackagePayment };

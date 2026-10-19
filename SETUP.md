@@ -1,6 +1,6 @@
-# 🛠️ Setup Instructions - DragBizz Subscription Service
+# 🛠️ Setup Instructions - DragBizz Finance Service
 
-This document provides instructions to set up and run the DragBizz Subscription Service.
+This document provides instructions to set up and run the DragBizz Finance Service.
 
 ---
 
@@ -17,7 +17,7 @@ This document provides instructions to set up and run the DragBizz Subscription 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd dragbizz-subscription
+   cd dragbizz-finance
    ```
 
 2. **Install dependencies**
@@ -52,13 +52,9 @@ If you have MongoDB and Redis accessible:
 1. **Dev mode:** `yarn dev`
 2. **Prod mode:** `yarn start`
 
----
+## 📚 Package Catalog
 
-## 🌱 Seeding Data
-To seed initial packages or test plans:
-```bash
-yarn dev:package
-```
+Package catalog and subscription records are owned by DragBizz-Core. Run `yarn dev:package` from the Core service directory to seed default plans. Finance fetches package details from Core over gRPC while creating a payment, and asks Core to create a subscription after a successful payment.
 
 ---
 

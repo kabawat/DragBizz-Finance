@@ -1,5 +1,5 @@
 {
-  "name": "dragbizz-subscription",
+  "name": "dragbizz-finance",
   "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
@@ -22,8 +22,7 @@
     "prod:restart": "docker compose -f docker-compose.yml restart",
     "prod:clean": "docker compose -f docker-compose.yml down -v --remove-orphans",
     "backup:create": "node scripts/backup.js",
-    "backup:restore": "node scripts/restore.js",
-    "dev:package": "node src/scripts/seed-packages.js"
+    "backup:restore": "node scripts/restore.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.0",

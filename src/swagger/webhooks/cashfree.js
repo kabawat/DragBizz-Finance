@@ -7,7 +7,7 @@
  *       Receives Cashfree PG payment notifications.
  *       Signature is verified with CASHFREE_CLIENT_SECRET using the raw body and x-webhook-timestamp.
  *       Handled events: PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK, PAYMENT_USER_DROPPED_WEBHOOK.
- *       Success events are confirmed with Cashfree Get Order before the subscription is activated.
+ *       Success events are confirmed with Cashfree Get Order before Finance reports settlement to Core.
  *     tags:
  *       - Webhooks
  *     parameters:
