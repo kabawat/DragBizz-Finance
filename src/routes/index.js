@@ -6,8 +6,8 @@ const paymentRouter = require('./routes/payment.routes');
 const billingRouter = require('./routes/billing.routes');
 
 const router = express.Router();
-router.use('/payment', accessMiddleware, paymentRouter);
 router.use('/billing', accessMiddleware, billingRouter);
+router.use('/subscription', accessMiddleware, paymentRouter);
 router.use('/webhooks', webhookRouter);
 
 module.exports = router;
