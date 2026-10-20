@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package retailer.retailPayment;
+
+service RetailPaymentService {
+  rpc GetPaymentCollectLinkInfo (GetPaymentCollectLinkRequest) returns (GetPaymentCollectLinkResponse);
+  rpc ApplyCustomerPayment (ApplyCustomerPaymentRequest) returns (ApplyCustomerPaymentResponse);
+}
+
+message GetPaymentCollectLinkRequest {
+  string publicToken = 1;
+}
+
+message StoreAddress {
+  string line1 = 1;
+  string line2 = 2;
+  string city = 3;
+  string state = 4;
+  string pincode = 5;
+  string country = 6;
+}
+
+message StoreDetails {
+  string id = 1;
+  string name = 2;
+  string phone = 3;
+  string email = 4;
+  StoreAddress address = 5;
+}
+
+message CustomerDetails {
+  string id = 1;
+  string name = 2;
+  string phone = 3;
+  string email = 4;
+}
+
+message GatewayCredentials {
+  string keyId = 1;
+  string keySecret = 2;
+  string webhookSecret = 3;
+  string clientId = 4;
+  string clientSecret = 5;
+  string publishableKey = 6;
+  string secretKey = 7;
+}
+
+message GetPaymentCollectLinkResponse {
+  bool success = 1;
+  string message = 2;
+  string collectLinkId = 3;
+  string agencyId = 4;
+  string storeId = 5;
+  string customerId = 6;
+  StoreDetails store = 7;
+  CustomerDetails customer = 8;
+  double totalDue = 9;
+  double linkAmount = 10;
+  string currency = 11;
+  string collectType = 12;
+  string invoiceId = 13;
+  string status = 14;
+  string expiresAt = 15;
+  string gatewayType = 16;
+  string gatewayMode = 17;
+  GatewayCredentials credentials = 18;
+}
+
+message ApplyCustomerPaymentRequest {
+  string collectLinkId = 1;
+  string storeId = 2;
+  string customerId = 3;
+  double amount = 4;
+  string paymentMethod = 5;
+  string gatewayPaymentId = 6;
+  string gatewayOrderId = 7;
+  string idempotencyKey = 8;
+  string notes = 9;
+}
+
+message ApplyCustomerPaymentResponse {
+  bool success = 1;
+  string message = 2;
+  string paymentId = 3;
+  double remainingDue = 4;
+}
+

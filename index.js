@@ -12,6 +12,7 @@ const { connectRedis, disconnectRedis } = require('@config/redis.config');
 const SECRET = require('@config/env.config');
 const logger = require('@src/utils/logger');
 const retailerGrpcClient = require('@src/lib/grpc/clients/retailer/retailer.client');
+const retailPaymentGrpcClient = require('@src/lib/grpc/clients/retailer/retailPayment.client');
 const utilityGrpcClient = require('@src/lib/grpc/clients/utility/utility.client');
 const { startWorkers, stopWorkers } = require('@src/workers');
 
@@ -28,6 +29,7 @@ async function startServer() {
     const connected = [];
     try {
       retailerGrpcClient.initialize();
+      retailPaymentGrpcClient.initialize();
       await retailerGrpcClient.waitForReady(SECRET.ENVIRONMENT === 'production' ? 10 : 5);
       connected.push(`core (${retailerGrpcClient.getAddress()})`);
     } catch (_error) {
