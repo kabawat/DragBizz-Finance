@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package utility;
+
+message UploadFileRequest {
+  string key = 1;
+  bytes content = 2;
+  string content_type = 3;
+}
+
+message UploadFileResponse {
+  bool success = 1;
+  string key = 2;
+  string message = 3;
+}
+
+message GetSignedUrlRequest {
+  string key = 1;
+  int32 expires_in = 2;
+}
+
+message GetSignedUrlResponse {
+  bool success = 1;
+  string url = 2;
+  int32 expires_in = 3;
+  string message = 4;
+}

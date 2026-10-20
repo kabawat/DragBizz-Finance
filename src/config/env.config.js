@@ -98,7 +98,10 @@ const SECRET = {
   grpc: {
     // Core gRPC client
     retailerHost: process.env.RETAILER_GRPC_HOST || '192.168.1.29',
-    retailerPort: process.env.RETAILER_GRPC_PORT || 5001
+    retailerPort: process.env.RETAILER_GRPC_PORT || 5001,
+    // Utility gRPC client
+    utilityHost: process.env.UTILITY_GRPC_HOST || 'localhost',
+    utilityPort: parseInt(process.env.UTILITY_GRPC_PORT) || 5003,
   },
 
   // Internal service auth
@@ -107,6 +110,15 @@ const SECRET = {
     .map((ip) => ip.trim())
     .filter(Boolean),
   internalServiceSecret: process.env.INTERNAL_SERVICE_SECRET || null,
+
+  // Invoice worker configuration
+  invoice: {
+    worker: {
+      batchSize: parseInt(process.env.INVOICE_WORKER_BATCH_SIZE) || 5,
+      concurrency: parseInt(process.env.INVOICE_WORKER_CONCURRENCY) || 3,
+      pollIntervalMs: parseInt(process.env.INVOICE_WORKER_POLL_INTERVAL_MS) || 30000,
+    },
+  },
 };
 
 if (!SECRET.mongo.uri) {

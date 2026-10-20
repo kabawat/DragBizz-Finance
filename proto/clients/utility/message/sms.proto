@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package utility;
+
+import "google/protobuf/struct.proto";
+
+enum SmsTemplate {
+  SMS_TEMPLATE_UNSPECIFIED = 0;
+  SMS_TEMPLATE_OTP = 1;
+  SMS_TEMPLATE_WELCOME = 2;
+  SMS_TEMPLATE_STORE_DELETE_OTP = 3;
+  SMS_TEMPLATE_PAYMENT_REMINDER = 4;
+}
+
+message SendSmsRequest {
+  string to = 1;
+  SmsTemplate type = 2;
+  google.protobuf.Struct payload = 3;
+}
+
+message SendSmsResponse {
+  bool success = 1;
+  string message = 2;
+  string message_id = 3;
+  string status = 4;
+  string to = 5;
+  string type = 6;
+}

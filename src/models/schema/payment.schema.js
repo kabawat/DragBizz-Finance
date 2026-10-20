@@ -222,6 +222,17 @@ const paymentSchema = new mongoose.Schema({
         default: null
     },
 
+    // Invoice PDF
+    invoice: {
+        r2Key: { type: String, default: null },
+        status: {
+            type: String,
+            enum: ['PENDING', 'GENERATING', 'DONE', 'FAILED'],
+            default: null,
+        },
+        generatedAt: { type: Date, default: null },
+    },
+
     // Notes
     notes: {
         type: String,
@@ -243,6 +254,23 @@ const paymentSchema = new mongoose.Schema({
     expiresAt: {
         type: Date,
         default: null // Order expiry time
+    },
+
+    // Invoice PDF (generated asynchronously after payment settles)
+    invoice: {
+        r2Key: {
+            type: String,
+            default: null
+        },
+        status: {
+            type: String,
+            enum: ['PENDING', 'GENERATING', 'DONE', 'FAILED'],
+            default: null
+        },
+        generatedAt: {
+            type: Date,
+            default: null
+        }
     }
 }, {
     timestamps: true,

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package utility;
+
+message SendFcmRequest {
+  string user_id = 1;
+  string title = 2;
+  string body = 3;
+  string device_id = 4;
+  map<string, string> data = 5;
+  bool all_devices = 6;
+}
+
+message SendFcmResponse {
+  bool success = 1;
+  string message = 2;
+  string message_id = 3;
+  int32 sent_count = 4;
+}
+
+message SaveFcmTokenRequest {
+  string user_id = 1;
+  string device_id = 2;
+}
+
+message SaveFcmTokenResponse {
+  bool success = 1;
+  string message = 2;
+  string device_id = 3;
+}

@@ -1,7 +1,9 @@
 require('module-alias/register');
 const { onPaymentSettled } = require('@src/services/payment/hooks');
 const { activateCoreSubscriptionAfterPayment } = require('@src/services/payment/activate-core-subscription.service');
+const { scheduleInvoicePdf } = require('@src/services/billing/invoice.pdf.service');
 onPaymentSettled(activateCoreSubscriptionAfterPayment);
+onPaymentSettled(scheduleInvoicePdf);
 
 const server = require('@src/app');
 const mongoose = require('mongoose');
@@ -10,6 +12,8 @@ const { connectRedis, disconnectRedis } = require('@config/redis.config');
 const SECRET = require('@config/env.config');
 const logger = require('@src/utils/logger');
 const retailerGrpcClient = require('@src/lib/grpc/clients/retailer/retailer.client');
+const utilityGrpcClient = require('@src/lib/grpc/clients/utility/utility.client');
+const { startWorkers, stopWorkers } = require('@src/workers');
 
 function logBootstrap({ httpHost, httpPort, connected }) {
   console.log(`HTTP server running (${httpHost}:${httpPort})`);
@@ -32,6 +36,16 @@ async function startServer() {
       }
     }
 
+    try {
+      utilityGrpcClient.initialize();
+      await utilityGrpcClient.waitForReady(SECRET.ENVIRONMENT === 'production' ? 10 : 5);
+      connected.push(`utility (${utilityGrpcClient.getAddress()})`);
+    } catch (_error) {
+      if (SECRET.ENVIRONMENT === 'production') {
+        throw _error;
+      }
+    }
+
     const httpHost = '0.0.0.0';
     const httpPort = SECRET.server.port;
 
@@ -44,6 +58,9 @@ async function startServer() {
       httpPort,
       connected,
     });
+
+    // Start background workers after server is up
+    startWorkers();
   } catch (err) {
     logger.error('Connection error', { error: err.message, stack: err.stack });
     process.exit(1);
@@ -52,6 +69,9 @@ async function startServer() {
 
 const gracefulShutdown = async () => {
   try {
+    // Stop background workers first (waits for in-flight jobs up to 30s)
+    await stopWorkers();
+
     await disconnectRedis();
     await mongoose.connection.close();
 

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package utility;
+
+import "message/email.proto";
+import "message/sms.proto";
+import "message/socket.proto";
+import "message/fcm.proto";
+import "message/storage.proto";
+
+service UtilityService {
+  rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+  rpc SendSms(SendSmsRequest) returns (SendSmsResponse);
+  rpc SendSocket(SendSocketRequest) returns (SendSocketResponse);
+  rpc SendFcm(SendFcmRequest) returns (SendFcmResponse);
+  rpc SaveFcmToken(SaveFcmTokenRequest) returns (SaveFcmTokenResponse);
+  rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
+  rpc GetSignedUrl(GetSignedUrlRequest) returns (GetSignedUrlResponse);
+}
