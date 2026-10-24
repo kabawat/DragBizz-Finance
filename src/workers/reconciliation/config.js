@@ -1,0 +1,22 @@
+const BATCH_SIZE = 10;
+const POLL_INTERVAL_MS = 30_000;
+const RETRY_DELAY_MS = 5 * 60_000; // 5 minutes
+const EXPIRY_GRACE_MS = 86_400_000; // 24 hours
+const SHUTDOWN_GRACE_MS = 30_000;
+
+const RECONCILE_STATUSES = [
+    'ORDER_CREATING',
+    'CHECKOUT_READY',
+    'PAYMENT_PENDING',
+    'PAYMENT_FAILED',
+];
+
+module.exports = {
+    BATCH_SIZE,
+    POLL_INTERVAL_MS,
+    RETRY_DELAY_MS,
+    EXPIRY_GRACE_MS,
+    SHUTDOWN_GRACE_MS,
+    RECONCILE_STATUSES,
+};
+

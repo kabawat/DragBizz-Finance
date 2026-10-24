@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package retailer.retailPayment;
+
+import "messages/common.proto";
+import "messages/collectLink.proto";
+import "messages/customerPayment.proto";
+import "messages/financeIntent.proto";
+
+service RetailPaymentService {
+  rpc ResolveFinanceIntent (FinanceIntentRequest) returns (FinanceIntentResponse);
+  rpc BeginFinanceCheckout (FinanceIntentRequest) returns (FinanceIntentResponse);
+  rpc GetGatewayCredentialForAttempt (AttemptCredentialRequest) returns (AttemptCredentialResponse);
+  rpc ApplyGatewaySettlement (GatewaySettlementRequest) returns (GatewaySettlementResponse);
+  rpc GetPaymentCollectLinkInfo (GetPaymentCollectLinkRequest) returns (GetPaymentCollectLinkResponse);
+  rpc ApplyCustomerPayment (ApplyCustomerPaymentRequest) returns (ApplyCustomerPaymentResponse);
+}
+

@@ -67,6 +67,7 @@
     "@config": "./src/config",
     "@utils": "./src/utils",
     "@lib": "./src/lib",
+    "@bootstrap": "./src/bootstrap",
     "@src": "./src"
   },
   "jest": {

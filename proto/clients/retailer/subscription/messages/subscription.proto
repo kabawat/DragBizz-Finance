@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package retailer.subscription;
+
+message Feature {
+  string module = 1;
+  bool report = 2;
+  bool analytics = 3;
+  string usageType = 4;
+  int32 maxLimit = 5;
+  int32 customDailyLimit = 6;
+  string metadataJson = 7;
+}
+
+message Request {
+  string userId = 1;
+  string agencyId = 2;
+  string subscriptionId = 3;
+  string startDate = 4;
+  string endDate = 5;
+  string status = 6;
+  repeated Feature features = 7;
+  string packageId = 8;
+  string paymentId = 9;
+  string paymentStatus = 10;
+  string billingCycle = 11;
+  int32 months = 12;
+  double amount = 13;
+  string currency = 14;
+}
+
+message Response {
+  bool success = 1;
+  string message = 2;
+  string subscriptionId = 3;
+  string subscriptionJson = 4;
+  string operationType = 5;
+}
+
+message GetSubscriptionByPaymentRequest {
+  string paymentId = 1;
+}
+
+message GetSubscriptionByPaymentResponse {
+  bool success = 1;
+  string message = 2;
+  string subscriptionJson = 3;
+}
+
+message ValidatePackagePaymentRequest {
+  string userId = 1;
+  string agencyId = 2;
+  string packageId = 3;
+  int32 months = 4;
+}
+
+message ValidatePackagePaymentResponse {
+  bool allowed = 1;
+  string message = 2;
+  int32 daysRemaining = 3;
+}
+
+message GetOwnerAgencyRequest {
+  string userId = 1;
+  string subdomain = 2;
+}
+
+message GetOwnerAgencyResponse {
+  bool success = 1;
+  string message = 2;
+  string agencyId = 3;
+  string subdomain = 4;
+}
+
+message GetPackageRequest {
+  string packageId = 1;
+  bool includeInactive = 2;
+}
+
+message GetPackageResponse {
+  bool success = 1;
+  string message = 2;
+  string packageJson = 3;
+}
+
+message GetPackagesRequest {
+  repeated string packageIds = 1;
+  bool includeInactive = 2;
+}
+
+message GetPackagesResponse {
+  bool success = 1;
+  string message = 2;
+  repeated string packagesJson = 3;
+}
+

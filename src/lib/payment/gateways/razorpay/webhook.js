@@ -34,6 +34,27 @@ function parseWebhook(_client, config, { rawBody, headers, body }) {
     const payment = body?.payload?.payment?.entity;
     const order = body?.payload?.order?.entity;
     const refund = body?.payload?.refund?.entity;
+    const paymentLink = body?.payload?.payment_link?.entity;
+
+    if (eventName === 'payment_link.paid' && (paymentLink || payment)) {
+        return {
+            ok: true,
+            event: {
+                type: GatewayEventType.PAYMENT_SUCCEEDED,
+                gatewayOrderId: paymentLink?.id || order?.id || null,
+                gatewayPaymentId: payment?.id || paymentLink?.payment_id || null,
+                merchantOrderId: paymentLink?.id || null,
+                amount: payment?.amount != null ? toMajorAmount(payment.amount / 100) : (paymentLink?.amount != null ? toMajorAmount(paymentLink.amount / 100) : null),
+                refundAmount: null,
+                currency: (paymentLink?.currency || payment?.currency || 'INR').toUpperCase(),
+                paymentMethod: payment?.method || null,
+                failureReason: null,
+                failureCode: null,
+                occurredAt: paymentLink?.updated_at ? new Date(paymentLink.updated_at * 1000) : new Date(),
+                raw: body,
+            }
+        };
+    }
 
     if (eventName === 'payment.captured' && payment) {
         return { ok: true, event: paymentEvent(GatewayEventType.PAYMENT_SUCCEEDED, payment) };
