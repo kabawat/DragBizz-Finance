@@ -123,7 +123,7 @@ const SECRET = {
     // Inbound finance payment gRPC server
     finance: {
       host: process.env.FINANCE_HOST || "0.0.0.0",
-      port: parseInteger(process.env.FINANCE_PORT, 50056),
+      port: parseInteger(process.env.FINANCE_PORT || process.env.HOST_GRPC_PORT, 5002),
     },
     // Outbound Core/Retailer gRPC client
     retailer: {
