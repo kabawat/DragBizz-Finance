@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package retailer.retailPayment;
+
+import "messages/common.proto";
+
+message FinanceIntentRequest {
+  string publicToken = 1;
+  string financeAttemptId = 2;
+}
+
+message FinanceIntentResponse {
+  bool success = 1;
+  string message = 2;
+  string intentId = 3;
+  int64 amountPaise = 4;
+  string currency = 5;
+  string collectType = 6;
+  string expiresAt = 7;
+  string gatewayType = 8;
+  StoreDetails store = 9;
+  CustomerDetails customer = 10;
+  string financeAttemptId = 11;
+  string gatewayConfigId = 12;
+  string gatewayCredentialVersion = 13;
+}
+
+message AttemptCredentialRequest {
+  string financeAttemptId = 1;
+  string purpose = 2;
+}
+
+message AttemptCredentialResponse {
+  bool success = 1;
+  string gatewayType = 2;
+  string gatewayMode = 3;
+  string gatewayCredentialVersion = 4;
+  GatewayCredentials credentials = 5;
+}
+
+message GatewaySettlementRequest {
+  string settlementId = 1;
+  string financeAttemptId = 2;
+  string collectLinkId = 3;
+  string provider = 4;
+  string gatewayOrderId = 5;
+  string gatewayPaymentId = 6;
+  string gatewayEventId = 7;
+  int64 amountPaise = 8;
+  string currency = 9;
+  string paymentMethod = 10;
+  string paidAt = 11;
+}
+
+message GatewaySettlementResponse {
+  bool success = 1;
+  string paymentId = 2;
+  int64 remainingDuePaise = 3;
+  bool duplicate = 4;
+  string message = 5;
+}
+

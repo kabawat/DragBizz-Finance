@@ -1,14 +1,26 @@
 const {
-    getCollectLinkDetails,
-    createRetailCheckout,
-    verifyRetailPayment,
-    RetailPaymentError,
-} = require('@src/services/payment/retailPayment.service');
+    getDetails: getCollectLinkDetails,
+    createCheckout: createRetailCheckout,
+    verifyPayment: verifyRetailPayment,
+    getStatus: getPaymentAttemptStatus,
+} = require('@src/services/payment/retail/checkout');
 const { successResponse } = require('@src/utils/responseHandler/success');
 const { errorResponse, parseErrorForResponse } = require('@src/utils/responseHandler/error');
 const STATUS_CODES = require('@src/constants/statusCode');
 
-async function getLinkDetailsController(req, res) {
+function handlePaymentError(res, error) {
+    if (error.statusCode) {
+        return errorResponse(res, {
+            message: error.message,
+            statusCode: error.statusCode || STATUS_CODES.BAD_REQUEST,
+            code: error.code,
+        });
+    }
+    return errorResponse(res, parseErrorForResponse(error));
+}
+
+// GET /payment/retail/link/:token
+async function getLink(req, res) {
     try {
         const { token } = req.params;
         const data = await getCollectLinkDetails(token);
@@ -18,18 +30,12 @@ async function getLinkDetailsController(req, res) {
             statusCode: STATUS_CODES.OK,
         });
     } catch (error) {
-        if (error instanceof RetailPaymentError) {
-            return errorResponse(res, {
-                message: error.message,
-                statusCode: error.statusCode || STATUS_CODES.BAD_REQUEST,
-                code: error.code,
-            });
-        }
-        return errorResponse(res, parseErrorForResponse(error));
+        return handlePaymentError(res, error);
     }
 }
 
-async function createRetailCheckoutController(req, res) {
+// POST /payment/retail/checkout
+async function createCheckout(req, res) {
     try {
         const { token, amount, notes } = req.body || {};
         const data = await createRetailCheckout({ token, amount, notes });
@@ -39,18 +45,12 @@ async function createRetailCheckoutController(req, res) {
             statusCode: STATUS_CODES.CREATED,
         });
     } catch (error) {
-        if (error instanceof RetailPaymentError) {
-            return errorResponse(res, {
-                message: error.message,
-                statusCode: error.statusCode || STATUS_CODES.BAD_REQUEST,
-                code: error.code,
-            });
-        }
-        return errorResponse(res, parseErrorForResponse(error));
+        return handlePaymentError(res, error);
     }
 }
 
-async function verifyRetailPaymentController(req, res) {
+// POST /payment/retail/verify
+async function verifyPayment(req, res) {
     try {
         const {
             token,
@@ -78,20 +78,40 @@ async function verifyRetailPaymentController(req, res) {
             statusCode: STATUS_CODES.OK,
         });
     } catch (error) {
-        if (error instanceof RetailPaymentError) {
-            return errorResponse(res, {
-                message: error.message,
-                statusCode: error.statusCode || STATUS_CODES.BAD_REQUEST,
-                code: error.code,
-            });
-        }
-        return errorResponse(res, parseErrorForResponse(error));
+        return handlePaymentError(res, error);
+    }
+}
+
+// POST /payment/retail/status
+async function getStatus(req, res) {
+    res.set({ 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' });
+    try {
+        const data = await getPaymentAttemptStatus(req.body || {});
+        return successResponse(res, {
+            message: 'Payment status fetched successfully',
+            data,
+            statusCode: STATUS_CODES.OK,
+        });
+    } catch (error) {
+        return errorResponse(res, {
+            message: error.statusCode ? error.message : 'Payment status is temporarily unavailable',
+            statusCode: error.statusCode || STATUS_CODES.SERVICE_UNAVAILABLE || 503,
+        });
     }
 }
 
 module.exports = {
-    getLinkDetailsController,
-    createRetailCheckoutController,
-    verifyRetailPaymentController,
-};
+    getLink,
+    createCheckout,
+    verifyPayment,
+    getStatus,
 
+    // Backward-compatibility aliases
+    getLinkDetails: getLink,
+    checkout: createCheckout,
+    verify: verifyPayment,
+    getLinkDetailsController: getLink,
+    createRetailCheckoutController: createCheckout,
+    verifyRetailPaymentController: verifyPayment,
+    getRetailPaymentStatusController: getStatus,
+};

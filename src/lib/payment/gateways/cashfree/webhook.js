@@ -27,13 +27,15 @@ function parseWebhook(_client, config, { rawBody, headers, body }) {
     const type = body?.type;
     const order = body?.data?.order;
     const payment = body?.data?.payment;
+    const link = body?.data?.link;
+
     const base = {
-        gatewayOrderId: order?.order_id || null,
+        gatewayOrderId: order?.order_id || link?.link_id || null,
         gatewayPaymentId: payment?.cf_payment_id != null ? String(payment.cf_payment_id) : null,
-        merchantOrderId: order?.order_id || null,
-        amount: order?.order_amount != null ? toMajorAmount(order.order_amount) : null,
+        merchantOrderId: order?.order_id || link?.link_id || null,
+        amount: (order?.order_amount != null ? toMajorAmount(order.order_amount) : (link?.link_amount != null ? toMajorAmount(link.link_amount) : null)),
         refundAmount: null,
-        currency: order?.order_currency || 'INR',
+        currency: order?.order_currency || link?.link_currency || 'INR',
         paymentMethod: paymentMethodFrom(payment),
         failureReason: payment?.payment_message || null,
         failureCode: null,
@@ -41,19 +43,19 @@ function parseWebhook(_client, config, { rawBody, headers, body }) {
         raw: body
     };
 
-    if (type === 'PAYMENT_SUCCESS_WEBHOOK') {
+    if (type === 'PAYMENT_SUCCESS_WEBHOOK' || type === 'PAYMENT_LINK_EVENT' || type === 'PAYMENT_LINK_PAID_WEBHOOK') {
         return { ok: true, event: { ...base, type: GatewayEventType.PAYMENT_SUCCEEDED, failureReason: null } };
     }
     if (type === 'PAYMENT_FAILED_WEBHOOK') {
         return { ok: true, event: { ...base, type: GatewayEventType.PAYMENT_FAILED, failureCode: 'PAYMENT_FAILED' } };
     }
-    if (type === 'PAYMENT_USER_DROPPED_WEBHOOK') {
+    if (type === 'PAYMENT_USER_DROPPED_WEBHOOK' || type === 'PAYMENT_LINK_CANCELLED_WEBHOOK' || type === 'PAYMENT_LINK_EXPIRED_WEBHOOK') {
         return {
             ok: true,
             event: {
                 ...base,
                 type: GatewayEventType.PAYMENT_CANCELLED,
-                failureReason: 'Customer dropped the payment',
+                failureReason: type === 'PAYMENT_LINK_EXPIRED_WEBHOOK' ? 'Payment link expired' : 'Customer dropped or cancelled payment',
                 failureCode: 'USER_DROPPED'
             }
         };

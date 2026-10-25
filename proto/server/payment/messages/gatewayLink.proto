@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package financePayment;
+
+message GatewayCredentials {
+  string keyId = 1;
+  string keySecret = 2;
+  string webhookSecret = 3;
+  string clientId = 4;
+  string clientSecret = 5;
+  string secretKey = 6;
+  string publishableKey = 7;
+}
+
+message Customer {
+  string name = 1;
+  string phone = 2;
+  string contact = 3;
+  string email = 4;
+}
+
+message CreateGatewayLinkRequest {
+  string gatewayType = 1;
+  string gatewayMode = 2;
+  GatewayCredentials credentials = 3;
+  double amount = 4;
+  string currency = 5;
+  string description = 6;
+  Customer customer = 7;
+  map<string, string> notes = 8;
+  string linkId = 9;
+  string expiresAt = 10;
+}
+
+message CancelGatewayLinkRequest {
+  string gatewayType = 1;
+  string gatewayMode = 2;
+  GatewayCredentials credentials = 3;
+  string gatewayPaymentLinkId = 4;
+}
+
+message GatewayLinkResponse {
+  string id = 1;
+  string shortUrl = 2;
+  string status = 3;
+}
+
+message CancelGatewayLinkResponse {
+  bool success = 1;
+}
+

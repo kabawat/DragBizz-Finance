@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package retailer.retailPayment;
+
+message ApplyCustomerPaymentRequest {
+  string collectLinkId = 1;
+  string storeId = 2;
+  string customerId = 3;
+  double amount = 4;
+  string paymentMethod = 5;
+  string gatewayPaymentId = 6;
+  string gatewayOrderId = 7;
+  string idempotencyKey = 8;
+  string notes = 9;
+}
+
+message ApplyCustomerPaymentResponse {
+  bool success = 1;
+  string message = 2;
+  string paymentId = 3;
+  double remainingDue = 4;
+}
+

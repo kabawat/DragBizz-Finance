@@ -29,8 +29,8 @@ class UtilityGrpcClient {
         });
 
         const utilityProto = grpc.loadPackageDefinition(packageDefinition).utility;
-        const grpcHost = SECRET.grpc?.utilityHost || "localhost";
-        const grpcPort = SECRET.grpc?.utilityPort || 5003;
+        const grpcHost = SECRET.grpc?.utility?.host || SECRET.grpc?.utilityHost || "localhost";
+        const grpcPort = SECRET.grpc?.utility?.port || SECRET.grpc?.utilityPort || 5003;
         this.serverAddress = `${grpcHost}:${grpcPort}`;
 
         const channelOptions = {
