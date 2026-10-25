@@ -25,6 +25,11 @@ async function createOrder(client, config, command) {
     const webhookUrl = client.notifyUrl();
     if (webhookUrl) orderMeta.notify_url = webhookUrl;
 
+    const storeName = command.storeName;
+    const orderNote = command.orderNote
+        || (storeName ? `Payment to ${storeName}` : null)
+        || (command.packageName ? `${command.packageName}${command.months ? ` · ${command.months} month(s)` : ''}` : 'Payment Request');
+
     const request = {
         order_amount: toMajorAmount(command.amount),
         order_currency: command.currency || 'INR',
@@ -34,13 +39,14 @@ async function createOrder(client, config, command) {
             customer_phone: customerPhone,
             ...(command.email && { customer_email: command.email })
         },
-        order_note: `${command.packageName || 'Subscription'} · ${command.months} month(s)`.slice(0, 200),
+        order_note: orderNote.slice(0, 200),
         order_expiry_time: expiresAt.toISOString(),
         order_tags: {
-            userId: String(command.userId).slice(0, 100),
-            packageId: String(command.packageId).slice(0, 50),
-            months: String(command.months),
-            billingCycle: command.billingCycle
+            userId: String(command.userId || '').slice(0, 100),
+            storeName: String(storeName || '').slice(0, 100),
+            packageId: String(command.packageId || '').slice(0, 50),
+            months: String(command.months || ''),
+            billingCycle: command.billingCycle || ''
         },
         ...(Object.keys(orderMeta).length && { order_meta: orderMeta })
     };

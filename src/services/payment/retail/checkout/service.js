@@ -171,6 +171,7 @@ async function createCheckout({ token, amount, notes }) {
 
     const gw = buildGateway(gatewayType, storeConfig);
     const merchantOrderId = `pay_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const storeName = info.store?.name || 'Store';
 
     const gatewayOrder = await gw.createOrder({
         amount: payableAmount,
@@ -178,6 +179,9 @@ async function createCheckout({ token, amount, notes }) {
         orderId: merchantOrderId,
         email: info.customer?.email || undefined,
         phone: info.customer?.phone || undefined,
+        storeName,
+        orderNote: `Payment to ${storeName}`,
+        packageName: `Payment to ${storeName}`,
         notes: {
             token,
             collectLinkId: info.collectLinkId,
@@ -201,7 +205,10 @@ async function createCheckout({ token, amount, notes }) {
         gatewayOrderId: gatewayOrder.gatewayOrderId,
         amount: payableAmount,
         currency: info.currency || 'INR',
-        checkout: gatewayOrder.checkout,
+        checkout: {
+            ...(gatewayOrder.checkout || {}),
+            storeName,
+        },
         store: info.store,
         customer: info.customer,
     };
