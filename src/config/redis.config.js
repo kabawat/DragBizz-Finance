@@ -72,7 +72,7 @@ const connectRedis = async () => {
             
             // Configure Redis settings if possible
             try {
-                await redisClient.configSet('maxmemory-policy', 'allkeys-lru');
+                await redisClient.configSet('maxmemory-policy', 'noeviction');
                 await redisClient.configSet('tcp-keepalive', '60');
                 await redisClient.configSet('timeout', '300');
             } catch (configError) {
