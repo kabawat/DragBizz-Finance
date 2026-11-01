@@ -1,6 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
-const checkOrigin = require("@src/utils/checkOrigin");
+const corsMiddleware = require("@src/middlewares/cors.middleware");
 const morgan = require("morgan");
 const specs = require("./swagger");
 const swaggerUi = require("swagger-ui-express");
@@ -14,22 +14,18 @@ const isProduction = SECRET.ENVIRONMENT === "production";
 
 const { applySecurityMiddleware } = require("@config/security.config");
 applySecurityMiddleware(app);
-app.use(express.json({
-  limit: "10mb",
-  verify: (req, res, buf) => {
-    const path = req.originalUrl || req.url || '';
-    if (path.includes('/webhooks')) {
-      req.rawBody = buf.toString('utf8');
-      console.log('[WEBHOOK] [0] rawBody captured in express.json verify', {
-        path,
-        bufLen: buf.length,
-      });
-    }
+function captureWebhookBody(req, res, buf) {
+  const path = req.originalUrl || req.url || '';
+  if (path.includes('/webhooks')) {
+    req.rawBody = buf.toString('utf8');
   }
-}));
+}
+
+app.use(express.json({ limit: "10mb", verify: captureWebhookBody }));
+app.use(express.urlencoded({ extended: false, limit: "1mb", verify: captureWebhookBody }));
 app.set("trust proxy", true);
 app.use(morgan(isProduction ? "combined" : "dev"));
-app.use(checkOrigin());
+app.use(corsMiddleware());
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 

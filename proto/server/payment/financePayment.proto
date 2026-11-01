@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package financePayment;
+
+import "messages/gatewayLink.proto";
+
+// Compatibility RPCs for existing gateway-hosted collection links.
+service FinancePaymentService {
+  rpc CreateStoreGatewayLink (CreateGatewayLinkRequest) returns (GatewayLinkResponse);
+  rpc CancelStoreGatewayLink (CancelGatewayLinkRequest) returns (CancelGatewayLinkResponse);
+}
+

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package utility;
+
+import "google/protobuf/struct.proto";
+
+enum EmailTemplate {
+  EMAIL_TEMPLATE_UNSPECIFIED = 0;
+  OTP = 1;
+  WELCOME = 2;
+  RESET_PASSWORD = 3;
+  STORE_DELETE_OTP = 4;
+  LOGIN_SUCCESS = 5;
+  SUBSCRIPTION_SUCCESS = 6;
+  CUSTOM = 7;
+  INVOICE_CREATED = 8;
+  ORDER_STATUS_UPDATE = 9;
+  ORDER_OTP = 10;
+  STAFF_INVITATION = 11;
+  PAYMENT_REMINDER = 12;
+  LOW_STOCK_ALERT = 13;
+  PAYMENT_RECEIVED = 14;
+}
+
+message SendEmailRequest {
+  string to = 1;
+  EmailTemplate type = 2;
+  google.protobuf.Struct payload = 3;
+}
+
+message SendEmailResponse {
+  bool success = 1;
+  string message = 2;
+  string job_id = 3;
+  string to = 4;
+  string type = 5;
+  string status = 6;
+}

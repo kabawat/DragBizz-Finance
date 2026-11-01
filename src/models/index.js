@@ -1,19 +1,25 @@
 const mongoose = require('mongoose');
-const packageSchema = require('./schema/package.schema');
 const paymentSchema = require('./schema/payment.schema');
-const subscriptionSchema = require('./schema/subscription.schema');
 const auditLogSchema = require('./schema/auditLog.schema');
+const invoiceJobSchema = require('./schema/invoiceJob.schema');
+const retailPaymentAttemptSchema = require('./schema/retailPaymentAttempt.schema');
+const retailWebhookEventSchema = require('./schema/retailWebhookEvent.schema');
+const coreSettlementOutboxSchema = require('./schema/coreSettlementOutbox.schema');
 
-const PackageModel = mongoose.model("Package", packageSchema);
 const PaymentModel = mongoose.model("Payment", paymentSchema);
-const SubscriptionModel = mongoose.model("Subscription", subscriptionSchema);
 const AuditLogModel = mongoose.model("AuditLog", auditLogSchema);
+const InvoiceJobModel = mongoose.model("InvoiceJob", invoiceJobSchema);
+const RetailPaymentAttemptModel = mongoose.model("RetailPaymentAttempt", retailPaymentAttemptSchema);
+const RetailWebhookEventModel = mongoose.model("RetailWebhookEvent", retailWebhookEventSchema);
+const CoreSettlementOutboxModel = mongoose.model("CoreSettlementOutbox", coreSettlementOutboxSchema);
 
 const Models = {
-    PackageModel,
     PaymentModel,
-    SubscriptionModel,
-    AuditLogModel
+    AuditLogModel,
+    InvoiceJobModel,
+    RetailPaymentAttemptModel,
+    RetailWebhookEventModel,
+    CoreSettlementOutboxModel,
 };
 
 module.exports = Models;

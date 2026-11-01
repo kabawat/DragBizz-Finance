@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package utility;
+
+import "google/protobuf/struct.proto";
+
+message SendSocketRequest {
+  repeated string user_ids = 1;
+  string type = 2;
+  google.protobuf.Struct data = 3;
+}
+
+message SendSocketResponse {
+  bool success = 1;
+  string message = 2;
+  bool sent = 3;
+  repeated string user_ids = 4;
+}

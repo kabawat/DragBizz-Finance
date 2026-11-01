@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-package subscription;
-
-option go_package = "subscription";

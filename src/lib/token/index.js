@@ -20,14 +20,6 @@ function getTokenCacheKey(token) {
     return `${VERIFY_CACHE_PREFIX}${hash}:subscription`;
 }
 
-// 📦 Extract Bearer token from Authorization header
-const extractBearerToken = (authHeader) => {
-    if (!authHeader || typeof authHeader !== "string") return null;
-    const parts = authHeader.split(" ");
-    return parts.length === 2 && parts[0] === "Bearer" ? parts[1] : null;
-};
-
-// ✅ Verify public token (Auth micro-service, RS256) with Redis caching
 async function verifyAccessToken(token) {
     try {
         // Step 1: Check Redis cache first (ultra fast - ~1ms)
@@ -88,6 +80,5 @@ function normalizeAccessClaims(payload) {
 
 module.exports = {
     verifyAccessToken,
-    extractBearerToken,
     normalizeAccessClaims,
 };

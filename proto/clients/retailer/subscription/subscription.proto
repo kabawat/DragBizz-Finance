@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package retailer.subscription;
+
+import "messages/subscription.proto";
+
+service SubscriptionService {
+  rpc CreateSubscription (Request) returns (Response);
+  rpc GetOwnerAgency (GetOwnerAgencyRequest) returns (GetOwnerAgencyResponse);
+  rpc GetPackage (GetPackageRequest) returns (GetPackageResponse);
+  rpc GetPackages (GetPackagesRequest) returns (GetPackagesResponse);
+  rpc GetSubscriptionByPayment (GetSubscriptionByPaymentRequest) returns (GetSubscriptionByPaymentResponse);
+  rpc ValidatePackagePayment (ValidatePackagePaymentRequest) returns (ValidatePackagePaymentResponse);
+}
+

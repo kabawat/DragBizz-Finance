@@ -4,7 +4,7 @@
  *   post:
  *     summary: Create a payment order
  *     description: |
- *       Create a new payment order for purchasing a package. This endpoint creates a Razorpay order and returns the order details.
+ *       Create a payment order using the gateway configured by `PAYMENT_GATEWAY`. Checkout fields in the response come from that provider.
  *       
  *       **Features:**
  *       - ✅ Creates Razorpay order
@@ -56,6 +56,18 @@
  *                 type: string
  *                 example: "SAVE10"
  *                 description: Coupon code for discount (optional)
+ *               gateway:
+ *                 type: string
+ *                 enum: [RAZORPAY, CASHFREE]
+ *                 example: "CASHFREE"
+ *                 description: Optional. Must match the server PAYMENT_GATEWAY value. The server selects the provider.
+ *               phone:
+ *                 type: string
+ *                 example: "9876543210"
+ *                 description: Customer phone. Required when gateway is CASHFREE.
+ *               email:
+ *                 type: string
+ *                 example: "user@example.com"
  *               idempotencyKey:
  *                 type: string
  *                 example: "unique-key-12345"
@@ -93,6 +105,13 @@
  *                       type: string
  *                       example: "order_abc123xyz456"
  *                       description: Internal order ID
+ *                     gateway:
+ *                       type: string
+ *                       example: "RAZORPAY"
+ *                       description: Which checkout the frontend must open. One of RAZORPAY, CASHFREE, STRIPE, PAYU, EASEBUZZ.
+ *                     checkout:
+ *                       type: object
+ *                       description: Gateway payload for that checkout, including the same gateway value.
  *                     razorpayOrderId:
  *                       type: string
  *                       example: "order_MNOPQR123456"
@@ -116,6 +135,7 @@
  *                   message: "Payment order created successfully"
  *                   data:
  *                     orderId: "order_abc123xyz456"
+ *                     gateway: "RAZORPAY"
  *                     razorpayOrderId: "order_MNOPQR123456"
  *                     amount: 999.00
  *                     currency: "INR"

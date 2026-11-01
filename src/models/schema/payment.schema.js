@@ -18,17 +18,20 @@ const paymentSchema = new mongoose.Schema({
     // Package Information
     packageId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Package',
-        required: true,
+        default: null,
         index: true
     },
 
-    // Subscription Reference (if payment successful)
+    // Reference to the subscription record owned by Core, if activated.
     subscriptionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Subscription',
+        type: String,
         default: null,
         index: true
+    },
+    subscriptionType: {
+        type: String,
+        enum: ['NEW', 'RENEWAL', 'UPGRADE', 'DOWNGRADE'],
+        default: null,
     },
 
     // Order Information
@@ -47,12 +50,22 @@ const paymentSchema = new mongoose.Schema({
         index: true
     },
 
-    // Razorpay Specific Fields
+    // Provider-neutral references. Legacy provider fields below stay for existing records.
+    gatewayOrderId: {
+        type: String
+    },
+    gatewayPaymentId: {
+        type: String
+    },
+    checkout: {
+        type: mongoose.Schema.Types.Mixed
+    },
+    gatewayResponse: {
+        type: mongoose.Schema.Types.Mixed
+    },
+
     razorpayOrderId: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true
+        type: String
     },
     razorpayPaymentId: {
         type: String,
@@ -62,6 +75,24 @@ const paymentSchema = new mongoose.Schema({
     razorpaySignature: {
         type: String,
         default: null
+    },
+
+    // Cashfree fields are set only for CASHFREE orders.
+    cashfreeOrderId: {
+        type: String
+    },
+    cfOrderId: {
+        type: String
+    },
+    cashfreePaymentSessionId: {
+        type: String
+    },
+    cashfreePaymentId: {
+        type: String,
+        index: true
+    },
+    cashfreeResponse: {
+        type: mongoose.Schema.Types.Mixed
     },
 
     // Payment Details
@@ -102,13 +133,11 @@ const paymentSchema = new mongoose.Schema({
     // Billing Information
     billingCycle: {
         type: String,
-        required: true,
         enum: ['MONTHLY', 'QUARTERLY', 'YEARLY', 'ONE_TIME'],
         index: true
     },
     months: {
         type: Number,
-        required: true,
         min: 1,
         index: true
     },
@@ -193,6 +222,17 @@ const paymentSchema = new mongoose.Schema({
         default: null
     },
 
+    // Invoice PDF
+    invoice: {
+        r2Key: { type: String, default: null },
+        status: {
+            type: String,
+            enum: ['PENDING', 'GENERATING', 'DONE', 'FAILED'],
+            default: null,
+        },
+        generatedAt: { type: Date, default: null },
+    },
+
     // Notes
     notes: {
         type: String,
@@ -214,6 +254,23 @@ const paymentSchema = new mongoose.Schema({
     expiresAt: {
         type: Date,
         default: null // Order expiry time
+    },
+
+    // Invoice PDF (generated asynchronously after payment settles)
+    invoice: {
+        r2Key: {
+            type: String,
+            default: null
+        },
+        status: {
+            type: String,
+            enum: ['PENDING', 'GENERATING', 'DONE', 'FAILED'],
+            default: null
+        },
+        generatedAt: {
+            type: Date,
+            default: null
+        }
     }
 }, {
     timestamps: true,
@@ -234,6 +291,26 @@ paymentSchema.index({ agencyId: 1, createdAt: -1 });
 paymentSchema.index(
     { 'metadata.idempotencyKey': 1, userId: 1 },
     { unique: true, partialFilterExpression: { 'metadata.idempotencyKey': { $type: 'string' } } }
+);
+
+paymentSchema.index(
+    { gatewayOrderId: 1 },
+    { unique: true, partialFilterExpression: { gatewayOrderId: { $type: 'string' } }, name: 'gatewayOrderId_partial_unique' }
+);
+
+paymentSchema.index(
+    { gatewayOrderId: 1 },
+    { unique: true, partialFilterExpression: { gatewayOrderId: { $type: 'string' } }, name: 'gatewayOrderId_partial_unique' }
+);
+
+paymentSchema.index(
+    { razorpayOrderId: 1 },
+    { unique: true, partialFilterExpression: { razorpayOrderId: { $type: 'string' } }, name: 'razorpayOrderId_partial_unique' }
+);
+
+paymentSchema.index(
+    { cashfreeOrderId: 1 },
+    { unique: true, partialFilterExpression: { cashfreeOrderId: { $type: 'string' } }, name: 'cashfreeOrderId_partial_unique' }
 );
 
 // Virtual for checking if payment is successful
