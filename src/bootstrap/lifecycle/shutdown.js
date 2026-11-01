@@ -23,11 +23,11 @@ async function gracefulShutdown(error = null) {
     }, 10000);
     shutdownTimeout.unref();
 
+    await stopHttp();
     await stopWorkers();
     await stopGrpc();
     await disconnectRedis();
     await closeDatabase();
-    await stopHttp();
 
     if (shutdownTimeout) clearTimeout(shutdownTimeout);
     logger.info('Graceful shutdown complete (finance)');

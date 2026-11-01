@@ -3,7 +3,7 @@ const Response = require("@src/utils/responseHandler/standardized");
 const STATUS_CODES = require("@src/constants/statusCode");
 const { getCache } = require("@src/services/cache.service");
 const { getAccessTokenFromRequest } = require("@src/utils/helper/requestToken.helper");
-
+const { redisClient } = require('@src/config/redis.config');
 async function assertTokenVersion(decoded) {
     const userId = decoded?.sub;
     if (!userId) return null;
@@ -29,6 +29,8 @@ function attachUser(req, decoded) {
 
 const accessMiddleware = async (req, res, next) => {
     try {
+        // Financial authorization cannot proceed with unavailable shared safety state.
+        await redisClient.ping();
         const token = getAccessTokenFromRequest(req);
         if (!token) {
             return Response.validationError(res, "Access token missing or invalid.", {}, STATUS_CODES.UNAUTHORIZED);
