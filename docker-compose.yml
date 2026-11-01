@@ -8,23 +8,15 @@ services:
     container_name: db-finance-prod
     restart: unless-stopped
     ports:
-    - ${HOST_HTTP_PORT:-8002}:${PORT:-3000}
-    - ${HOST_GRPC_PORT:-5002}:${FINANCE_PORT:-5002}
+    - ${HOST_HTTP_PORT:-8002}:3000
+    - ${HOST_GRPC_PORT:-5002}:5002
     env_file:
-    - .env.production
+    - .env
     extra_hosts:
     - host.docker.internal:host-gateway
     networks:
     - subscription-network
     - redis-private
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: '6379'
-      REDIS_DB: '0'
-      REDIS_USERNAME: finance_user
-      NODE_ENV: production
-      ENVIRONMENT: production
-      MONGODB_URI_DEV: ''
     stop_grace_period: 45s
 networks:
   subscription-network:

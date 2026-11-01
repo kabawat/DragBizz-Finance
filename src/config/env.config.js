@@ -57,9 +57,7 @@ const SECRET = {
   },
 
   mongo: {
-    uri: IS_PRODUCTION
-      ? (process.env.MONGODB_URI || "").trim()
-      : (process.env.MONGODB_URI_DEV || process.env.MONGODB_URI || "").trim(),
+    uri: (process.env.MONGODB_URI || "").trim(),
     maxPoolSize: parseInteger(process.env.MONGO_MAX_POOL_SIZE, undefined),
     minPoolSize: parseInteger(process.env.MONGO_MIN_POOL_SIZE, undefined),
   },
@@ -178,7 +176,7 @@ function validateConfig() {
 
   // 2. Database configuration
   if (!SECRET.mongo.uri) {
-    missingVars.push(IS_PRODUCTION ? "MONGODB_URI" : "MONGODB_URI_DEV");
+    missingVars.push("MONGODB_URI");
   }
 
   if (!SECRET.redis.host) {
