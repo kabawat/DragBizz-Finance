@@ -6,14 +6,18 @@ const IS_PROD = SECRET.ENVIRONMENT === 'production';
 
 const connectDB = async () => {
   try {
+    const isDirect = process.env.MONGODB_DIRECT_CONNECTION === 'true' ||
+      /directConnection=true/i.test(SECRET.mongo?.uri || '') ||
+      !IS_PROD;
+
     const options = {
       maxPoolSize: 50,
       minPoolSize: 5,
-      serverSelectionTimeoutMS: IS_PROD ? 5000 : 15000,
+      serverSelectionTimeoutMS: 15000,
       socketTimeoutMS: 45000,
       connectTimeoutMS: 10000,
       readPreference: 'primary',
-      directConnection: !IS_PROD,
+      directConnection: isDirect,
       retryWrites: true,
       retryReads: true,
       bufferCommands: false,
