@@ -1,7 +1,7 @@
 services:
   dragbizz-subscription:
     build: .
-    container_name: db-finance
+    container_name: finance
     ports:
     - ${HOST_HTTP_PORT:-8002}:${PORT:-3000}
     - ${HOST_GRPC_PORT:-5002}:${FINANCE_PORT:-5002}

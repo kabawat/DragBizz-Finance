@@ -27,11 +27,11 @@ yarn dev:logs
 
 ## Step: 5 — Start production
 
-For production, copy `env.example` to `.env.production`, fill in production settings and use Infra's `secrets-production/finance.env` credentials. Provision production key/certificate mounts under `/etc/dragbizz/production/` as declared in Compose.
+Each server uses its own `.env` file. Copy `env.example` to `.env` and set values for that server. For production, fill in production settings and use Infra's `secrets/finance.env` credentials. Provision production mounts under `/etc/dragbizz/finance/` if declared in Compose.
 
 ```bash
 yarn prod:start
 yarn prod:logs
 ```
 
-`dev:start` uses `docker-compose.dev.yml`; `prod:start` uses only `docker-compose.yml` and `.env.production`. Stop with `yarn dev:stop` or `yarn prod:stop`.
+`dev:start` uses `docker-compose.dev.yml`; `prod:start` uses `docker-compose.yml`. Both use the server's `.env`. Stop with `yarn dev:stop` or `yarn prod:stop`.
