@@ -27,7 +27,7 @@ yarn dev:logs
 
 ## Step: 5 — Start production
 
-Each server uses its own `.env` file. Copy `env.example` to `.env` and set values for that server. For production, fill in production settings and use Infra's `secrets-production/finance.env` credentials. Provision production key/certificate mounts under `/etc/dragbizz/production/` as declared in Compose.
+Each server uses its own `.env` file. Copy `env.example` to `.env` and set values for that server. For production, fill in production settings and use Infra's `secrets/finance.env` credentials. Provision production mounts under `/etc/dragbizz/finance/` if declared in Compose.
 
 ```bash
 yarn prod:start

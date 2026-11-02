@@ -299,11 +299,6 @@ paymentSchema.index(
 );
 
 paymentSchema.index(
-    { gatewayOrderId: 1 },
-    { unique: true, partialFilterExpression: { gatewayOrderId: { $type: 'string' } }, name: 'gatewayOrderId_partial_unique' }
-);
-
-paymentSchema.index(
     { razorpayOrderId: 1 },
     { unique: true, partialFilterExpression: { razorpayOrderId: { $type: 'string' } }, name: 'razorpayOrderId_partial_unique' }
 );
@@ -324,4 +319,3 @@ paymentSchema.virtual('isRefunded').get(function () {
 });
 
 module.exports = paymentSchema;
-

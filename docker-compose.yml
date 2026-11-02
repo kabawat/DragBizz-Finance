@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: dragbizz-subscription:prod
-    container_name: db-finance-prod
+    container_name: finance
     restart: unless-stopped
     ports:
     - ${HOST_HTTP_PORT:-8002}:3000
