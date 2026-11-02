@@ -13,10 +13,6 @@ function getChannelCredentials() {
     const keyPath = SECRET.grpc?.tls?.financeKeyPath || process.env.FINANCE_PAYMENT_GRPC_KEY_PATH;
     const certPath = SECRET.grpc?.tls?.financeCertPath || process.env.FINANCE_PAYMENT_GRPC_CERT_PATH;
 
-    if (SECRET.ENVIRONMENT === 'production' && (!caPath || !keyPath || !certPath || !SECRET.internalServiceSecret)) {
-        throw new Error('Retailer gRPC requires mTLS and INTERNAL_SERVICE_SECRET in production');
-    }
-
     if (caPath && keyPath && certPath) {
         return grpc.credentials.createSsl(
             fs.readFileSync(caPath),
