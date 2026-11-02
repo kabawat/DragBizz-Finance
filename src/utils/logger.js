@@ -49,11 +49,9 @@ const logger = winston.createLogger({
     ]
 });
 
-if (!isProduction) {
-    logger.add(new winston.transports.Console({
-        format: consoleFormat
-    }));
-}
+logger.add(new winston.transports.Console({
+    format: consoleFormat
+}));
 
 module.exports = logger;
 
