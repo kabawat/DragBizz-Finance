@@ -1,6 +1,7 @@
 const { getPackageById, validatePayment } = require('@src/services/subscription');
 const { createPaymentOrder } = require('./create.service');
 const { getBillingCycleFromMonths, calculateFinalPricing } = require('./pricing.service');
+const logger = require('@src/utils/logger');
 
 function httpError(message, statusCode, fields) {
     const error = new Error(message);
@@ -30,6 +31,14 @@ async function createPackagePayment(orderData) {
 
     const packageDoc = await getPackageById(packageId);
 
+    logger.info('[SUBSCRIPTION_PAYMENT_DEBUG] package resolved', {
+        packageId,
+        packageName: packageDoc?.name,
+        planType: packageDoc?.planType,
+        months: monthsNum,
+        pricingOptions: packageDoc?.pricing?.map((item) => item.months),
+    });
+
     if (!packageDoc) {
         throw new Error('Package not found or not available');
     }
@@ -42,6 +51,15 @@ async function createPackagePayment(orderData) {
 
     const { baseAmount, discountAmount, taxAmount, finalAmount } = await calculateFinalPricing(pricingOption, couponCode);
     const billingCycle = getBillingCycleFromMonths(monthsNum);
+
+    logger.info('[SUBSCRIPTION_PAYMENT_DEBUG] pricing calculated', {
+        packageId,
+        baseAmount,
+        discountAmount,
+        taxAmount,
+        finalAmount,
+        billingCycle,
+    });
 
     return createPaymentOrder({
         userId,

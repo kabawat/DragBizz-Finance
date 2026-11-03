@@ -5,6 +5,7 @@ const { serializeOrderResponse } = require('@src/utils/serializer/payment.serial
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
+const logger = require("@src/utils/logger");
 
 // Create payment order controller
 async function createOrderController(req, res) {
@@ -28,8 +29,18 @@ async function createOrderController(req, res) {
 
         // Sanitize and validate input
         const sanitizedData = sanitizeCreateOrderData(req.body);
+        logger.info("[SUBSCRIPTION_PAYMENT_DEBUG] create-order request", {
+            userId,
+            agencyId,
+            packageId: sanitizedData.packageId,
+            months: sanitizedData.months,
+            hasEmail: Boolean(sanitizedData.email),
+            hasPhone: Boolean(sanitizedData.phone),
+            gateway: process.env.PAYMENT_GATEWAY || "razorpay",
+        });
         const validation = validateCreateOrder(sanitizedData);
         if (!validation.isValid) {
+            logger.warn("[SUBSCRIPTION_PAYMENT_DEBUG] validation failed", { fields: validation.errors });
             return errorResponse(res, {
                 message: 'Validation failed',
                 fields: validation.errors,
@@ -44,6 +55,16 @@ async function createOrderController(req, res) {
             idempotencyKey: req.idempotencyKey,
             ipAddress: req.clientIp,
             userAgent: req.userAgent
+        });
+
+        logger.info("[SUBSCRIPTION_PAYMENT_DEBUG] gateway order created", {
+            orderId: orderData?.orderId,
+            gateway: orderData?.gateway || orderData?.checkout?.gateway,
+            gatewayOrderId: orderData?.gatewayOrderId || orderData?.checkout?.gatewayOrderId,
+            amount: orderData?.amount,
+            currency: orderData?.currency,
+            hasCheckout: Boolean(orderData?.checkout),
+            checkoutKeys: orderData?.checkout ? Object.keys(orderData.checkout) : [],
         });
 
         if (!orderData) {
@@ -63,6 +84,11 @@ async function createOrderController(req, res) {
         });
 
     } catch (error) {
+        logger.error("[SUBSCRIPTION_PAYMENT_DEBUG] create-order failed", {
+            message: error?.message,
+            code: error?.code,
+            statusCode: error?.statusCode,
+        });
         // Handle specific error cases
         if (error.statusCode === 404 || error.message === 'Package not found or not available') {
             return errorResponse(res, {
