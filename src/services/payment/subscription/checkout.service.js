@@ -30,6 +30,7 @@ async function createPackagePayment(orderData) {
     await assertPackagePaymentAllowed({ userId, agencyId, packageId, months });
 
     const packageDoc = await getPackageById(packageId);
+    const monthsNum = parseInt(months, 10);
 
     logger.info('[SUBSCRIPTION_PAYMENT_DEBUG] package resolved', {
         packageId,
@@ -43,7 +44,6 @@ async function createPackagePayment(orderData) {
         throw new Error('Package not found or not available');
     }
 
-    const monthsNum = parseInt(months, 10);
     const pricingOption = packageDoc.pricing?.find((item) => item.months === monthsNum);
     if (!pricingOption) {
         throw new Error(`Pricing not available for ${monthsNum} month(s)`);
