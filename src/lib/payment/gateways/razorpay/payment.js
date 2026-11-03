@@ -2,6 +2,7 @@ const { PaymentStatus } = require('@src/lib/payment/events');
 const { GatewayError } = require('@src/lib/payment/errors');
 const { toMinorAmount, toMajorAmount } = require('@src/lib/payment/money');
 const { hmac, timingSafeEqualHex } = require('@src/lib/payment/signature');
+const logger = require('@src/utils/logger');
 
 function verifyClientSignature(config, gatewayOrderId, gatewayPaymentId, signature) {
     if (!config.keySecret || !signature) return false;
@@ -10,10 +11,17 @@ function verifyClientSignature(config, gatewayOrderId, gatewayPaymentId, signatu
 }
 
 function verifyPayment(_client, config, input) {
+    logger.info('razorpay.payment.verify.started', {
+        gatewayOrderId: input.gatewayOrderId,
+        gatewayPaymentId: input.gatewayPaymentId,
+        mode: config.mode,
+    });
     const valid = verifyClientSignature(config, input.gatewayOrderId, input.gatewayPaymentId, input.signature);
     if (!valid) {
+        logger.warn('razorpay.payment.verify.signature_failed', { gatewayOrderId: input.gatewayOrderId });
         throw new GatewayError('Invalid payment signature', { code: 'INVALID_SIGNATURE', statusCode: 400 });
     }
+    logger.info('razorpay.payment.verify.signature_valid', { gatewayOrderId: input.gatewayOrderId, gatewayPaymentId: input.gatewayPaymentId });
     return {
         status: PaymentStatus.SUCCESS,
         gatewayOrderId: input.gatewayOrderId,
@@ -31,11 +39,14 @@ function verifyPayment(_client, config, input) {
 }
 
 async function getPaymentStatus(client, _config, gatewayOrderId) {
+    logger.info('razorpay.payment.status.started', { gatewayOrderId });
     const payments = await client.sdk().orders.fetchPayments(gatewayOrderId);
     const captured = (payments?.items || []).find((item) => item.status === 'captured');
     if (!captured) {
+        logger.info('razorpay.payment.status.pending', { gatewayOrderId, paymentCount: payments?.items?.length || 0 });
         return { status: PaymentStatus.PENDING, gatewayOrderId, gatewayPaymentId: null, amount: null, raw: payments };
     }
+    logger.info('razorpay.payment.status.captured', { gatewayOrderId, gatewayPaymentId: captured.id, amountMinor: captured.amount, currency: captured.currency });
     return {
         status: PaymentStatus.SUCCESS,
         gatewayOrderId,

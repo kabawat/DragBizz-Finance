@@ -29,6 +29,13 @@ async function handleWebhook(providerName, request) {
         return { received: true, ignored: true };
     }
 
+    logger.info('payment.webhook.parsed', {
+        gateway: gateway.id,
+        type: parsed.event.type,
+        gatewayOrderId: parsed.event.gatewayOrderId,
+        gatewayPaymentId: parsed.event.gatewayPaymentId,
+    });
+
     // Persist the signed event before settlement. Provider retries become a
     // durable no-op, while failed processing remains inspectable/retryable.
     const eventId = String(parsed.event.eventId || parsed.event.providerEventId || parsed.event.id ||
