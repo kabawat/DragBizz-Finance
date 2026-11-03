@@ -290,6 +290,10 @@ paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
 paymentSchema.index({ agencyId: 1, createdAt: -1 });
+paymentSchema.index(
+    { agencyId: 1, userId: 1, _id: -1 },
+    { name: 'billing_history_cursor_idx' }
+);
 paymentSchema.index({ status: 1, packageId: 1, subscriptionId: 1, _id: 1 }, { name: 'subscription_activation_scan_idx' });
 
 // Ensure idempotency key is unique per user to prevent exact-millisecond race conditions
