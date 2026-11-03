@@ -29,9 +29,7 @@ class UtilityGrpcClient {
         });
 
         const utilityProto = grpc.loadPackageDefinition(packageDefinition).utility;
-        const grpcHost = SECRET.grpc?.utility?.host || SECRET.grpc?.utilityHost || "localhost";
-        const grpcPort = SECRET.grpc?.utility?.port || SECRET.grpc?.utilityPort || 5003;
-        this.serverAddress = `${grpcHost}:${grpcPort}`;
+        this.serverAddress = `${SECRET.grpc.utility.host}:${SECRET.grpc.utility.port}`;
 
         const channelOptions = {
             "grpc.max_receive_message_length": 50 * 1024 * 1024,

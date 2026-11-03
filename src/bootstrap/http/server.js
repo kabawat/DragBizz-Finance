@@ -6,7 +6,7 @@ let httpServer = null;
 
 function startHttp(options = {}) {
   const host = options.host || '0.0.0.0';
-  const port = options.port || SECRET.server?.port || 4002;
+  const port = options.port || SECRET.server.port;
 
   return new Promise((resolve, reject) => {
     try {

@@ -3,15 +3,15 @@ const fs = require('fs');
 const SECRET = require('@src/config/env.config');
 
 function getRetailerAddress(customHost, customPort) {
-    const host = customHost || process.env.RETAIL_PAYMENT_GRPC_HOST || SECRET.grpc?.retailer?.host || SECRET.grpc?.retailerHost || '127.0.0.1';
-    const port = customPort || process.env.RETAIL_PAYMENT_GRPC_PORT || SECRET.grpc?.retailer?.port || SECRET.grpc?.retailerPort || 50052;
+    const host = customHost || SECRET.grpc.retailer.host;
+    const port = customPort || SECRET.grpc.retailer.port;
     return `${host}:${port}`;
 }
 
 function getChannelCredentials() {
-    const caPath = SECRET.grpc?.tls?.coreCaPath || process.env.CORE_PAYMENT_GRPC_CA_PATH;
-    const keyPath = SECRET.grpc?.tls?.financeKeyPath || process.env.FINANCE_PAYMENT_GRPC_KEY_PATH;
-    const certPath = SECRET.grpc?.tls?.financeCertPath || process.env.FINANCE_PAYMENT_GRPC_CERT_PATH;
+    const caPath = SECRET.grpc.tls.coreCaPath;
+    const keyPath = SECRET.grpc.tls.financeKeyPath;
+    const certPath = SECRET.grpc.tls.financeCertPath;
 
     if (caPath && keyPath && certPath) {
         return grpc.credentials.createSsl(
