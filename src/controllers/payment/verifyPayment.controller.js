@@ -32,6 +32,8 @@ async function verifyPaymentController(req, res) {
         // Verify payment with service
         const payment = await verifyPayment({
             ...sanitizedData,
+            userId,
+            agencyId: req.user?.agencyId,
             ipAddress: req.clientIp,
             userAgent: req.userAgent
         });

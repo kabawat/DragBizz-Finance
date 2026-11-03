@@ -33,6 +33,10 @@ const paymentSchema = new mongoose.Schema({
         enum: ['NEW', 'RENEWAL', 'UPGRADE', 'DOWNGRADE'],
         default: null,
     },
+    activationIntent: {
+        status: { type: String, enum: ['PENDING', 'ENQUEUED', 'COMPLETED'], default: null },
+        createdAt: { type: Date, default: null },
+    },
 
     // Order Information
     orderId: {
@@ -286,6 +290,7 @@ paymentSchema.index({ createdAt: -1 });
 paymentSchema.index({ status: 1, createdAt: -1 });
 paymentSchema.index({ userId: 1, createdAt: -1 });
 paymentSchema.index({ agencyId: 1, createdAt: -1 });
+paymentSchema.index({ status: 1, packageId: 1, subscriptionId: 1, _id: 1 }, { name: 'subscription_activation_scan_idx' });
 
 // Ensure idempotency key is unique per user to prevent exact-millisecond race conditions
 paymentSchema.index(

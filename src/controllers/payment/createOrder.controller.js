@@ -29,7 +29,7 @@ async function createOrderController(req, res) {
 
         // Sanitize and validate input
         const sanitizedData = sanitizeCreateOrderData(req.body);
-        logger.info("[SUBSCRIPTION_PAYMENT_DEBUG] create-order request", {
+        logger.info("subscription_payment.create_order", {
             userId,
             agencyId,
             packageId: sanitizedData.packageId,
@@ -40,7 +40,7 @@ async function createOrderController(req, res) {
         });
         const validation = validateCreateOrder(sanitizedData);
         if (!validation.isValid) {
-            logger.warn("[SUBSCRIPTION_PAYMENT_DEBUG] validation failed", { fields: validation.errors });
+            logger.warn("subscription_payment.validation_failed", { fieldCount: Object.keys(validation.errors || {}).length });
             return errorResponse(res, {
                 message: 'Validation failed',
                 fields: validation.errors,
@@ -57,14 +57,13 @@ async function createOrderController(req, res) {
             userAgent: req.userAgent
         });
 
-        logger.info("[SUBSCRIPTION_PAYMENT_DEBUG] gateway order created", {
+        logger.info("subscription_payment.order_created", {
             orderId: orderData?.orderId,
             gateway: orderData?.gateway || orderData?.checkout?.gateway,
             gatewayOrderId: orderData?.gatewayOrderId || orderData?.checkout?.gatewayOrderId,
             amount: orderData?.amount,
             currency: orderData?.currency,
             hasCheckout: Boolean(orderData?.checkout),
-            checkoutKeys: orderData?.checkout ? Object.keys(orderData.checkout) : [],
         });
 
         if (!orderData) {
@@ -84,7 +83,7 @@ async function createOrderController(req, res) {
         });
 
     } catch (error) {
-        logger.error("[SUBSCRIPTION_PAYMENT_DEBUG] create-order failed", {
+        logger.error("subscription_payment.create_order_failed", {
             message: error?.message,
             code: error?.code,
             statusCode: error?.statusCode,
