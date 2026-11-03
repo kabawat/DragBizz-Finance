@@ -6,6 +6,8 @@ function sanitizeCreateOrderData(data) {
         email: data.email?.trim() || null,
         phone: data.phone?.trim() || null,
         customerName: data.customerName?.trim() || data.name?.trim() || null,
+        agencyName: data.agencyName?.trim() || null,
+        storeName: data.storeName?.trim() || null,
         gateway: typeof data.gateway === 'string' ? data.gateway.trim() : null
     };
 }

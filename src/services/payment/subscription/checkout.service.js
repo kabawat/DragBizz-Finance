@@ -25,7 +25,7 @@ async function assertPackagePaymentAllowed({ userId, agencyId, packageId, months
 }
 
 async function createPackagePayment(orderData) {
-    const { userId, agencyId = null, packageId, months, couponCode, email, phone, customerName, idempotencyKey, ipAddress, userAgent } = orderData;
+    const { userId, agencyId = null, packageId, months, couponCode, email, phone, customerName, agencyName, storeName, idempotencyKey, ipAddress, userAgent } = orderData;
 
     await assertPackagePaymentAllowed({ userId, agencyId, packageId, months });
 
@@ -76,7 +76,8 @@ async function createPackagePayment(orderData) {
             baseAmount,
             discountAmount,
             taxAmount,
-            discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0
+            discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
+            metadata: { agencyName, storeName }
         },
         idempotencyKey,
         ipAddress,

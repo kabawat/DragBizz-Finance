@@ -8,6 +8,11 @@ const logger = require('@src/utils/logger');
 const { getActiveGateway } = require('@src/lib/payment/gateway.factory');
 const { presentOrder } = require('./present.service');
 
+function createInvoiceNumber() {
+    const stamp = new Date().toISOString().slice(0, 7).replace('-', '');
+    return `DBZ-INV-${stamp}-${nanoid(8).toUpperCase()}`;
+}
+
 async function createPaymentOrder({
     userId,
     amount,
@@ -56,6 +61,7 @@ async function createPaymentOrder({
     let created;
     try { created = await gateway.createOrder({
         orderId,
+        invoiceNumber: createInvoiceNumber(),
         amount,
         currency,
         userId,
@@ -104,6 +110,8 @@ async function createPaymentOrder({
             ipAddress,
             userAgent,
             description: description || null,
+            packageName: description || null,
+            customerName: customer.name || null,
             ...(customer.email && { email: customer.email }),
             ...(customer.phone && { phone: customer.phone }),
             ...(metadataPatch || {}),

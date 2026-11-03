@@ -46,6 +46,14 @@ const paymentSchema = new mongoose.Schema({
         index: true
     },
 
+    // Human-readable invoice identifier shown on customer invoices.
+    invoiceNumber: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true,
+    },
+
     // Internal payment identifier (ensures uniqueness for existing indexes)
     paymentId: {
         type: mongoose.Schema.Types.ObjectId,

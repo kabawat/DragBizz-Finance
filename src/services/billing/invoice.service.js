@@ -20,7 +20,7 @@ async function getInvoices(agencyId, userId, options = {}) {
 
     // Fetch one extra to detect hasNextPage
     const payments = await PaymentModel.find(query)
-        .select('_id orderId gateway gatewayPaymentId razorpayPaymentId amount currency baseAmount discountAmount taxAmount finalAmount billingCycle months status paymentMethod couponCode discountPercentage gstPercentage receipt paidAt createdAt invoice')
+        .select('_id orderId invoiceNumber gateway gatewayPaymentId razorpayPaymentId amount currency baseAmount discountAmount taxAmount finalAmount billingCycle months status paymentMethod couponCode discountPercentage gstPercentage receipt paidAt createdAt invoice metadata')
         .sort({ _id: -1 })
         .limit(limitNum + 1)
         .lean();
@@ -33,6 +33,7 @@ async function getInvoices(agencyId, userId, options = {}) {
     const invoices = payments.map(p => ({
         invoiceId: p._id,
         orderId: p.orderId,
+        invoiceNumber: p.invoiceNumber || null,
         gateway: p.gateway || null,
         gatewayPaymentId: p.gatewayPaymentId || p.razorpayPaymentId || null,
         razorpayPaymentId: p.razorpayPaymentId || null,
@@ -58,6 +59,8 @@ async function getInvoices(agencyId, userId, options = {}) {
                   hasDownload: p.invoice.status === 'DONE',
               }
             : null,
+        customerName: p.metadata?.customerName || null,
+        packageName: p.metadata?.packageName || p.metadata?.description || null,
     }));
 
     return {
