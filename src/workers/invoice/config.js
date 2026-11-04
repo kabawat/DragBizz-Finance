@@ -1,8 +1,8 @@
 const SECRET = require('@config/env.config');
 
-const BATCH_SIZE = SECRET?.invoice?.worker?.batchSize || parseInt(process.env.INVOICE_WORKER_BATCH_SIZE, 10) || 5;
-const CONCURRENCY = SECRET?.invoice?.worker?.concurrency || parseInt(process.env.INVOICE_WORKER_CONCURRENCY, 10) || 3;
-const POLL_MS = SECRET?.invoice?.worker?.pollIntervalMs || parseInt(process.env.INVOICE_WORKER_POLL_INTERVAL_MS, 10) || 30_000;
+const BATCH_SIZE = SECRET.invoice.worker.batchSize;
+const CONCURRENCY = SECRET.invoice.worker.concurrency;
+const POLL_MS = SECRET.invoice.worker.pollIntervalMs;
 const LOCK_TTL_MS = 5 * 60 * 1000;   // 5 minutes: stale lock threshold
 const MAX_BACKOFF_MS = 30 * 60 * 1000;  // 30 minutes: cap on exponential backoff
 const SHUTDOWN_GRACE_MS = 30_000;

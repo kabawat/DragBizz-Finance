@@ -1,6 +1,8 @@
 const { GatewayError } = require('@src/lib/payment/errors');
 const { toMinorAmount } = require('@src/lib/payment/money');
 const { guardProvider } = require('@src/lib/payment/provider-error');
+const { providerMessage } = require('@src/lib/payment/provider-error');
+const logger = require('@src/utils/logger');
 
 function validateVerificationInput(input) {
     const errors = {};
@@ -11,7 +13,7 @@ function validateVerificationInput(input) {
 }
 
 async function createOrder(client, config, command) {
-    const order = await guardProvider('Failed to create Razorpay order', () => client.sdk().orders.create({
+    const request = {
             amount: toMinorAmount(command.amount),
             currency: command.currency || 'INR',
             receipt: command.orderId,
@@ -24,10 +26,32 @@ async function createOrder(client, config, command) {
                 ...(command.email && { email: command.email }),
                 ...(command.phone && { phone: command.phone })
             }
-        }));
+        };
+
+    logger.info('razorpay.order.create.started', {
+        receipt: command.orderId,
+        amountMinor: request.amount,
+        currency: request.currency,
+        mode: config.mode,
+        keyPrefix: config.keyId ? config.keyId.slice(0, 9) : null,
+    });
+
+    let order;
+    try {
+        order = await guardProvider('Failed to create Razorpay order', () => client.sdk().orders.create(request));
+    } catch (error) {
+        logger.error('razorpay.order.create.failed', {
+            receipt: command.orderId,
+            code: error.code,
+            statusCode: error.statusCode,
+            providerMessage: providerMessage(error),
+        });
+        throw error;
+    }
     if (!order?.id) {
         throw new GatewayError('Invalid response from Razorpay: Order ID not found');
     }
+    logger.info('razorpay.order.create.succeeded', { receipt: command.orderId, gatewayOrderId: order.id });
     return {
         gatewayOrderId: order.id,
         checkout: {

@@ -19,6 +19,12 @@ async function verifyPayment(paymentData) {
     if (!payment) {
         throw new Error('Payment order not found');
     }
+    if (paymentData.userId && String(payment.userId) !== String(paymentData.userId)) {
+        throw new GatewayError('Payment does not belong to this user', { code: 'FORBIDDEN', statusCode: 403 });
+    }
+    if (paymentData.agencyId && String(payment.agencyId || '') !== String(paymentData.agencyId)) {
+        throw new GatewayError('Payment does not belong to this agency', { code: 'FORBIDDEN', statusCode: 403 });
+    }
 
     let result;
     try {
@@ -77,6 +83,7 @@ async function settleSuccess(payment, result, context = {}) {
                 paidAt: result.paidAt || new Date(),
                 paymentMethod: result.paymentMethod || payment.paymentMethod,
                 gatewayPaymentId: result.gatewayPaymentId || payment.gatewayPaymentId,
+                activationIntent: { status: 'PENDING', createdAt: new Date() },
                 ...(result.persistence || {})
             }
         },

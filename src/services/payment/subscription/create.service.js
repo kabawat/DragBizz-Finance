@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
 const { nanoid } = require('nanoid');
-const { PaymentModel } = require('@src/models');
-const { generateIdempotencyKey, checkIdempotency } = require('@src/utils/security/idempotency');
+const { PaymentModel, PaymentOrderReservationModel } = require('@src/models');
+const { generateIdempotencyKey } = require('@src/utils/security/idempotency');
 const { validateAmount } = require('@src/utils/security/amount.validation');
 const { logPaymentEvent } = require('@src/utils/audit/audit.logger');
 const logger = require('@src/utils/logger');
 const { getActiveGateway } = require('@src/lib/payment/gateway.factory');
 const { presentOrder } = require('./present.service');
+
+function createInvoiceNumber() {
+    const stamp = new Date().toISOString().slice(0, 7).replace('-', '');
+    return `DBZ-INV-${stamp}-${nanoid(8).toUpperCase()}`;
+}
 
 async function createPaymentOrder({
     userId,
@@ -30,14 +35,33 @@ async function createPaymentOrder({
 
     const reference = context.packageId || context.referenceId || description || 'payment';
     const finalIdempotencyKey = idempotencyKey || generateIdempotencyKey(userId, reference, amount);
-    const idempotencyCheck = await checkIdempotency(finalIdempotencyKey, userId);
-    if (idempotencyCheck.isDuplicate) {
-        return presentOrder(idempotencyCheck.payment);
+    const leaseUntil = new Date(Date.now() + 2 * 60 * 1000);
+    let reservation;
+    try {
+        reservation = await PaymentOrderReservationModel.findOneAndUpdate(
+            { key: finalIdempotencyKey, $or: [
+                { status: 'CREATING', leaseUntil: { $lt: new Date() } },
+                { status: 'FAILED' },
+            ] },
+            { $set: { userId: String(userId), status: 'CREATING', leaseUntil, error: null } }, { new: true }
+        );
+        if (!reservation) reservation = await PaymentOrderReservationModel.create({ key: finalIdempotencyKey, userId: String(userId), leaseUntil });
+        if (reservation.status === 'CREATED' && reservation.paymentId) {
+            const existing = await PaymentModel.findById(reservation.paymentId);
+            if (existing) return presentOrder(existing);
+        }
+    } catch (error) {
+        if (error.code !== 11000) throw error;
+        const existing = await PaymentOrderReservationModel.findOne({ key: finalIdempotencyKey });
+        if (existing?.paymentId) return presentOrder(await PaymentModel.findById(existing.paymentId));
+        throw Object.assign(new Error('Payment order is already being created; retry shortly'), { statusCode: 409, code: 'ORDER_IN_PROGRESS' });
     }
 
     const orderId = `order_${nanoid(16)}`;
-    const created = await gateway.createOrder({
+    let created;
+    try { created = await gateway.createOrder({
         orderId,
+        invoiceNumber: createInvoiceNumber(),
         amount,
         currency,
         userId,
@@ -48,7 +72,10 @@ async function createPaymentOrder({
         packageName: description,
         months: context.months,
         billingCycle: context.billingCycle
-    });
+    }); } catch (error) {
+        await PaymentOrderReservationModel.updateOne({ _id: reservation._id }, { $set: { status: 'FAILED', error: String(error.message).slice(0, 500), leaseUntil: null } });
+        throw error;
+    }
 
     const persistence = { ...(created.persistence || {}) };
     const metadataPatch = persistence.metadataPatch;
@@ -83,6 +110,8 @@ async function createPaymentOrder({
             ipAddress,
             userAgent,
             description: description || null,
+            packageName: description || null,
+            customerName: customer.name || null,
             ...(customer.email && { email: customer.email }),
             ...(customer.phone && { phone: customer.phone }),
             ...(metadataPatch || {}),
@@ -96,10 +125,15 @@ async function createPaymentOrder({
     } catch (err) {
         if (err.code === 11000) {
             const existing = await PaymentModel.findOne({ 'metadata.idempotencyKey': finalIdempotencyKey, userId });
-            if (existing) return presentOrder(existing);
+            if (existing) {
+                await PaymentOrderReservationModel.updateOne({ _id: reservation._id }, { $set: { status: 'CREATED', paymentId: existing._id, orderId: existing.orderId, leaseUntil: null } });
+                return presentOrder(existing);
+            }
         }
         throw err;
     }
+
+    await PaymentOrderReservationModel.updateOne({ _id: reservation._id }, { $set: { status: 'CREATED', paymentId: savedPayment._id, orderId: savedPayment.orderId, leaseUntil: null } });
 
     setImmediate(() => {
         logPaymentEvent('PAYMENT_ORDER_CREATED', {
@@ -112,7 +146,7 @@ async function createPaymentOrder({
             ipAddress,
             userAgent
         }).catch((error) => {
-            logger.error('Background log event failed', { error: error?.message, stack: error?.stack });
+            logger.error('Background payment audit log failed', { error: error?.message });
         });
     });
 

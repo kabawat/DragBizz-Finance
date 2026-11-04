@@ -6,6 +6,7 @@ const specs = require("./swagger");
 const swaggerUi = require("swagger-ui-express");
 const SECRET = require("@config/env.config");
 const router = require("@routes/");
+const healthController = require('@src/controllers/health.controller');
 
 const app = express();
 app.use(cookieParser());
@@ -27,7 +28,7 @@ app.set("trust proxy", true);
 app.use(morgan(isProduction ? "combined" : "dev"));
 app.use(corsMiddleware());
 
-app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.get('/health', healthController);
 
 app.use("/", router);
 

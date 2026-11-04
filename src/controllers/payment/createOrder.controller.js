@@ -5,6 +5,7 @@ const { serializeOrderResponse } = require('@src/utils/serializer/payment.serial
 const { successResponse } = require("@src/utils/responseHandler/success");
 const { errorResponse, parseErrorForResponse } = require("@src/utils/responseHandler/error");
 const STATUS_CODES = require("@src/constants/statusCode");
+const logger = require("@src/utils/logger");
 
 // Create payment order controller
 async function createOrderController(req, res) {
@@ -28,8 +29,18 @@ async function createOrderController(req, res) {
 
         // Sanitize and validate input
         const sanitizedData = sanitizeCreateOrderData(req.body);
+        logger.info("subscription_payment.create_order", {
+            userId,
+            agencyId,
+            packageId: sanitizedData.packageId,
+            months: sanitizedData.months,
+            hasEmail: Boolean(sanitizedData.email),
+            hasPhone: Boolean(sanitizedData.phone),
+            gateway: process.env.PAYMENT_GATEWAY || "razorpay",
+        });
         const validation = validateCreateOrder(sanitizedData);
         if (!validation.isValid) {
+            logger.warn("subscription_payment.validation_failed", { fieldCount: Object.keys(validation.errors || {}).length });
             return errorResponse(res, {
                 message: 'Validation failed',
                 fields: validation.errors,
@@ -44,6 +55,15 @@ async function createOrderController(req, res) {
             idempotencyKey: req.idempotencyKey,
             ipAddress: req.clientIp,
             userAgent: req.userAgent
+        });
+
+        logger.info("subscription_payment.order_created", {
+            orderId: orderData?.orderId,
+            gateway: orderData?.gateway || orderData?.checkout?.gateway,
+            gatewayOrderId: orderData?.gatewayOrderId || orderData?.checkout?.gatewayOrderId,
+            amount: orderData?.amount,
+            currency: orderData?.currency,
+            hasCheckout: Boolean(orderData?.checkout),
         });
 
         if (!orderData) {
@@ -63,6 +83,11 @@ async function createOrderController(req, res) {
         });
 
     } catch (error) {
+        logger.error("subscription_payment.create_order_failed", {
+            message: error?.message,
+            code: error?.code,
+            statusCode: error?.statusCode,
+        });
         // Handle specific error cases
         if (error.statusCode === 404 || error.message === 'Package not found or not available') {
             return errorResponse(res, {

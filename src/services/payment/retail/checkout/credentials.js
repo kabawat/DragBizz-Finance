@@ -15,7 +15,7 @@ async function getCredentials(attempt, purpose) {
     }
 
     const c = result.credentials || {};
-    const base = String(SECRET.server.url || '').replace(/\/+$/, '');
+    const base = (SECRET.server.url || '').replace(/\/+$/, '');
     if (!base) {
         throw httpError('Public server URL is not configured', 'SERVER_URL_REQUIRED', 503);
     }

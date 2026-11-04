@@ -1,4 +1,6 @@
 const logger = require('@src/utils/logger');
+const crypto = require('crypto');
+const { PaymentWebhookEventModel } = require('@src/models');
 const { resolveGateway } = require('@src/lib/payment/gateway.factory');
 const { GatewayError } = require('@src/lib/payment/errors');
 const { GatewayEventType, PaymentStatus } = require('@src/lib/payment/events');
@@ -27,7 +29,36 @@ async function handleWebhook(providerName, request) {
         return { received: true, ignored: true };
     }
 
-    await applyGatewayEvent(gateway, parsed.event);
+    logger.info('payment.webhook.parsed', {
+        gateway: gateway.id,
+        type: parsed.event.type,
+        gatewayOrderId: parsed.event.gatewayOrderId,
+        gatewayPaymentId: parsed.event.gatewayPaymentId,
+    });
+
+    // Persist the signed event before settlement. Provider retries become a
+    // durable no-op, while failed processing remains inspectable/retryable.
+    const eventId = String(parsed.event.eventId || parsed.event.providerEventId || parsed.event.id ||
+        crypto.createHash('sha256').update(request.rawBody || JSON.stringify(request.body || {})).digest('hex'));
+    let eventRecord;
+    try {
+        eventRecord = await PaymentWebhookEventModel.create({
+            provider: gateway.id || providerName || 'default', eventId, type: parsed.event.type,
+            payload: parsed.event,
+        });
+    } catch (error) {
+        if (error.code === 11000) return { received: true, duplicate: true };
+        throw error;
+    }
+
+    await PaymentWebhookEventModel.updateOne({ _id: eventRecord._id }, { $set: { status: 'PROCESSING' } });
+    try {
+        await applyGatewayEvent(gateway, parsed.event);
+        await PaymentWebhookEventModel.updateOne({ _id: eventRecord._id }, { $set: { status: 'PROCESSED', processedAt: new Date() } });
+    } catch (error) {
+        await PaymentWebhookEventModel.updateOne({ _id: eventRecord._id }, { $set: { status: 'FAILED', error: String(error.message).slice(0, 2000) } });
+        throw error;
+    }
     return { received: true };
 }
 

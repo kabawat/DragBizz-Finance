@@ -22,7 +22,8 @@
     "prod:restart": "docker compose --env-file .env -f docker-compose.yml restart",
     "prod:clean": "docker compose --env-file .env -f docker-compose.yml down",
     "backup:create": "node scripts/backup.js",
-    "backup:restore": "node scripts/restore.js"
+    "backup:restore": "node scripts/restore.js",
+    "invoice:preview": "node scripts/generate-invoice-preview.js ./tmp/invoice-preview.pdf"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.0",

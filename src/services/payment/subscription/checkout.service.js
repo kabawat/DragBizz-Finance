@@ -1,6 +1,7 @@
 const { getPackageById, validatePayment } = require('@src/services/subscription');
 const { createPaymentOrder } = require('./create.service');
 const { getBillingCycleFromMonths, calculateFinalPricing } = require('./pricing.service');
+const logger = require('@src/utils/logger');
 
 function httpError(message, statusCode, fields) {
     const error = new Error(message);
@@ -24,17 +25,25 @@ async function assertPackagePaymentAllowed({ userId, agencyId, packageId, months
 }
 
 async function createPackagePayment(orderData) {
-    const { userId, agencyId = null, packageId, months, couponCode, email, phone, customerName, idempotencyKey, ipAddress, userAgent } = orderData;
+    const { userId, agencyId = null, packageId, months, couponCode, email, phone, customerName, agencyName, storeName, idempotencyKey, ipAddress, userAgent } = orderData;
 
     await assertPackagePaymentAllowed({ userId, agencyId, packageId, months });
 
     const packageDoc = await getPackageById(packageId);
+    const monthsNum = parseInt(months, 10);
+
+    logger.info('[SUBSCRIPTION_PAYMENT_DEBUG] package resolved', {
+        packageId,
+        packageName: packageDoc?.name,
+        planType: packageDoc?.planType,
+        months: monthsNum,
+        pricingOptions: packageDoc?.pricing?.map((item) => item.months),
+    });
 
     if (!packageDoc) {
         throw new Error('Package not found or not available');
     }
 
-    const monthsNum = parseInt(months, 10);
     const pricingOption = packageDoc.pricing?.find((item) => item.months === monthsNum);
     if (!pricingOption) {
         throw new Error(`Pricing not available for ${monthsNum} month(s)`);
@@ -42,6 +51,15 @@ async function createPackagePayment(orderData) {
 
     const { baseAmount, discountAmount, taxAmount, finalAmount } = await calculateFinalPricing(pricingOption, couponCode);
     const billingCycle = getBillingCycleFromMonths(monthsNum);
+
+    logger.info('[SUBSCRIPTION_PAYMENT_DEBUG] pricing calculated', {
+        packageId,
+        baseAmount,
+        discountAmount,
+        taxAmount,
+        finalAmount,
+        billingCycle,
+    });
 
     return createPaymentOrder({
         userId,
@@ -58,7 +76,8 @@ async function createPackagePayment(orderData) {
             baseAmount,
             discountAmount,
             taxAmount,
-            discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0
+            discountPercentage: discountAmount > 0 ? (discountAmount / baseAmount) * 100 : 0,
+            metadata: { agencyName, storeName }
         },
         idempotencyKey,
         ipAddress,
